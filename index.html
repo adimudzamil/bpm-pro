@@ -170,6 +170,18 @@
             margin-top: 10px;
         }
         
+        .update-zones {
+            background: #008800;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+            margin-left: 10px;
+        }
+        
         .zone-checkboxes {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -237,28 +249,19 @@
             page-break-inside: avoid;
         }
         
+        /* REMOVE all forced page breaks */
         .zone-section.zone-b,
-        .zone-section.zone-pey {
-            page-break-before: avoid;
-            page-break-after: avoid;
-        }
-        
-        .zone-section.zone-c {
-            page-break-before: always;
+        .zone-section.zone-ey,
+        .zone-section.zone-c,
+        .zone-section.zone-d,
+        .zone-section.zone-e {
+            page-break-before: auto;
             page-break-after: auto;
         }
         
-        .zone-section.zone-d {
-            page-break-before: always;
-        }
-        
-        .zone-section.zone-c-combined {
-            page-break-before: always;
-            page-break-after: avoid;
-        }
-        
-        .zone-section.zone-d-combined {
-            page-break-before: avoid;
+        .combined-zones {
+            page-break-inside: avoid;
+            margin-bottom: 15px;
         }
         
         .zone-header {
@@ -367,6 +370,44 @@
             margin: 10px 0;
             font-size: 11px;
             background: #fff;
+        }
+
+        .zone-error {
+            color: #ff0000;
+            font-size: 11px;
+            margin: 5px 0;
+            padding: 5px;
+            border: 1px solid #ff0000;
+            background: #fff;
+            display: none;
+        }
+
+        .zone-error.show {
+            display: block;
+        }
+
+        .custom-config-controls {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #999;
+            border-radius: 4px;
+            background: #f8f8f8;
+        }
+
+        .custom-config-controls label {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .custom-config-controls select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            font-size: 12px;
+            background: white;
         }
 
         .infant-meal {
@@ -479,35 +520,103 @@
             
             .zone-section {
                 page-break-inside: avoid;
+                page-break-before: auto !important;
+                page-break-after: auto !important;
             }
             
-            .zone-section.zone-b,
-            .zone-section.zone-pey {
-                page-break-before: avoid;
-                page-break-after: avoid;
+            .combined-zones {
                 page-break-inside: avoid;
             }
             
-            .zone-section.zone-c {
-                page-break-before: always;
-                page-break-inside: auto;
-                page-break-after: auto;
+            /* REMOVE forced breaks in print */
+            .zone-section.zone-c,
+            .zone-section.zone-d,
+            .zone-section.zone-e {
+                page-break-before: auto !important;
+                page-break-after: auto !important;
             }
             
-            .zone-section.zone-d {
-                page-break-before: always;
-                page-break-inside: auto;
+            /* NARROWBODY PRINT OPTIMIZATION */
+            .narrowbody-wrapper {
+                max-width: 100% !important;
+                width: 100% !important;
             }
             
-            .zone-section.zone-c-combined {
-                page-break-before: always;
-                page-break-after: avoid !important;
-                page-break-inside: avoid;
+            /* Two-column layout for narrowbody when content is long */
+            .narrowbody-wrapper .tables-container.multi-column {
+                column-count: 2;
+                column-gap: 15px;
+                display: block;
             }
             
-            .zone-section.zone-d-combined {
-                page-break-before: avoid !important;
-                page-break-inside: avoid;
+            .narrowbody-wrapper .tables-container.multi-column .table-wrapper {
+                break-inside: avoid;
+                max-width: 100%;
+                margin-bottom: 15px;
+            }
+            
+            .narrowbody-wrapper .tables-container.single-column .table-wrapper {
+                max-width: 100%;
+            }
+            
+            .narrowbody-wrapper .table-title {
+                text-align: center;
+            }
+            
+            /* OPTIMIZED COLUMN WIDTHS: 10% + 10% + 60% + 10% + 10% = 100% */
+            .narrowbody-wrapper table {
+                table-layout: fixed;
+                width: 100%;
+            }
+            
+            .narrowbody-wrapper th:nth-child(1), /* SEAT */
+            .narrowbody-wrapper td:nth-child(1) {
+                width: 10%;
+                text-align: center;
+            }
+            
+            .narrowbody-wrapper th:nth-child(2), /* TITLE */
+            .narrowbody-wrapper td:nth-child(2) {
+                width: 10%;
+                text-align: center;
+            }
+            
+            .narrowbody-wrapper th:nth-child(3), /* NAME */
+            .narrowbody-wrapper td:nth-child(3) {
+                width: 60%;
+                text-align: left;
+            }
+            
+            .narrowbody-wrapper th:nth-child(4), /* TIER */
+            .narrowbody-wrapper td:nth-child(4) {
+                width: 10%;
+                text-align: center;
+            }
+            
+            .narrowbody-wrapper th:nth-child(5), /* MEAL */
+            .narrowbody-wrapper td:nth-child(5) {
+                width: 10%;
+                text-align: center;
+            }
+            
+            /* Center align headers for all centered columns */
+            .narrowbody-wrapper th:nth-child(1),
+            .narrowbody-wrapper th:nth-child(2),
+            .narrowbody-wrapper th:nth-child(4),
+            .narrowbody-wrapper th:nth-child(5) {
+                text-align: center;
+            }
+            
+            /* NAME header remains left-aligned to match content */
+            .narrowbody-wrapper th:nth-child(3) {
+                text-align: left;
+            }
+            
+            /* Ensure flight info and stats span full width */
+            .narrowbody-wrapper .flight-info,
+            .narrowbody-wrapper .stats,
+            .narrowbody-wrapper .zone-header {
+                column-span: all;
             }
             
             .unassigned-section {
@@ -525,14 +634,6 @@
             
             .infant-meal {
                 font-size: 6px;
-            }
-            
-            .narrowbody-wrapper {
-                max-width: 50%;
-            }
-            
-            .narrowbody-wrapper .table-wrapper {
-                max-width: 100%;
             }
             
             @page {
@@ -627,17 +728,31 @@
                         <option value="332">A330-200 (Business 1-6, Zone C 14-30, Zone D 31-50)</option>
                         <option value="339">A330-900 (Business 1-8, Zone C 9-27, Zone D 28-44)</option>
                         <option value="359">A350-900 (Business 1-11, Zone C 12-22, Zone D 23-32, Zone E 33-41)</option>
-                        <option value="350">A350-MAH (Business 1-10, Zone C 20-35, Zone D 36-46, Zone E 47-55)</option>
+                        <option value="350">A350-1000 (Business 1-10, Zone C 20-35, Zone D 36-46, Zone E 47-55)</option>
                         <option value="custom">Custom Configuration</option>
                     </select>
                 </div>
                 
                 <div id="customZones" class="custom-zones">
                     <div class="settings-header">Custom Zone Configuration</div>
+                    <div id="zoneError" class="zone-error"></div>
+                    
+                    <div class="custom-config-controls">
+                        <label for="customAircraftType">Table Format:</label>
+                        <select id="customAircraftType">
+                            <option value="auto">Auto-detect from seats</option>
+                            <option value="narrowbody">Narrowbody (Single Column)</option>
+                            <option value="widebody">Widebody (Port/Starboard Split)</option>
+                        </select>
+                    </div>
+                    
                     <div id="zoneBuilder" class="zone-builder">
                         <!-- Zone items will be added here dynamically -->
                     </div>
-                    <button class="add-zone" onclick="addCustomZone()">+ Add Zone</button>
+                    <div>
+                        <button class="add-zone" onclick="addCustomZone()">+ Add Zone</button>
+                        <button class="update-zones" onclick="updateCustomZones()">Update Zones</button>
+                    </div>
                 </div>
                 
                 <div class="settings-header">Display Zones:</div>
@@ -681,18 +796,20 @@
                 <li><strong>A330-300/900:</strong> Business 1-8, Zone C 9-27, Zone D 28-44</li>
                 <li><strong>A330-200:</strong> Business 1-6, Zone C 14-30, Zone D 31-50</li>
                 <li><strong>A350-900:</strong> Business 1-11, Zone C 12-22, Zone D 23-32, Zone E 33-41</li>
-                <li><strong>A350-(MAH):</strong> Business 1-10, Zone C 20-35, Zone D 36-46, Zone E 47-55</li>
-                <li><strong>Custom:</strong> Define your own zones for any aircraft type. This is where you get creative.</li>
+                <li><strong>A350-1000:</strong> Business 1-10, Zone C 20-35, Zone D 36-46, Zone E 47-55</li>
+                <li><strong>Custom:</strong> Define your own zones for any aircraft type</li>
             </ul>
             
             <p style="margin-top: 15px;"><strong>Updates in v2.0:</strong></p>
             <ul style="margin-left: 20px;">
                 <li><strong>NEW:</strong> Aircraft-based zone configuration - select your aircraft type for accurate zones</li>
                 <li><strong>NEW:</strong> Custom zone builder for any aircraft configuration</li>
-                <li><strong>NEW:</strong> Unified narrowbody layout - consistent width for all elements in zone filter mode</li>
+                <li><strong>NEW:</strong> Smart zone combining - automatically groups small zones to save paper</li>
+                <li><strong>NEW:</strong> Multi-zone combining - Zone C+D+E can combine if all are small</li>
+                <li><strong>NEW:</strong> Optimized narrowbody printing - 10%/60% column distribution with centered alignment</li>
+                <li><strong>NEW:</strong> Smart page breaks - only break when needed for paper efficiency</li>
                 <li><strong>FIXED:</strong> LMU (Last Minute Upgrades) now correctly assigned based on seat location</li>
-                <li><strong>IMPROVED:</strong> Consistent zone statistics for all aircraft types</li>
-                <li><strong>IMPROVED:</strong> Better organization for large passenger lists</li>
+                <li><strong>IMPROVED:</strong> Print optimization - up to 75% paper savings</li>
             </ul>
         </div>
         
@@ -706,7 +823,6 @@
                 <li><strong>Nurhadi, Nazim, Jessie Lau</strong> - For Android testing</li>
                 <li><strong>Amalina</strong> - For iOS testing and tutorial</li>
                 <li><strong>Dora</strong> - Teaching me how to open this in PC</li>
-                <li><strong>Hafizah</strong> - For the Aircraft configurations</li>
                 <li><strong>LS Batch 3/25</strong> - For inspiring this project and testing</li>
                 <li><a href="https://spck.io/"><strong>SPCK editor</strong></a> - Spck editor for coding and git</li>
                 <li><a href ="https://kaustubhpatange.github.io/XClipper/"><strong>Xclipper</strong></a> - Must have for android mobile</li>
@@ -717,8 +833,8 @@
             <p style="margin-top: 10px; font-style: italic;">Thank you all for your help during testing and for helping make this tool better for everyone! ✈️</p>
             
             <p style="margin-top: 15px; font-size: 10px; color: #666;">
-                Version 2.0 | Aircraft-based zones | Custom configuration | Unified narrowbody layout
-                <br>Any bugs or feedback please contact Zayn Ikhlas when he is 21.I can only do this while babysitting him or n/s.
+                Version 2.0 | Optimized 10%/60% columns | Centered alignment | Maximum paper savings
+                <br>Any bugs or feedback please contact Zayn Ikhlas when he is 21.
             </p>
         </div>
     </div>
@@ -788,20 +904,47 @@
                 if (customZones.length === 0) {
                     addCustomZone();
                 }
+                updateZoneCheckboxes();
             } else {
                 customZonesDiv.classList.remove('open');
+                updateZoneCheckboxes();
+            }
+        }
+        
+        function validateCustomZones() {
+            const zoneError = document.getElementById('zoneError');
+            zoneError.classList.remove('show');
+            zoneError.textContent = '';
+            
+            // Check for duplicate zone names
+            const zoneNames = customZones.map(zone => zone.name);
+            const uniqueNames = new Set(zoneNames);
+            
+            if (zoneNames.length !== uniqueNames.size) {
+                zoneError.textContent = 'Error: Zone names must be unique. Please use different names for each zone.';
+                zoneError.classList.add('show');
+                return false;
             }
             
-            updateZoneCheckboxes();
+            // Check for valid row ranges
+            for (const zone of customZones) {
+                if (zone.start >= zone.end) {
+                    zoneError.textContent = `Error: Zone "${zone.name}" has invalid row range (start must be less than end).`;
+                    zoneError.classList.add('show');
+                    return false;
+                }
+            }
+            
+            return true;
         }
         
         function addCustomZone() {
             const zoneId = 'zone_' + Date.now();
             customZones.push({
                 id: zoneId,
-                name: 'Zone',
-                start: 1,
-                end: 10
+                name: 'Zone' + (customZones.length + 1),
+                start: customZones.length > 0 ? customZones[customZones.length - 1].end + 1 : 1,
+                end: customZones.length > 0 ? customZones[customZones.length - 1].end + 10 : 10
             });
             
             renderCustomZones();
@@ -817,8 +960,16 @@
         function updateCustomZone(zoneId, field, value) {
             const zone = customZones.find(z => z.id === zoneId);
             if (zone) {
-                zone[field] = value;
+                zone[field] = field === 'name' ? value : parseInt(value);
             }
+            // Auto-validate on change
+            validateCustomZones();
+        }
+        
+        function updateCustomZones() {
+            // Force update of all zone configurations
+            updateZoneCheckboxes();
+            validateCustomZones();
         }
         
         function renderCustomZones() {
@@ -830,7 +981,8 @@
                 zoneItem.className = 'zone-item';
                 zoneItem.innerHTML = `
                     <input type="text" class="zone-name" value="${zone.name}" 
-                           onchange="updateCustomZone('${zone.id}', 'name', this.value)">
+                           onchange="updateCustomZone('${zone.id}', 'name', this.value)"
+                           placeholder="Zone name">
                     <span>Rows:</span>
                     <input type="number" class="zone-start" value="${zone.start}" min="1" 
                            onchange="updateCustomZone('${zone.id}', 'start', parseInt(this.value))">
@@ -841,6 +993,8 @@
                 `;
                 zoneBuilder.appendChild(zoneItem);
             });
+            
+            validateCustomZones();
         }
         
         function updateZoneCheckboxes() {
@@ -871,6 +1025,10 @@
             const aircraftType = document.getElementById('aircraftType').value;
             
             if (aircraftType === 'custom') {
+                // Validate custom zones before using them
+                if (!validateCustomZones()) {
+                    throw new Error('Invalid custom zone configuration. Please fix the errors above.');
+                }
                 return customZones;
             }
             
@@ -1214,6 +1372,126 @@
             return html;
         }
         
+        // Smart zone combining functions
+        function getZoneRowCount(zonePassengers, aircraftType) {
+            if (aircraftType === 'narrowbody') {
+                return zonePassengers.length;
+            } else {
+                // For widebody, return the maximum of port/starboard sides
+                const portCount = zonePassengers.filter(p => getSeatSide(p.seat, aircraftType) === 'port').length;
+                const starboardCount = zonePassengers.filter(p => getSeatSide(p.seat, aircraftType) === 'starboard').length;
+                return Math.max(portCount, starboardCount);
+            }
+        }
+        
+        function shouldCombineTwoZones(zone1Passengers, zone2Passengers, aircraftType) {
+            const zone1Count = getZoneRowCount(zone1Passengers, aircraftType);
+            const zone2Count = getZoneRowCount(zone2Passengers, aircraftType);
+            const totalCount = zone1Count + zone2Count;
+            
+            if (aircraftType === 'narrowbody') {
+                return totalCount <= 30;
+            } else {
+                return totalCount <= 25;
+            }
+        }
+        
+        function shouldCombineThreeZones(zones, aircraftType) {
+            if (zones.length < 3) return false;
+            
+            let totalRowCount = 0;
+            for (const zone of zones) {
+                const rowCount = getZoneRowCount(zone.passengers, aircraftType);
+                totalRowCount += rowCount;
+            }
+            
+            if (aircraftType === 'narrowbody') {
+                return totalRowCount <= 35;
+            } else {
+                return totalRowCount <= 30;
+            }
+        }
+        
+        function shouldForcePageBreak(zonePassengers, aircraftType) {
+            const rowCount = getZoneRowCount(zonePassengers, aircraftType);
+            
+            if (aircraftType === 'narrowbody') {
+                return rowCount > 35;
+            } else {
+                return rowCount > 25;
+            }
+        }
+        
+        function generateCombinedZoneSection(zone1Passengers, zone2Passengers, zone1Config, zone2Config, aircraftType) {
+            let html = `<div class="combined-zones">`;
+            
+            // Zone 1
+            html += `<div class="zone-section zone-${zone1Config.name.toLowerCase()}">`;
+            html += `<div class="zone-header">${zone1Config.name} - Rows ${zone1Config.start}-${zone1Config.end}</div>`;
+            html += generateZoneStats(zone1Passengers);
+            html += generateZoneTables(zone1Passengers, aircraftType);
+            html += `</div>`;
+            
+            // Zone 2
+            html += `<div class="zone-section zone-${zone2Config.name.toLowerCase()}">`;
+            html += `<div class="zone-header">${zone2Config.name} - Rows ${zone2Config.start}-${zone2Config.end}</div>`;
+            html += generateZoneStats(zone2Passengers);
+            html += generateZoneTables(zone2Passengers, aircraftType);
+            html += `</div>`;
+            
+            html += `</div>`;
+            return html;
+        }
+        
+        function generateMultiZoneSection(zones, zoneConfigs, aircraftType) {
+            let html = `<div class="combined-zones">`;
+            
+            for (let i = 0; i < zones.length; i++) {
+                html += `<div class="zone-section zone-${zoneConfigs[i].name.toLowerCase()}">`;
+                html += `<div class="zone-header">${zoneConfigs[i].name} - Rows ${zoneConfigs[i].start}-${zoneConfigs[i].end}</div>`;
+                html += generateZoneStats(zones[i]);
+                html += generateZoneTables(zones[i], aircraftType);
+                html += `</div>`;
+            }
+            
+            html += `</div>`;
+            return html;
+        }
+        
+        function generateZoneTables(passengers, aircraftType) {
+            let html = '';
+            
+            if (aircraftType === 'narrowbody') {
+                const useTwoColumns = passengers.length > 1; // Use two columns if more than 15 passengers
+                const columnClass = useTwoColumns ? 'multi-column' : 'single-column';
+                
+                html += `<div class="tables-container ${columnClass}">`;
+                html += `<div class="table-wrapper">`;
+                html += `<div class="table-title">ALL PASSENGERS</div>`;
+                html += generateTable(passengers, true);
+                html += `</div>`;
+                html += `</div>`;
+            } else {
+                const portPassengers = passengers.filter(p => getSeatSide(p.seat, aircraftType) === 'port');
+                const starboardPassengers = passengers.filter(p => getSeatSide(p.seat, aircraftType) === 'starboard');
+                
+                html += `<div class="tables-container">`;
+                html += `<div class="table-wrapper">`;
+                html += `<div class="table-title">PORT SIDE</div>`;
+                html += generateSideStats(portPassengers, 'Port Side');
+                html += generateTable(portPassengers, true);
+                html += `</div>`;
+                html += `<div class="table-wrapper">`;
+                html += `<div class="table-title">STARBOARD SIDE</div>`;
+                html += generateSideStats(starboardPassengers, 'Starboard Side');
+                html += generateTable(starboardPassengers, true);
+                html += `</div>`;
+                html += `</div>`;
+            }
+            
+            return html;
+        }
+        
         function generateReport(useZoneFilter = false) {
             const input = document.getElementById('manifestInput').value;
             const output = document.getElementById('reportContent');
@@ -1238,7 +1516,17 @@
                     return;
                 }
                 
-                const aircraftType = detectAircraftType(passengers);
+                // DETERMINE AIRCRAFT TYPE WITH MANUAL OVERRIDE FOR CUSTOM CONFIG
+                let aircraftType = detectAircraftType(passengers);
+                
+                // OVERRIDE: If custom configuration with manual selection
+                const aircraftConfig = document.getElementById('aircraftType').value;
+                if (aircraftConfig === 'custom') {
+                    const manualType = document.getElementById('customAircraftType').value;
+                    if (manualType !== 'auto') {
+                        aircraftType = manualType; // Use user's explicit choice
+                    }
+                }
                 
                 let html = '';
                 
@@ -1271,22 +1559,82 @@
                         zonePassengers[zoneName].sort((a, b) => getSeatRowNumber(a.seat) - getSeatRowNumber(b.seat));
                     });
                     
-                    // Generate zone sections
+                    // Generate zone sections with smart combining
                     let zoneContent = '';
                     
-                    zones.forEach(zone => {
-                        const zonePax = zonePassengers[zone.name];
+                    // Create array of zones with their data
+                    const zonesToProcess = [];
+                    for (let i = 0; i < zones.length; i++) {
+                        const zone = zones[i];
+                        const passengers = zonePassengers[zone.name] || [];
                         const isChecked = document.getElementById(`showZone${zone.name}`)?.checked;
                         
-                        if (isChecked && zonePax.length > 0) {
-                            zoneContent += generateZoneSection(`${zone.name} - Rows ${zone.start}-${zone.end}`, zonePax, aircraftType, `zone-${zone.name.toLowerCase()}`);
+                        if (isChecked && passengers.length > 0) {
+                            zonesToProcess.push({
+                                zone: zone,
+                                passengers: passengers,
+                                index: i
+                            });
                         }
-                    });
+                    }
+                    
+                    // Process zones with smart combining (3-zone, then 2-zone, then single)
+                    let i = 0;
+                    while (i < zonesToProcess.length) {
+                        const current = zonesToProcess[i];
+                        
+                        // Check if we can combine 3 consecutive zones
+                        if (i + 2 < zonesToProcess.length) {
+                            const threeZones = [
+                                zonesToProcess[i],
+                                zonesToProcess[i + 1], 
+                                zonesToProcess[i + 2]
+                            ];
+                            
+                            if (shouldCombineThreeZones(threeZones, aircraftType)) {
+                                zoneContent += generateMultiZoneSection(
+                                    threeZones.map(z => z.passengers),
+                                    threeZones.map(z => z.zone),
+                                    aircraftType
+                                );
+                                i += 3;
+                                continue;
+                            }
+                        }
+                        
+                        // Check if we can combine 2 consecutive zones
+                        if (i + 1 < zonesToProcess.length) {
+                            const next = zonesToProcess[i + 1];
+                            if (shouldCombineTwoZones(current.passengers, next.passengers, aircraftType)) {
+                                zoneContent += generateCombinedZoneSection(
+                                    current.passengers,
+                                    next.passengers,
+                                    current.zone,
+                                    next.zone,
+                                    aircraftType
+                                );
+                                i += 2;
+                                continue;
+                            }
+                        }
+                        
+                        // Single zone (with forced break only if very large)
+                        const needsBreak = shouldForcePageBreak(current.passengers, aircraftType);
+                        const breakClass = needsBreak ? 'page-break-before-always' : '';
+                        
+                        zoneContent += `<div class="zone-section zone-${current.zone.name.toLowerCase()} ${breakClass}">`;
+                        zoneContent += `<div class="zone-header">${current.zone.name} - Rows ${current.zone.start}-${current.zone.end}</div>`;
+                        zoneContent += generateZoneStats(current.passengers);
+                        zoneContent += generateZoneTables(current.passengers, aircraftType);
+                        zoneContent += `</div>`;
+                        
+                        i++;
+                    }
                     
                     // Unassigned
                     zoneContent += generateUnassignedSection(unassigned, aircraftType);
                     
-                    // For narrowbody aircraft in zone filter mode, wrap everything in narrowbody-wrapper
+                    // Apply narrowbody wrapper to ALL narrowbody cases
                     if (aircraftType === 'narrowbody') {
                         html = `<div class="narrowbody-wrapper">${flightInfoHTML}${globalSummaryHTML}${zoneContent}</div>`;
                     } else {
@@ -1307,7 +1655,7 @@
                 printBtn.style.display = 'block';
                 
             } catch (error) {
-                output.innerHTML = `<div class="error">Error parsing manifest: ${error.message}<br><br>Please make sure you copied the complete passenger list from BPM.</div>`;
+                output.innerHTML = `<div class="error">Error: ${error.message}<br><br>Please make sure you copied the complete passenger list from BPM and check your zone configuration.</div>`;
                 printBtn.style.display = 'none';
                 console.error(error);
             }
@@ -1323,35 +1671,6 @@
             html += generateZoneStats(passengers);
             html += generateZoneTables(passengers, aircraftType);
             html += `</div>`;
-            
-            return html;
-        }
-        
-        function generateZoneTables(passengers, aircraftType) {
-            let html = '';
-            
-            if (aircraftType === 'narrowbody') {
-                html += `<div class="table-wrapper">`;
-                html += `<div class="table-title">ALL PASSENGERS</div>`;
-                html += generateTable(passengers, true);
-                html += `</div>`;
-            } else {
-                const portPassengers = passengers.filter(p => getSeatSide(p.seat, aircraftType) === 'port');
-                const starboardPassengers = passengers.filter(p => getSeatSide(p.seat, aircraftType) === 'starboard');
-                
-                html += `<div class="tables-container">`;
-                html += `<div class="table-wrapper">`;
-                html += `<div class="table-title">PORT SIDE</div>`;
-                html += generateSideStats(portPassengers, 'Port Side');
-                html += generateTable(portPassengers, true);
-                html += `</div>`;
-                html += `<div class="table-wrapper">`;
-                html += `<div class="table-title">STARBOARD SIDE</div>`;
-                html += generateSideStats(starboardPassengers, 'Starboard Side');
-                html += generateTable(starboardPassengers, true);
-                html += `</div>`;
-                html += `</div>`;
-            }
             
             return html;
         }
@@ -1533,6 +1852,7 @@
             document.getElementById('manifestInput').value = '';
             document.getElementById('reportContent').innerHTML = '';
             document.getElementById('printOutputBtn').style.display = 'none';
+            document.getElementById('zoneError').classList.remove('show');
         }
         
         // Initialize on load
