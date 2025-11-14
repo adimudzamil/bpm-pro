@@ -1462,7 +1462,7 @@
             let html = '';
             
             if (aircraftType === 'narrowbody') {
-                const useTwoColumns = passengers.length > 1; // Use two columns if more than 15 passengers
+                const useTwoColumns = passengers.length > 1; // Use two columns if more than 1 passengers
                 const columnClass = useTwoColumns ? 'multi-column' : 'single-column';
                 
                 html += `<div class="tables-container ${columnClass}">`;
