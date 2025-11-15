@@ -16,28 +16,40 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             padding: 20px;
             background: #f5f5f5;
             -webkit-text-size-adjust: 100%;
+            color: #334155;
+            line-height: 1.6;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
             background: white;
-            padding: 20px;
-            border: 1px solid #ccc;
+            padding: 0;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
         
         h1 {
-            font-size: 18px;
-            margin-bottom: 15px;
+            background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
+            color: white;
+            padding: 16px;
+            margin: 0;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
             text-align: center;
+            font-size: 18px;
+            box-shadow: 0 2px 4px rgba(30, 58, 138, 0.2);
         }
         
         .input-section {
-            margin-bottom: 20px;
+            padding: 20px;
+            background: #F8FAFC;
+            border-bottom: 1px solid #E2E8F0;
         }
         
         textarea {
@@ -46,11 +58,19 @@
             font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
             font-size: 12px;
             padding: 10px;
-            border: 1px solid #333;
+            border: 2px solid #E2E8F0;
+            border-radius: 6px;
             resize: vertical;
             -webkit-appearance: none;
             -webkit-text-size-adjust: 100%;
-            border-radius: 4px;
+            background: white;
+            transition: all 0.2s ease;
+        }
+        
+        textarea:focus {
+            border-color: #2563EB;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
         
         .button-group {
@@ -63,27 +83,56 @@
         button {
             padding: 12px 20px;
             font-size: 14px;
-            font-weight: bold;
-            border: 2px solid #000;
-            background: #fff;
+            font-weight: 600;
+            border: 2px solid;
+            border-radius: 6px;
             cursor: pointer;
             font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-            border-radius: 4px;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
+            transition: all 0.2s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
         
         button:active {
-            background: #000;
-            color: #fff;
+            transform: translateY(0);
+        }
+        
+        button[onclick="generateReport()"] {
+            background: linear-gradient(to bottom, #DC2626, #B91C1C);
+            color: white;
+            border-color: #DC2626;
+            box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+        }
+        
+        button[onclick="clearAll()"] {
+            background: linear-gradient(to bottom, #64748B, #475569);
+            color: white;
+            border-color: #64748B;
+        }
+        
+        button#toggleAdvanced {
+            background: linear-gradient(to bottom, #1E3A8A, #2563EB);
+            color: white;
+            border-color: #1E3A8A;
+        }
+        
+        button[onclick="window.print()"] {
+            background: linear-gradient(to bottom, #059669, #047857);
+            color: white;
+            border-color: #059669;
         }
         
         .advanced-settings {
             margin-top: 15px;
-            padding: 15px;
-            border: 2px solid #666;
-            border-radius: 4px;
-            background: #fafafa;
+            padding: 16px;
+            border: 2px solid #CBD5E1;
+            border-radius: 6px;
+            background: #F1F5F9;
             display: none;
         }
         
@@ -92,9 +141,12 @@
         }
         
         .settings-header {
-            font-size: 13px;
-            font-weight: bold;
-            margin-bottom: 10px;
+            color: #1E3A8A;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #E2E8F0;
+            padding-bottom: 8px;
         }
         
         .aircraft-selection {
@@ -104,10 +156,17 @@
         .aircraft-selection select {
             width: 100%;
             padding: 10px;
-            border: 1px solid #333;
-            border-radius: 4px;
+            border: 2px solid #E2E8F0;
+            border-radius: 6px;
             font-size: 14px;
             background: white;
+            transition: border-color 0.2s ease;
+        }
+        
+        .aircraft-selection select:focus {
+            border-color: #2563EB;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
         
         .custom-zones {
@@ -206,73 +265,86 @@
             cursor: pointer;
         }
         
-        #toggleAdvanced {
-            background: #666;
-            color: #fff;
+        .custom-config-controls {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #CBD5E1;
+            border-radius: 4px;
+            background: #F8FAFC;
+        }
+        
+        .custom-config-controls label {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+            color: #1E3A8A;
+        }
+        
+        .custom-config-controls select {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #E2E8F0;
+            border-radius: 4px;
+            font-size: 12px;
+            background: white;
         }
         
         .output-section {
-            margin-top: 20px;
+            padding: 20px;
         }
         
         .flight-info {
-            font-size: 11px;
-            font-weight: bold;
-            padding: 8px;
-            border: 2px solid #000;
-            margin-bottom: 5px;
+            background: #FEF7CD;
+            color: #1E3A8A;
+            border: 2px solid #D4AF37;
+            border-radius: 6px;
+            font-weight: 600;
             text-align: center;
-            page-break-after: avoid;
+            padding: 8px;
+            margin-bottom: 10px;
         }
         
         .stats {
+            background: #F0F4FF;
+            border: 1px solid #2563EB;
+            border-radius: 4px;
+            border-left: 4px solid #2563EB;
             font-size: 10px;
             padding: 6px;
-            border: 1px solid #000;
             margin-bottom: 10px;
             line-height: 1.5;
-            page-break-after: avoid;
         }
         
         .side-stats {
+            background: #F8FAFC;
+            border: 1px solid #CBD5E1;
+            border-radius: 4px;
+            border-left: 4px solid #64748B;
             font-size: 9px;
             padding: 4px;
-            border: 1px solid #666;
             margin-bottom: 5px;
             line-height: 1.3;
-            background: #f9f9f9;
-            page-break-after: avoid;
         }
         
         .zone-section {
             margin-bottom: 15px;
-            page-break-inside: avoid;
-        }
-        
-        /* REMOVE all forced page breaks */
-        .zone-section.zone-b,
-        .zone-section.zone-ey,
-        .zone-section.zone-c,
-        .zone-section.zone-d,
-        .zone-section.zone-e {
-            page-break-before: auto;
-            page-break-after: auto;
         }
         
         .combined-zones {
-            page-break-inside: avoid;
             margin-bottom: 15px;
         }
         
         .zone-header {
-            font-size: 12px;
-            font-weight: bold;
-            padding: 6px;
-            border: 2px solid #000;
-            background: #e0e0e0;
+            background: linear-gradient(135deg, #1E3A8A, #2563EB);
+            color: white;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px 6px 0 0;
             text-align: center;
+            font-size: 12px;
+            padding: 6px;
             margin-bottom: 5px;
-            page-break-after: avoid;
         }
         
         .tables-container {
@@ -285,17 +357,17 @@
         .table-wrapper {
             flex: 1;
             max-width: 50%;
-            page-break-inside: avoid;
         }
         
         .table-title {
-            font-size: 11px;
-            font-weight: bold;
+            background: linear-gradient(135deg, #1E3A8A, #2563EB);
+            color: white;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px 6px 0 0;
             text-align: center;
+            font-size: 11px;
             padding: 4px;
-            border: 2px solid #000;
-            background: #fff;
-            page-break-after: avoid;
         }
         
         table {
@@ -303,18 +375,23 @@
             border-collapse: collapse;
             font-size: 9px;
             margin-top: 2px;
+            border: 1px solid #E2E8F0;
+            border-radius: 0 0 6px 6px;
+            overflow: hidden;
         }
         
         th, td {
-            border: 1px solid #000;
+            border: 1px solid #E2E8F0;
             padding: 3px 4px;
             text-align: left;
         }
         
         th {
             font-weight: bold;
-            background: #fff;
+            background: #F1F5F9;
+            color: #1E3A8A;
             font-size: 9px;
+            border-bottom: 2px solid #E2E8F0;
         }
         
         td {
@@ -322,7 +399,7 @@
         }
         
         tbody tr:nth-child(even) {
-            background-color: #f5f5f5;
+            background-color: #f8f8f8;
         }
         
         tbody tr:nth-child(odd) {
@@ -330,7 +407,7 @@
         }
         
         .class-divider {
-            border-top: 2px solid #000;
+            border-top: 2px solid #E2E8F0;
             font-weight: bold;
             text-align: center;
             background: #fff !important;
@@ -338,16 +415,17 @@
         
         .unassigned-section {
             margin-top: 10px;
-            page-break-before: avoid;
         }
         
         .unassigned-title {
-            font-size: 11px;
-            font-weight: bold;
+            background: linear-gradient(135deg, #1E3A8A, #2563EB);
+            color: white;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px 6px 0 0;
             text-align: center;
+            font-size: 11px;
             padding: 4px;
-            border: 2px solid #000;
-            background: #fff;
             margin-bottom: 2px;
         }
         
@@ -364,50 +442,29 @@
         }
         
         .error {
-            color: #000;
+            color: #DC2626;
             padding: 10px;
-            border: 2px solid #000;
+            border: 2px solid #DC2626;
             margin: 10px 0;
             font-size: 11px;
-            background: #fff;
+            background: #FEF2F2;
+            border-radius: 4px;
+            border-left: 4px solid #DC2626;
         }
 
         .zone-error {
-            color: #ff0000;
+            color: #DC2626;
             font-size: 11px;
             margin: 5px 0;
             padding: 5px;
-            border: 1px solid #ff0000;
-            background: #fff;
+            border: 1px solid #DC2626;
+            background: #FEF2F2;
             display: none;
+            border-radius: 4px;
         }
 
         .zone-error.show {
             display: block;
-        }
-
-        .custom-config-controls {
-            margin: 15px 0;
-            padding: 10px;
-            border: 1px solid #999;
-            border-radius: 4px;
-            background: #f8f8f8;
-        }
-
-        .custom-config-controls label {
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .custom-config-controls select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #333;
-            border-radius: 4px;
-            font-size: 12px;
-            background: white;
         }
 
         .infant-meal {
@@ -417,18 +474,65 @@
             margin-top: 2px;
         }
 
+        #printOutputBtn {
+            display: none;
+            margin: 10px 0;
+            background: linear-gradient(to bottom, #1E3A8A, #2563EB);
+            color: white;
+            width: 100%;
+            border-color: #1E3A8A;
+        }
+
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            border-top: 1px solid #E2E8F0;
+            font-size: 11px;
+            line-height: 1.6;
+            background: #F8FAFC;
+        }
+        
+        .acknowledgments {
+            margin-top: 20px;
+            padding: 15px;
+            border-top: 1px solid #E2E8F0;
+            font-size: 11px;
+            line-height: 1.6;
+            background: #F8FAFC;
+        }
+
+        .instructions h2, .acknowledgments h2 {
+            color: #1E3A8A;
+            border-bottom: 2px solid #E2E8F0;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
         @media print {
             body {
                 background: white;
                 padding: 0;
                 font-size: 10px;
                 line-height: 1.2;
+                color: black;
             }
             
             .container {
-                border: none;
-                padding: 5px;
+                border: 1px solid #000 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
                 max-width: 100%;
+                padding: 0;
+            }
+            
+            h1 {
+                background: white !important;
+                color: black !important;
+                border: 2px solid #000 !important;
+                margin: 0 0 15px 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
             }
             
             .input-section {
@@ -443,15 +547,44 @@
                 display: none !important;
             }
             
+            .flight-info {
+                background: white !important;
+                color: black !important;
+                border: 2px solid #000 !important;
+                border-radius: 0 !important;
+            }
+            
+            .stats, .side-stats {
+                background: white !important;
+                border: 1px solid #000 !important;
+                border-left: 4px solid #000 !important;
+                border-radius: 0 !important;
+            }
+            
+            .zone-header, .table-title, .unassigned-title {
+                background: white !important;
+                color: black !important;
+                border: 2px solid #000 !important;
+                border-radius: 0 !important;
+            }
+            
             table {
                 page-break-inside: avoid;
                 font-size: 7px;
+                border: 1px solid #000 !important;
             }
             
             th, td {
                 padding: 1px 2px;
                 font-size: 7px;
                 line-height: 1.1;
+                border: 1px solid #000 !important;
+            }
+            
+            th {
+                background: white !important;
+                color: black !important;
+                border-bottom: 2px solid #000 !important;
             }
             
             tbody tr:nth-child(even) {
@@ -474,75 +607,51 @@
                 font-size: 9px;
                 padding: 4px;
                 margin-bottom: 3px;
-                page-break-after: avoid;
             }
             
             .stats {
                 font-size: 8px;
                 padding: 3px;
                 margin-bottom: 5px;
-                page-break-after: avoid;
             }
             
             .side-stats {
                 font-size: 7px;
                 padding: 2px;
                 margin-bottom: 3px;
-                page-break-after: avoid;
             }
             
             .zone-header {
                 font-size: 10px;
                 padding: 3px;
-                background-color: #e0e0e0 !important;
+                background-color: white !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
-                page-break-after: avoid;
-                page-break-inside: avoid;
             }
             
             .table-title, .unassigned-title {
                 font-size: 9px;
                 padding: 2px;
-                page-break-after: avoid;
-                page-break-inside: avoid;
             }
             
             .tables-container {
                 gap: 5px;
                 margin-bottom: 5px;
-                page-break-inside: avoid;
-            }
-            
-            .table-wrapper {
-                page-break-inside: avoid;
             }
             
             .zone-section {
                 page-break-inside: avoid;
-                page-break-before: auto !important;
-                page-break-after: auto !important;
             }
             
             .combined-zones {
                 page-break-inside: avoid;
             }
             
-            /* REMOVE forced breaks in print */
-            .zone-section.zone-c,
-            .zone-section.zone-d,
-            .zone-section.zone-e {
-                page-break-before: auto !important;
-                page-break-after: auto !important;
-            }
-            
-            /* NARROWBODY PRINT OPTIMIZATION */
             .narrowbody-wrapper {
                 max-width: 100% !important;
                 width: 100% !important;
             }
             
-            /* Two-column layout for narrowbody when content is long */
             .narrowbody-wrapper .tables-container.multi-column {
                 column-count: 2;
                 column-gap: 15px;
@@ -563,43 +672,41 @@
                 text-align: center;
             }
             
-            /* OPTIMIZED COLUMN WIDTHS: 10% + 10% + 60% + 10% + 10% = 100% */
             .narrowbody-wrapper table {
                 table-layout: fixed;
                 width: 100%;
             }
             
-            .narrowbody-wrapper th:nth-child(1), /* SEAT */
+            .narrowbody-wrapper th:nth-child(1),
             .narrowbody-wrapper td:nth-child(1) {
                 width: 10%;
                 text-align: center;
             }
             
-            .narrowbody-wrapper th:nth-child(2), /* TITLE */
+            .narrowbody-wrapper th:nth-child(2),
             .narrowbody-wrapper td:nth-child(2) {
                 width: 10%;
                 text-align: center;
             }
             
-            .narrowbody-wrapper th:nth-child(3), /* NAME */
+            .narrowbody-wrapper th:nth-child(3),
             .narrowbody-wrapper td:nth-child(3) {
                 width: 60%;
                 text-align: left;
             }
             
-            .narrowbody-wrapper th:nth-child(4), /* TIER */
+            .narrowbody-wrapper th:nth-child(4),
             .narrowbody-wrapper td:nth-child(4) {
                 width: 10%;
                 text-align: center;
             }
             
-            .narrowbody-wrapper th:nth-child(5), /* MEAL */
+            .narrowbody-wrapper th:nth-child(5),
             .narrowbody-wrapper td:nth-child(5) {
                 width: 10%;
                 text-align: center;
             }
             
-            /* Center align headers for all centered columns */
             .narrowbody-wrapper th:nth-child(1),
             .narrowbody-wrapper th:nth-child(2),
             .narrowbody-wrapper th:nth-child(4),
@@ -607,12 +714,10 @@
                 text-align: center;
             }
             
-            /* NAME header remains left-aligned to match content */
             .narrowbody-wrapper th:nth-child(3) {
                 text-align: left;
             }
             
-            /* Ensure flight info and stats span full width */
             .narrowbody-wrapper .flight-info,
             .narrowbody-wrapper .stats,
             .narrowbody-wrapper .zone-header {
@@ -664,30 +769,6 @@
             }
         }
 
-        #printOutputBtn {
-            display: none;
-            margin: 10px 0;
-            background: #000;
-            color: #fff;
-            width: 100%;
-        }
-
-        .instructions {
-            margin-top: 30px;
-            padding: 15px;
-            border-top: 2px solid #ccc;
-            font-size: 11px;
-            line-height: 1.6;
-        }
-        
-        .acknowledgments {
-            margin-top: 20px;
-            padding: 15px;
-            border-top: 1px solid #ccc;
-            font-size: 11px;
-            line-height: 1.6;
-        }
-
         @media (max-width: 768px) {
             button {
                 min-height: 44px;
@@ -701,6 +782,14 @@
             
             .narrowbody-wrapper {
                 max-width: 100%;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .button-group button {
+                width: 100%;
             }
         }
     </style>
@@ -760,7 +849,7 @@
                     <!-- Zone checkboxes will be generated dynamically -->
                 </div>
                 
-                <button onclick="generateReport(true)" style="width: 100%; background: #000; color: #fff;">Apply Zone Filter</button>
+                <button onclick="generateReport(true)" style="width: 100%; background: linear-gradient(to bottom, #1E3A8A, #2563EB); color: #fff; border-color: #1E3A8A;">Apply Zone Filter</button>
             </div>
         </div>
         
@@ -770,7 +859,7 @@
         </div>
         
         <div class="instructions">
-            <h2 style="font-size: 14px; margin-bottom: 10px; font-weight: bold;">HOW TO USE</h2>
+            <h2>HOW TO USE</h2>
             <ol style="margin-left: 20px;">
                 <li style="margin-bottom: 8px;"><strong>Access BPM:</strong> Log into BPM</li>
                 <li style="margin-bottom: 8px;"><strong>Navigate to Passenger List:</strong> Go to your flight → Click "Passenger List"</li>
@@ -814,7 +903,7 @@
         </div>
         
         <div class="acknowledgments">
-            <h2 style="font-size: 14px; margin-bottom: 10px; font-weight: bold;">ACKNOWLEDGMENTS</h2>
+            <h2>ACKNOWLEDGMENTS</h2>
             <p style="margin-bottom: 5px;">This tool was made possible thanks to:</p>
             <ul style="margin-left: 20px;">
               <li><strong>Nadiya and Zayn Ikhlas</strong> - for the LOVE</li>
@@ -834,13 +923,15 @@
             <p style="margin-top: 10px; font-style: italic;">Thank you all for your help during testing and for helping make this tool better for everyone! ✈️</p>
             
             <p style="margin-top: 15px; font-size: 10px; color: #666;">
-                Version 2.0 | Optimized 10%/60% columns | Centered alignment | Maximum paper savings
+                Version 2.0 | Pre- defined and Custom Configuration |  Optimized printing | Automated aircraft type detection | Maximum paper savings
                 <br>Any bugs or feedback please contact Zayn Ikhlas when he is 21. I only do this when i'm babysitting Zayn or n/s lol XP
             </p>
         </div>
     </div>
 
     <script>
+        // The JavaScript code remains exactly the same as in your original version
+        // Only CSS has been updated for the new design
         const SEAT_PATTERN = /^\d{2}[A-K]$/i;
         const PNR_PATTERN = /^[A-Z0-9]{6,7}$/i;
         const CLASS_PATTERN = /^[JY]$/i;
