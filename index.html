@@ -291,11 +291,6 @@
             margin-bottom: 12px;
         }
         
-        .font-size-selector input[type="range"] {
-            flex: 1;
-            height: 6px;
-        }
-        
         .font-size-presets {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -605,6 +600,12 @@
         .seat-occupied { background: #E0F2FE !important; border: 1px solid #0EA5E9; }
         .seat-empty { background: #F8FAFC !important; color: #94A3B8; }
         
+        /* NEW: Business class regular passenger styling */
+        .seat-business-regular { 
+            background: #F0F4FF !important; 
+            border: 1px solid #CBD5E1;
+        }
+        
         /* Layer 3: Tier overrides (highest priority - override everything) */
         .seat-tier-emer { 
             background: #FEF3C7 !important; 
@@ -807,8 +808,20 @@
                 color-adjust: exact;
             }
             
+            .seat-business-regular {
+                background: #f8f8f8 !important;
+                border: 1px solid #ccc;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+            
             .seat-meal {
                 font-weight: bold;
+            }
+            
+            /* Hide acknowledgments section when printing */
+            .acknowledgments {
+                display: none !important;
             }
         }
         
@@ -1049,6 +1062,13 @@
                     <span id="versionLabel">Show</span> Version Updates
                 </label>
             </div>
+            
+            <!-- NEW: Download Button -->
+            <div class="help-toggle">
+                <button class="btn-success btn-small" onclick="downloadPage()">
+                    💾 Download Offline Version
+                </button>
+            </div>
         </div>
         
         <div id="tutorialContent" class="help-content">
@@ -1144,32 +1164,30 @@
         </div>
         
         <div id="versionContent" class="help-content">
-            <h3>Version 3.1 - Magic Aft View Update</h3>
-            <p><strong>New Magical Features:</strong></p>
+            <h3>Version 3.2 - Business Class Display Update</h3>
+            <p><strong>New Features:</strong></p>
             <ul>
-                <li><strong>Super Pro Max Ultra Secret Magic Trick</strong> - Generate upside-down text for perfect aft perspective when printed and turned</li>
-                <li><strong>Enhanced Tier Display</strong> - Stars for EMER/PLAT with larger, bolder text</li>
-                <li><strong>Better Alternating Rows</strong> - Visible in print with optimized colors</li>
-                <li><strong>Optimized Column Widths</strong> - More space for passenger info, less for aisles</li>
-                <li><strong>Thicker Borders for EMER/PLAT</strong> - Easy identification in black & white print</li>
+                <li><strong>Business Class Display Option</strong> - Show all business class passengers in seat chart, even without special meals/tier</li>
+                <li><strong>Zone-Based Business Display</strong> - Only affects business class zones (B/J zones)</li>
+                <li><strong>Enhanced Visual Styling</strong> - Regular business passengers shown with light blue background</li>
+                <li><strong>BBML Support in Seat Chart</strong> - Infant meals now display alongside parent meals</li>
             </ul>
             
-            <p><strong>Seat Chart Improvements:</strong></p>
-            <ul>
-                <li>Fixed A330-300 business class syntax error</li>
-                <li>Better visual hierarchy with improved spacing</li>
-                <li>Responsive column widths for different screen sizes</li>
-                <li>Print-optimized alternating rows that actually show up</li>
-            </ul>
-            
-            <p><strong>How to Use the Magic Trick:</strong></p>
+            <p><strong>How to Use Business Class Display:</strong></p>
             <ol>
-                <li>Check the "Super Pro Max Ultra Secret Magic Trick" option</li>
+                <li>Check "Show All Business Class Passengers" in Seat Chart Controls</li>
                 <li>Generate your seat chart</li>
-                <li>Print the report</li>
-                <li>Physically turn the paper 180 degrees</li>
-                <li>Now you have perfect aft perspective view! ✨</li>
+                <li>Business class zones will show ALL passengers</li>
+                <li>Economy zones continue to show only special cases</li>
+                <li>Perfect for complete business class service planning!</li>
             </ol>
+            
+            <p><strong>Other Improvements:</strong></p>
+            <ul>
+                <li>Enhanced tier display with stars for EMER/PLAT</li>
+                <li>Better alternating rows visible in print</li>
+                <li>Optimized column widths for different screen sizes</li>
+            </ul>
         </div>
         
         <div class="input-section">
@@ -1279,7 +1297,19 @@
                         <input type="range" id="seatChartFontSlider" min="6" max="12" value="8" step="1">
                     </div>
                     
-                    <!-- NEW: Magic Aft View Option -->
+                    <!-- NEW: Business Class Display Option -->
+                    <div class="print-option">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="showAllBusiness">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <label class="toggle-label" for="showAllBusiness">
+                            <strong>Show All Business Class Passengers in Seat Chart</strong>
+                            <span class="option-description">Display all business class passengers (B/J zones), even without special meals/tier. Economy zones continue to show only special cases.</span>
+                        </label>
+                    </div>
+                    
+                    <!-- Magic Aft View Option -->
                     <div class="print-option">
                         <label class="toggle-switch">
                             <input type="checkbox" id="upsideDownMode">
@@ -1370,7 +1400,7 @@
             <p style="margin-top: 10px; font-style: italic; text-align: center;">Thank you all for your help during testing and for helping make this tool better for everyone! ✈️</p>
             
             <div class="version-info">
-                Version 3.1 | Magic Aft View | Super Pro Max Ultra Secret Magic Trick | Enhanced Tier Display | Optimized Print Visibility
+                Version 3.2 | Business Class Display | Zone-Based Business View | BBML Support | Magic Aft View
                 <br>Any bugs or feedback please contact Zayn Ikhlas when he is 21. I only do this when i'm babysitting Zayn or n/s lol XP
             </div>
         </div>
@@ -1475,6 +1505,7 @@
             pageBreakZones: true,
             avoidOrphans: true,
             upsideDownMode: false,
+            showAllBusiness: false, // NEW: Business class display setting
             activeZones: {},
             detectedAircraftType: 'narrowbody'
         };
@@ -1498,6 +1529,34 @@
             'y': '⅄', 'z': 'Z'
         };
         
+        // NEW: Download functionality
+        function downloadPage() {
+            // Get the current HTML content
+            const htmlContent = document.documentElement.outerHTML;
+            
+            // Create a blob with the HTML content
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            
+            // Create a temporary URL for the blob
+            const url = URL.createObjectURL(blob);
+            
+            // Create a temporary anchor element to trigger download
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bpm-pro.html';
+            
+            // Append to body, click, and remove
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            // Clean up the URL
+            URL.revokeObjectURL(url);
+            
+            // Show success message
+            showSuccess('✓ Offline version downloaded as bpm-pro.html');
+        }
+        
         // Helper Functions
         function truncateName(name) {
             if (!name || !name.includes('/')) return name || '';
@@ -1516,6 +1575,31 @@
             return text.split('').reverse().map(char => 
                 UPSIDE_DOWN_MAP[char] || char
             ).join('');
+        }
+        
+        // NEW: Helper function to format meal display with BBML
+        function formatMealDisplay(mealString) {
+            if (!mealString) return '';
+            
+            const meals = mealString.split(',').map(m => m.trim());
+            const parentMeal = meals.find(m => m !== 'BBML') || '';
+            const infantMeal = meals.find(m => m === 'BBML') || '';
+            
+            let mealDisplay = '';
+            if (parentMeal && infantMeal) {
+                mealDisplay = `${parentMeal}(+BBML)`;
+            } else if (parentMeal) {
+                mealDisplay = parentMeal;
+            } else if (infantMeal) {
+                mealDisplay = infantMeal;
+            }
+            
+            return mealDisplay;
+        }
+        
+        // NEW: Check if a zone is a business class zone
+        function isBusinessClassZone(zoneName) {
+            return zoneName === 'B' || zoneName === 'J' || zoneName.startsWith('B') || zoneName.startsWith('J');
         }
         
         function debounce(func, wait) {
@@ -1557,6 +1641,7 @@
             currentSettings.pageBreakZones = document.getElementById('pageBreakBetweenZones').checked;
             currentSettings.avoidOrphans = document.getElementById('avoidOrphanRows').checked;
             currentSettings.upsideDownMode = document.getElementById('upsideDownMode').checked;
+            currentSettings.showAllBusiness = document.getElementById('showAllBusiness').checked; // NEW: Business class display
             
             // Column widths
             currentSettings.columnWidths.seat = parseInt(document.getElementById('colSeatSlider').value);
@@ -1612,6 +1697,7 @@
                 pageBreakZones: true,
                 avoidOrphans: true,
                 upsideDownMode: false,
+                showAllBusiness: false, // NEW: Default to false
                 activeZones: {},
                 detectedAircraftType: 'narrowbody'
             };
@@ -1627,6 +1713,7 @@
             document.getElementById('pageBreakBetweenZones').checked = true;
             document.getElementById('avoidOrphanRows').checked = true;
             document.getElementById('upsideDownMode').checked = false;
+            document.getElementById('showAllBusiness').checked = false; // NEW: Reset business display
             
             // Column widths
             document.getElementById('colSeatSlider').value = 10;
@@ -1963,7 +2050,7 @@
                 const { flightInfo, passengers } = parseManifest(input);
                 const filtered = passengers.filter(p => p.meal || p.tier === 'EMER' || p.tier === 'PLAT');
                 
-                if (filtered.length === 0) {
+                if (filtered.length === 0 && !currentSettings.showAllBusiness) {
                     showError('No passengers found with special meals or EMER/PLAT tier.');
                     return;
                 }
@@ -1993,6 +2080,7 @@
                                 <span>${currentSettings.seatChartFontSize}px</span>
                             </label>
                             ${currentSettings.upsideDownMode ? '<div class="magic-option"><span>✨ Magic Mode Active - Print and turn paper 180°</span></div>' : ''}
+                            ${currentSettings.showAllBusiness ? '<div class="magic-option"><span>👔 Business Class Display Active - Showing all business class passengers</span></div>' : ''}
                         </div>
                     `;
                 }
@@ -2007,7 +2095,10 @@
                     
                     zones.forEach(zone => { zonePassengers[zone.name] = []; });
                     
-                    filtered.forEach(p => {
+                    // NEW: For business class display, we need to handle both filtered and all passengers
+                    const passengersToProcess = currentSettings.showAllBusiness ? passengers : filtered;
+                    
+                    passengersToProcess.forEach(p => {
                         let assigned = false;
                         if (p.seat) {
                             const rowNum = parseInt(p.seat.substring(0, 2));
@@ -2041,7 +2132,16 @@
                         tableContent += generateZoneStats(zonePax);
                         
                         if (effectiveLayout === 'seat-chart') {
-                            tableContent += generateSeatChart(filtered, zone, effectiveAircraftConfig);
+                            // NEW: For business class zones with showAllBusiness enabled, use all passengers in the zone
+                            let seatChartPassengers = zonePax;
+                            if (currentSettings.showAllBusiness && isBusinessClassZone(zone.name)) {
+                                seatChartPassengers = passengers.filter(p => {
+                                    if (!p.seat) return false;
+                                    const rowNum = parseInt(p.seat.substring(0, 2));
+                                    return rowNum >= zone.start && rowNum <= zone.end;
+                                });
+                            }
+                            tableContent += generateSeatChart(seatChartPassengers, zone, effectiveAircraftConfig);
                         } else if (effectiveLayout === 'port-starboard') {
                             if (currentSettings.detectedAircraftType === 'widebody') {
                                 // Widebody split: ABCDE | FGHJK
@@ -2123,9 +2223,19 @@
                         const allZones = AIRCRAFT_CONFIGS[effectiveAircraftConfig] || [];
                         if (allZones.length > 0) {
                             allZones.forEach(zone => {
+                                // NEW: For business class zones with showAllBusiness enabled, use all passengers in the zone
+                                let seatChartPassengers = filtered;
+                                if (currentSettings.showAllBusiness && isBusinessClassZone(zone.name)) {
+                                    seatChartPassengers = passengers.filter(p => {
+                                        if (!p.seat) return false;
+                                        const rowNum = parseInt(p.seat.substring(0, 2));
+                                        return rowNum >= zone.start && rowNum <= zone.end;
+                                    });
+                                }
+                                
                                 tableContent += `<div class="zone-section">`;
                                 tableContent += `<div class="zone-header">${generateUpsideDownText(zone.name + ' - Rows ' + zone.start + '-' + zone.end)}</div>`;
-                                tableContent += generateSeatChart(filtered, zone, effectiveAircraftConfig);
+                                tableContent += generateSeatChart(seatChartPassengers, zone, effectiveAircraftConfig);
                                 tableContent += `</div>`;
                             });
                         }
@@ -2204,7 +2314,23 @@
                 }
                 
                 const html = warningHtml + flightInfoHTML + globalSummaryHTML + seatChartControls + tableContent;
-                document.getElementById('reportContent').innerHTML = '<div class="success">✓ Report generated successfully! ' + filtered.length + ' passengers with special requirements found.' + (currentSettings.upsideDownMode ? ' ✨ Magic mode active - print and turn paper 180° for aft perspective!' : '') + '</div>' + html;
+                let successMessage = '✓ Report generated successfully! ';
+                
+                if (currentSettings.showAllBusiness) {
+                    const businessZones = zones.filter(zone => isBusinessClassZone(zone.name));
+                    if (businessZones.length > 0) {
+                        successMessage += `Showing ALL passengers in ${businessZones.length} business class zone${businessZones.length > 1 ? 's' : ''}. `;
+                    }
+                    successMessage += `${filtered.length} passengers with special requirements found.`;
+                } else {
+                    successMessage += `${filtered.length} passengers with special requirements found.`;
+                }
+                
+                if (currentSettings.upsideDownMode) {
+                    successMessage += ' ✨ Magic mode active - print and turn paper 180° for aft perspective!';
+                }
+                
+                document.getElementById('reportContent').innerHTML = `<div class="success">${successMessage}</div>` + html;
                 
                 updateUIFromSettings();
                 
@@ -2385,6 +2511,11 @@
             return '';
         }
         
+        // NEW: Check if passenger has special requirements
+        function hasSpecialRequirements(passenger) {
+            return passenger.meal || passenger.tier === 'EMER' || passenger.tier === 'PLAT';
+        }
+        
         function generateSeatChart(passengers, zone, aircraftConfig) {
             const seatMap = SEAT_MAPS[aircraftConfig];
             if (!seatMap) {
@@ -2432,7 +2563,6 @@
                                          seatMap.businessClassRows.includes(row) &&
                                          zone.name === 'B';
                 
-                // FIXED: Changed isExceptio.nRow to isExceptionRow
                 const isExceptionRow = isA333BusinessRow && [2, 5, 7].includes(row);
                 
                 if (isA333BusinessRow && seatMap.businessClassMerges && !isExceptionRow) {
@@ -2474,17 +2604,29 @@
                                     if (passenger) break;
                                 }
                                 
-                                const cellClass = passenger ? 'seat-occupied' : 'seat-empty';
-                                const tierClass = passenger ? getTierClass(passenger.tier) : '';
+                                // NEW: Determine cell class based on passenger type
+                                let cellClass = 'seat-empty';
+                                let tierClass = '';
+                                
+                                if (passenger) {
+                                    cellClass = 'seat-occupied';
+                                    tierClass = getTierClass(passenger.tier);
+                                    
+                                    // NEW: For business class display, check if this is a regular business passenger
+                                    if (currentSettings.showAllBusiness && isBusinessClassZone(zone.name) && !hasSpecialRequirements(passenger)) {
+                                        cellClass = 'seat-business-regular';
+                                    }
+                                }
                                 
                                 html += `<td class="${cellClass} ${tierClass}" colspan="${colspan}">`;
                                 if (passenger) {
-                                    // NEW: Enhanced tier display with stars for EMER/PLAT
+                                    // Use the formatMealDisplay function to show BBML
+                                    const mealDisplay = formatMealDisplay(passenger.meal);
                                     const tierIcon = (passenger.tier === 'EMER' || passenger.tier === 'PLAT') ? '⭐ ' : '';
                                     html += `<div class="seat-cell">
                                         <div class="seat-name">${generateUpsideDownText(passenger.title + '/' + passenger.name.split('/')[0])}</div>
                                         <div class="seat-tier">${tierIcon}${generateUpsideDownText(passenger.tier || '')}</div>
-                                        ${passenger.meal ? `<div class="seat-meal-info">${generateUpsideDownText(passenger.meal.split(',')[0])}</div>` : ''}
+                                        ${mealDisplay ? `<div class="seat-meal-info">${generateUpsideDownText(mealDisplay)}</div>` : ''}
                                     </div>`;
                                 } else {
                                     html += `<div class="seat-cell">${generateUpsideDownText(seatNumber)}</div>`;
@@ -2501,17 +2643,30 @@
                             // Normal cell
                             const seatNumber = `${rowNum}${col}`;
                             const passenger = passengers.find(p => p.seat === seatNumber);
-                            const cellClass = passenger ? 'seat-occupied' : 'seat-empty';
-                            const tierClass = passenger ? getTierClass(passenger.tier) : '';
+                            
+                            // NEW: Determine cell class based on passenger type
+                            let cellClass = 'seat-empty';
+                            let tierClass = '';
+                            
+                            if (passenger) {
+                                cellClass = 'seat-occupied';
+                                tierClass = getTierClass(passenger.tier);
+                                
+                                // NEW: For business class display, check if this is a regular business passenger
+                                if (currentSettings.showAllBusiness && isBusinessClassZone(zone.name) && !hasSpecialRequirements(passenger)) {
+                                    cellClass = 'seat-business-regular';
+                                }
+                            }
                             
                             html += `<td class="${cellClass} ${tierClass}">`;
                             if (passenger) {
-                                // NEW: Enhanced tier display with stars for EMER/PLAT
+                                // Use the formatMealDisplay function to show BBML
+                                const mealDisplay = formatMealDisplay(passenger.meal);
                                 const tierIcon = (passenger.tier === 'EMER' || passenger.tier === 'PLAT') ? '⭐ ' : '';
                                 html += `<div class="seat-cell">
                                     <div class="seat-name">${generateUpsideDownText(passenger.title + '/' + passenger.name.split('/')[0])}</div>
                                     <div class="seat-tier">${tierIcon}${generateUpsideDownText(passenger.tier || '')}</div>
-                                    ${passenger.meal ? `<div class="seat-meal-info">${generateUpsideDownText(passenger.meal.split(',')[0])}</div>` : ''}
+                                    ${mealDisplay ? `<div class="seat-meal-info">${generateUpsideDownText(mealDisplay)}</div>` : ''}
                                 </div>`;
                             } else {
                                 html += `<div class="seat-cell">${generateUpsideDownText(seatNumber)}</div>`;
@@ -2528,17 +2683,30 @@
                         } else {
                             const seatNumber = `${rowNum}${col}`;
                             const passenger = passengers.find(p => p.seat === seatNumber);
-                            const cellClass = passenger ? 'seat-occupied' : 'seat-empty';
-                            const tierClass = passenger ? getTierClass(passenger.tier) : '';
+                            
+                            // NEW: Determine cell class based on passenger type
+                            let cellClass = 'seat-empty';
+                            let tierClass = '';
+                            
+                            if (passenger) {
+                                cellClass = 'seat-occupied';
+                                tierClass = getTierClass(passenger.tier);
+                                
+                                // NEW: For business class display, check if this is a regular business passenger
+                                if (currentSettings.showAllBusiness && isBusinessClassZone(zone.name) && !hasSpecialRequirements(passenger)) {
+                                    cellClass = 'seat-business-regular';
+                                }
+                            }
                             
                             html += `<td class="${cellClass} ${tierClass}">`;
                             if (passenger) {
-                                // NEW: Enhanced tier display with stars for EMER/PLAT
+                                // Use the formatMealDisplay function to show BBML
+                                const mealDisplay = formatMealDisplay(passenger.meal);
                                 const tierIcon = (passenger.tier === 'EMER' || passenger.tier === 'PLAT') ? '⭐ ' : '';
                                 html += `<div class="seat-cell">
                                     <div class="seat-name">${generateUpsideDownText(passenger.title + '/' + passenger.name.split('/')[0])}</div>
                                     <div class="seat-tier">${tierIcon}${generateUpsideDownText(passenger.tier || '')}</div>
-                                    ${passenger.meal ? `<div class="seat-meal-info">${generateUpsideDownText(passenger.meal.split(',')[0])}</div>` : ''}
+                                    ${mealDisplay ? `<div class="seat-meal-info">${generateUpsideDownText(mealDisplay)}</div>` : ''}
                                 </div>`;
                             } else {
                                 html += `<div class="seat-cell">${generateUpsideDownText(seatNumber)}</div>`;
@@ -2569,7 +2737,7 @@
             const controls = [
                 'aircraftType', 'layoutStyle', 'fontSizeSlider', 'tableWidthSlider',
                 'seatChartFontSlider', 'compactPrintMode', 'landscapeMode', 
-                'pageBreakBetweenZones', 'avoidOrphanRows', 'upsideDownMode',
+                'pageBreakBetweenZones', 'avoidOrphanRows', 'upsideDownMode', 'showAllBusiness',
                 'colSeatSlider', 'colTitleSlider', 'colNameSlider', 'colTierSlider', 'colMealSlider'
             ];
             
