@@ -497,6 +497,7 @@
             font-size: 8px;
             min-width: 100%;
             border: 2px solid #1E3A8A;
+            transition: all 0.3s ease;
         }
         
         .seat-chart th, .seat-chart td {
@@ -505,9 +506,8 @@
             text-align: center;
             vertical-align: top;
             height: 35px;
-            min-width: 40px;
-            max-width: 60px;
             overflow: hidden;
+            transition: all 0.3s ease;
         }
         
         .seat-chart th {
@@ -520,27 +520,100 @@
             background: #F1F5F9;
             font-weight: bold;
             color: #1E3A8A;
-            min-width: 25px;
         }
         
         .seat-chart .aisle {
             background: #F8FAFC;
             border-left: 2px solid #CBD5E1;
             border-right: 2px solid #CBD5E1;
-            min-width: 5px;
         }
         
-        /* Layer 1: Base alternating rows for seat chart */
-        .seat-chart tr.row-even { background-color: #f8f8f8; }
-        .seat-chart tr.row-odd { background-color: #ffffff; }
+        /* NEW: Optimized column widths */
+        .seat-chart .row-header {
+            width: 12px !important;
+            min-width: 12px !important;
+            max-width: 12px !important;
+        }
+        
+        .seat-chart .aisle {
+            width: 10px !important;
+            min-width: 10px !important;
+            max-width: 10px !important;
+        }
+        
+        .seat-chart td:not(.row-header):not(.aisle) {
+            width: 50px !important;
+            min-width: 50px !important;
+            max-width: 50px !important;
+        }
+        
+        /* Responsive column widths */
+        @media (max-width: 768px) {
+            .seat-chart .row-header {
+                width: 10px !important;
+                min-width: 10px !important;
+                max-width: 10px !important;
+            }
+            
+            .seat-chart .aisle {
+                width: 8px !important;
+                min-width: 8px !important;
+                max-width: 8px !important;
+            }
+            
+            .seat-chart td:not(.row-header):not(.aisle) {
+                width: 45px !important;
+                min-width: 45px !important;
+                max-width: 45px !important;
+            }
+        }
+        
+        @media (min-width: 1200px) {
+            .seat-chart td:not(.row-header):not(.aisle) {
+                width: 55px !important;
+                min-width: 55px !important;
+                max-width: 55px !important;
+            }
+        }
+        
+        /* Fixed widths for print */
+        @media print {
+            .seat-chart .row-header {
+                width: 12px !important;
+                min-width: 12px !important;
+                max-width: 12px !important;
+            }
+            
+            .seat-chart .aisle {
+                width: 10px !important;
+                min-width: 10px !important;
+                max-width: 10px !important;
+            }
+            
+            .seat-chart td:not(.row-header):not(.aisle) {
+                width: 50px !important;
+                min-width: 50px !important;
+                max-width: 50px !important;
+            }
+        }
+        
+        /* Layer 1: Base alternating rows for seat chart - ENHANCED */
+        .seat-chart tr.row-even { background-color: #e8e8e8 !important; }
+        .seat-chart tr.row-odd { background-color: #ffffff !important; }
         
         /* Layer 2: Occupancy states (override row colors) */
         .seat-occupied { background: #E0F2FE !important; border: 1px solid #0EA5E9; }
         .seat-empty { background: #F8FAFC !important; color: #94A3B8; }
         
         /* Layer 3: Tier overrides (highest priority - override everything) */
-        .seat-tier-emer { background: #FEF3C7 !important; }
-        .seat-tier-plat { background: #E0E7FF !important; }
+        .seat-tier-emer { 
+            background: #FEF3C7 !important; 
+            border: 2px solid #444444 !important; /* Dark gray for print */
+        }
+        .seat-tier-plat { 
+            background: #E0E7FF !important; 
+            border: 2px solid #888888 !important; /* Medium gray for print */
+        }
         .seat-tier-gold { background: #FEF7CD !important; }
         
         /* Layer 3: Meal indicators */
@@ -552,6 +625,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            gap: 1px;
         }
         
         .seat-name {
@@ -560,11 +634,25 @@
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 100%;
+            font-size: 7px;
         }
         
         .seat-tier {
             font-weight: bold;
+            font-size: 8px;
+            color: #1E3A8A;
+        }
+        
+        .seat-tier-emer .seat-tier,
+        .seat-tier-plat .seat-tier {
+            font-size: 9px !important;
+            font-weight: 900;
+        }
+        
+        .seat-meal-info {
             font-size: 7px;
+            color: #DC2626;
+            font-weight: bold;
         }
         
         .zone-boundary {
@@ -573,6 +661,7 @@
         
         .seat-chart-controls {
             display: flex;
+            flex-wrap: wrap;
             gap: 15px;
             align-items: center;
             margin-bottom: 10px;
@@ -588,6 +677,39 @@
         
         .seat-chart-controls input[type="range"] {
             width: 150px;
+        }
+        
+        .magic-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #8B5CF6, #A78BFA);
+            color: white;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .magic-option .toggle-switch {
+            width: 40px;
+            height: 20px;
+        }
+        
+        .magic-option .toggle-slider:before {
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+        
+        .magic-description {
+            font-size: 10px;
+            font-style: italic;
         }
         
         body.compact-print-mode .stats { padding: 3px; font-size: 8px; }
@@ -654,9 +776,36 @@
                 border: 1px solid #666;
             }
             
-            .seat-tier-emer { background: #e0e0e0 !important; }
-            .seat-tier-plat { background: #d0d0d0 !important; }
-            .seat-tier-gold { background: #f5f5f5 !important; }
+            /* Ensure alternating rows are visible in print */
+            .seat-chart tr.row-even { 
+                background-color: #e8e8e8 !important; 
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+            
+            .seat-chart tr.row-odd { 
+                background-color: #ffffff !important; 
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+            
+            .seat-tier-emer { 
+                background: #e0e0e0 !important; 
+                border: 2px solid #444444 !important;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+            .seat-tier-plat { 
+                background: #d0d0d0 !important; 
+                border: 2px solid #888888 !important;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+            .seat-tier-gold { 
+                background: #f5f5f5 !important;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
             
             .seat-meal {
                 font-weight: bold;
@@ -990,35 +1139,37 @@
                 <li>The tool auto-detects aircraft type and selects the optimal layout</li>
                 <li>Seat Chart view shows visual seating with color-coded tiers and meals</li>
                 <li>Adjust font sizes and table width for perfect printing</li>
+                <li>Try the <strong>Super Pro Max Ultra Secret Magic Trick</strong> for aft perspective views!</li>
             </ul>
         </div>
         
         <div id="versionContent" class="help-content">
-            <h3>Version 3.0 - Smart Flow Update</h3>
-            <p><strong>New Smart Features:</strong></p>
+            <h3>Version 3.1 - Magic Aft View Update</h3>
+            <p><strong>New Magical Features:</strong></p>
             <ul>
-                <li><strong>Auto-detection</strong> of aircraft type and optimal layout</li>
-                <li><strong>Live preview</strong> - changes update report in real-time</li>
-                <li><strong>Two-tier workflow</strong> - simple for quick tasks, advanced for detailed work</li>
-                <li><strong>Smart defaults</strong> - tool "just works" without configuration</li>
-                <li><strong>Column width controls</strong> - fine-tune table layout</li>
-                <li><strong>Reset to defaults</strong> - easily return to auto-detection</li>
-                <li><strong>Enhanced Seat Chart</strong> - alternating row colors for better readability</li>
-            </ul>
-            <p><strong>Improved User Experience:</strong></p>
-            <ul>
-                <li>Faster for common use cases (90% of users)</li>
-                <li>Clear advanced path for power users</li>
-                <li>Better mobile experience with less tapping</li>
-                <li>Intuitive controls with immediate feedback</li>
+                <li><strong>Super Pro Max Ultra Secret Magic Trick</strong> - Generate upside-down text for perfect aft perspective when printed and turned</li>
+                <li><strong>Enhanced Tier Display</strong> - Stars for EMER/PLAT with larger, bolder text</li>
+                <li><strong>Better Alternating Rows</strong> - Visible in print with optimized colors</li>
+                <li><strong>Optimized Column Widths</strong> - More space for passenger info, less for aisles</li>
+                <li><strong>Thicker Borders for EMER/PLAT</strong> - Easy identification in black & white print</li>
             </ul>
             
-            <p><strong>Platform Support:</strong></p>
+            <p><strong>Seat Chart Improvements:</strong></p>
             <ul>
-                <li>Android (with XClipper app)</li>
-                <li>iOS (native selection)</li>
-                <li>Windows/Mac (desktop optimized)</li>
+                <li>Fixed A330-300 business class syntax error</li>
+                <li>Better visual hierarchy with improved spacing</li>
+                <li>Responsive column widths for different screen sizes</li>
+                <li>Print-optimized alternating rows that actually show up</li>
             </ul>
+            
+            <p><strong>How to Use the Magic Trick:</strong></p>
+            <ol>
+                <li>Check the "Super Pro Max Ultra Secret Magic Trick" option</li>
+                <li>Generate your seat chart</li>
+                <li>Print the report</li>
+                <li>Physically turn the paper 180 degrees</li>
+                <li>Now you have perfect aft perspective view! ✨</li>
+            </ol>
         </div>
         
         <div class="input-section">
@@ -1127,6 +1278,18 @@
                         <label>Seat Chart Font Size: <span id="seatChartFontValue">8px</span></label>
                         <input type="range" id="seatChartFontSlider" min="6" max="12" value="8" step="1">
                     </div>
+                    
+                    <!-- NEW: Magic Aft View Option -->
+                    <div class="print-option">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="upsideDownMode">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <label class="toggle-label" for="upsideDownMode">
+                            <strong>Super Pro Max Ultra Secret Magic Trick After Print</strong>
+                            <span class="option-description">Generate upside-down text - print and turn paper 180° for perfect aft perspective!</span>
+                        </label>
+                    </div>
                 </div>
                 
                 <div class="settings-header">Print Layout Options</div>
@@ -1207,7 +1370,7 @@
             <p style="margin-top: 10px; font-style: italic; text-align: center;">Thank you all for your help during testing and for helping make this tool better for everyone! ✈️</p>
             
             <div class="version-info">
-                Version 3.0 | Flow Changed, Quick vs Detailed Generator , Pre-Defined Layout | Optimized printing | Seat Chart Beta | Fonts and Table Width Adjustments for Individual Preferences
+                Version 3.1 | Magic Aft View | Super Pro Max Ultra Secret Magic Trick | Enhanced Tier Display | Optimized Print Visibility
                 <br>Any bugs or feedback please contact Zayn Ikhlas when he is 21. I only do this when i'm babysitting Zayn or n/s lol XP
             </div>
         </div>
@@ -1311,12 +1474,29 @@
             landscapeMode: false,
             pageBreakZones: true,
             avoidOrphans: true,
+            upsideDownMode: false,
             activeZones: {},
             detectedAircraftType: 'narrowbody'
         };
         
         let customZones = [];
         let debounceTimer;
+        
+        // NEW: Upside-down character mapping
+        const UPSIDE_DOWN_MAP = {
+            'A': '∀', 'B': '𐐒', 'C': 'Ɔ', 'D': 'ᗡ', 'E': 'Ǝ', 'F': 'Ⅎ',
+            'G': '⅁', 'H': 'H', 'I': 'I', 'J': 'ſ', 'K': 'ꓘ', 'L': '⅂',
+            'M': 'W', 'N': 'N', 'O': 'O', 'P': 'Ԁ', 'Q': 'Ό', 'R': 'ᴚ',
+            'S': 'S', 'T': '⊥', 'U': '∩', 'V': 'Λ', 'W': 'M', 'X': 'X',
+            'Y': '⅄', 'Z': 'Z', '0': '0', '1': 'Ɩ', '2': 'ᄅ', '3': 'Ɛ',
+            '4': 'ᔭ', '5': 'ϛ', '6': '9', '7': 'ㄥ', '8': '8', '9': '6',
+            '/': '/', '|': '|', ' ': ' ', '⭐': '⭐', ',': ',', '-': '-',
+            'a': '∀', 'b': '𐐒', 'c': 'Ɔ', 'd': 'ᗡ', 'e': 'Ǝ', 'f': 'Ⅎ',
+            'g': '⅁', 'h': 'H', 'i': 'I', 'j': 'ſ', 'k': 'ꓘ', 'l': '⅂',
+            'm': 'W', 'n': 'N', 'o': 'O', 'p': 'Ԁ', 'q': 'Ό', 'r': 'ᴚ',
+            's': 'S', 't': '⊥', 'u': '∩', 'v': 'Λ', 'w': 'M', 'x': 'X',
+            'y': '⅄', 'z': 'Z'
+        };
         
         // Helper Functions
         function truncateName(name) {
@@ -1327,6 +1507,15 @@
                 const trimmed = part.trim();
                 return trimmed.length > 15 ? trimmed.substring(0, 6) + '..' : trimmed;
             }).join('/');
+        }
+        
+        // NEW: Upside-down text generator
+        function generateUpsideDownText(text) {
+            if (!text || !currentSettings.upsideDownMode) return text;
+            
+            return text.split('').reverse().map(char => 
+                UPSIDE_DOWN_MAP[char] || char
+            ).join('');
         }
         
         function debounce(func, wait) {
@@ -1367,6 +1556,7 @@
             currentSettings.landscapeMode = document.getElementById('landscapeMode').checked;
             currentSettings.pageBreakZones = document.getElementById('pageBreakBetweenZones').checked;
             currentSettings.avoidOrphans = document.getElementById('avoidOrphanRows').checked;
+            currentSettings.upsideDownMode = document.getElementById('upsideDownMode').checked;
             
             // Column widths
             currentSettings.columnWidths.seat = parseInt(document.getElementById('colSeatSlider').value);
@@ -1421,6 +1611,7 @@
                 landscapeMode: false,
                 pageBreakZones: true,
                 avoidOrphans: true,
+                upsideDownMode: false,
                 activeZones: {},
                 detectedAircraftType: 'narrowbody'
             };
@@ -1435,6 +1626,7 @@
             document.getElementById('landscapeMode').checked = false;
             document.getElementById('pageBreakBetweenZones').checked = true;
             document.getElementById('avoidOrphanRows').checked = true;
+            document.getElementById('upsideDownMode').checked = false;
             
             // Column widths
             document.getElementById('colSeatSlider').value = 10;
@@ -1789,7 +1981,7 @@
                     }
                 }
                 
-                const flightInfoHTML = `<div class="flight-info">Flight: ${flightInfo.flightNumber} | Route: ${flightInfo.sector} | Date: ${flightInfo.date} ${flightInfo.stdLocal} | ACFT: ${flightInfo.aircraft}</div>`;
+                const flightInfoHTML = `<div class="flight-info">${generateUpsideDownText('Flight: ' + flightInfo.flightNumber + ' | Route: ' + flightInfo.sector + ' | Date: ' + flightInfo.date + ' ' + flightInfo.stdLocal + ' | ACFT: ' + flightInfo.aircraft)}</div>`;
                 const globalSummaryHTML = generateGlobalSummary(filtered);
                 
                 let seatChartControls = '';
@@ -1800,6 +1992,7 @@
                                 <input type="range" id="seatChartFontSliderInline" min="6" max="12" value="${currentSettings.seatChartFontSize}" step="1" oninput="document.getElementById('seatChartFontSlider').value = this.value; updateSettingsFromControls(); generateReportWithCurrentSettings();" style="width: 120px;">
                                 <span>${currentSettings.seatChartFontSize}px</span>
                             </label>
+                            ${currentSettings.upsideDownMode ? '<div class="magic-option"><span>✨ Magic Mode Active - Print and turn paper 180°</span></div>' : ''}
                         </div>
                     `;
                 }
@@ -1844,7 +2037,7 @@
                         
                         const pageBreakClass = currentSettings.pageBreakZones && zoneIndex > 0 ? 'page-break' : '';
                         tableContent += `<div class="zone-section ${pageBreakClass}">`;
-                        tableContent += `<div class="zone-header">${zone.name} - Rows ${zone.start}-${zone.end}</div>`;
+                        tableContent += `<div class="zone-header">${generateUpsideDownText(zone.name + ' - Rows ' + zone.start + '-' + zone.end)}</div>`;
                         tableContent += generateZoneStats(zonePax);
                         
                         if (effectiveLayout === 'seat-chart') {
@@ -1865,12 +2058,12 @@
                                 
                                 tableContent += `<div class="tables-container">`;
                                 tableContent += `<div class="table-wrapper">`;
-                                tableContent += `<div class="table-title">PORT SIDE (ABCDE)</div>`;
+                                tableContent += `<div class="table-title">${generateUpsideDownText('PORT SIDE (ABCDE)')}</div>`;
                                 tableContent += generateSideStats(portPax, 'Port');
                                 tableContent += generateTable(portPax, true, currentSettings.detectedAircraftType);
                                 tableContent += `</div>`;
                                 tableContent += `<div class="table-wrapper">`;
-                                tableContent += `<div class="table-title">STARBOARD SIDE (FGHJK)</div>`;
+                                tableContent += `<div class="table-title">${generateUpsideDownText('STARBOARD SIDE (FGHJK)')}</div>`;
                                 tableContent += generateSideStats(starboardPax, 'Starboard');
                                 tableContent += generateTable(starboardPax, true, currentSettings.detectedAircraftType);
                                 tableContent += `</div>`;
@@ -1890,12 +2083,12 @@
                                 
                                 tableContent += `<div class="tables-container">`;
                                 tableContent += `<div class="table-wrapper">`;
-                                tableContent += `<div class="table-title">PORT SIDE (ABC)</div>`;
+                                tableContent += `<div class="table-title">${generateUpsideDownText('PORT SIDE (ABC)')}</div>`;
                                 tableContent += generateSideStats(portPax, 'Port');
                                 tableContent += generateTable(portPax, true, currentSettings.detectedAircraftType);
                                 tableContent += `</div>`;
                                 tableContent += `<div class="table-wrapper">`;
-                                tableContent += `<div class="table-title">STARBOARD SIDE (DEF)</div>`;
+                                tableContent += `<div class="table-title">${generateUpsideDownText('STARBOARD SIDE (DEF)')}</div>`;
                                 tableContent += generateSideStats(starboardPax, 'Starboard');
                                 tableContent += generateTable(starboardPax, true, currentSettings.detectedAircraftType);
                                 tableContent += `</div>`;
@@ -1913,7 +2106,7 @@
                     if (unassigned.length > 0) {
                         const pageBreakClass = currentSettings.pageBreakZones && zoneIndex > 0 ? 'page-break' : '';
                         tableContent += `<div class="zone-section ${pageBreakClass}">`;
-                        tableContent += `<div class="zone-header">UNASSIGNED SEATS</div>`;
+                        tableContent += `<div class="zone-header">${generateUpsideDownText('UNASSIGNED SEATS')}</div>`;
                         tableContent += generateUnassignedTable(unassigned, currentSettings.detectedAircraftType);
                         tableContent += `</div>`;
                     }
@@ -1931,7 +2124,7 @@
                         if (allZones.length > 0) {
                             allZones.forEach(zone => {
                                 tableContent += `<div class="zone-section">`;
-                                tableContent += `<div class="zone-header">${zone.name} - Rows ${zone.start}-${zone.end}</div>`;
+                                tableContent += `<div class="zone-header">${generateUpsideDownText(zone.name + ' - Rows ' + zone.start + '-' + zone.end)}</div>`;
                                 tableContent += generateSeatChart(filtered, zone, effectiveAircraftConfig);
                                 tableContent += `</div>`;
                             });
@@ -1953,12 +2146,12 @@
                             
                             tableContent += `<div class="tables-container">`;
                             tableContent += `<div class="table-wrapper">`;
-                            tableContent += `<div class="table-title">PORT SIDE (ABCDE)</div>`;
+                            tableContent += `<div class="table-title">${generateUpsideDownText('PORT SIDE (ABCDE)')}</div>`;
                             tableContent += generateSideStats(portPax, 'Port');
                             tableContent += generateTable(portPax, true, currentSettings.detectedAircraftType);
                             tableContent += `</div>`;
                             tableContent += `<div class="table-wrapper">`;
-                            tableContent += `<div class="table-title">STARBOARD SIDE (FGHJK)</div>`;
+                            tableContent += `<div class="table-title">${generateUpsideDownText('STARBOARD SIDE (FGHJK)')}</div>`;
                             tableContent += generateSideStats(starboardPax, 'Starboard');
                             tableContent += generateTable(starboardPax, true, currentSettings.detectedAircraftType);
                             tableContent += `</div>`;
@@ -1966,7 +2159,7 @@
                             
                             if (unassigned.length > 0) {
                                 tableContent += `<div class="zone-section">`;
-                                tableContent += `<div class="zone-header">UNASSIGNED SEATS</div>`;
+                                tableContent += `<div class="zone-header">${generateUpsideDownText('UNASSIGNED SEATS')}</div>`;
                                 tableContent += generateUnassignedTable(unassigned, currentSettings.detectedAircraftType);
                                 tableContent += `</div>`;
                             }
@@ -1986,12 +2179,12 @@
                             
                             tableContent += `<div class="tables-container">`;
                             tableContent += `<div class="table-wrapper">`;
-                            tableContent += `<div class="table-title">PORT SIDE (ABC)</div>`;
+                            tableContent += `<div class="table-title">${generateUpsideDownText('PORT SIDE (ABC)')}</div>`;
                             tableContent += generateSideStats(portPax, 'Port');
                             tableContent += generateTable(portPax, true, currentSettings.detectedAircraftType);
                             tableContent += `</div>`;
                             tableContent += `<div class="table-wrapper">`;
-                            tableContent += `<div class="table-title">STARBOARD SIDE (DEF)</div>`;
+                            tableContent += `<div class="table-title">${generateUpsideDownText('STARBOARD SIDE (DEF)')}</div>`;
                             tableContent += generateSideStats(starboardPax, 'Starboard');
                             tableContent += generateTable(starboardPax, true, currentSettings.detectedAircraftType);
                             tableContent += `</div>`;
@@ -1999,7 +2192,7 @@
                             
                             if (unassigned.length > 0) {
                                 tableContent += `<div class="zone-section">`;
-                                tableContent += `<div class="zone-header">UNASSIGNED SEATS</div>`;
+                                tableContent += `<div class="zone-header">${generateUpsideDownText('UNASSIGNED SEATS')}</div>`;
                                 tableContent += generateUnassignedTable(unassigned, currentSettings.detectedAircraftType);
                                 tableContent += `</div>`;
                             }
@@ -2011,7 +2204,7 @@
                 }
                 
                 const html = warningHtml + flightInfoHTML + globalSummaryHTML + seatChartControls + tableContent;
-                document.getElementById('reportContent').innerHTML = '<div class="success">✓ Report generated successfully! ' + filtered.length + ' passengers with special requirements found.</div>' + html;
+                document.getElementById('reportContent').innerHTML = '<div class="success">✓ Report generated successfully! ' + filtered.length + ' passengers with special requirements found.' + (currentSettings.upsideDownMode ? ' ✨ Magic mode active - print and turn paper 180° for aft perspective!' : '') + '</div>' + html;
                 
                 updateUIFromSettings();
                 
@@ -2039,10 +2232,10 @@
                 }
             });
             const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${count}`).join(', ');
-            let html = `<div class="stats"><strong>Summary:</strong> Special Meals: ${specialMealCount} | EMER/PLAT: ${tierCount}`;
-            if (bbmlCount > 0) html += ` | Infants (BBML): ${bbmlCount}`;
-            html += `<br><strong>Meal Breakdown:</strong> ${mealBreakdown || 'None'}`;
-            if (bbmlCount > 0) html += ` | BBML: ${bbmlCount}`;
+            let html = `<div class="stats"><strong>${generateUpsideDownText('Summary:')}</strong> ${generateUpsideDownText('Special Meals: ' + specialMealCount + ' | EMER/PLAT: ' + tierCount)}`;
+            if (bbmlCount > 0) html += ` | ${generateUpsideDownText('Infants (BBML): ' + bbmlCount)}`;
+            html += `<br><strong>${generateUpsideDownText('Meal Breakdown:')}</strong> ${generateUpsideDownText(mealBreakdown || 'None')}`;
+            if (bbmlCount > 0) html += ` | ${generateUpsideDownText('BBML: ' + bbmlCount)}`;
             html += `</div>`;
             return html;
         }
@@ -2062,10 +2255,10 @@
                 }
             });
             const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${count}`).join(', ');
-            let html = `<div class="stats"><strong>Zone Summary:</strong> Special Meals: ${specialMealCount} | EMER/PLAT: ${tierCount}`;
-            if (bbmlCount > 0) html += ` | Infants (BBML): ${bbmlCount}`;
-            html += `<br><strong>Zone Meal Breakdown:</strong> ${mealBreakdown || 'None'}`;
-            if (bbmlCount > 0) html += ` | BBML: ${bbmlCount}`;
+            let html = `<div class="stats"><strong>${generateUpsideDownText('Zone Summary:')}</strong> ${generateUpsideDownText('Special Meals: ' + specialMealCount + ' | EMER/PLAT: ' + tierCount)}`;
+            if (bbmlCount > 0) html += ` | ${generateUpsideDownText('Infants (BBML): ' + bbmlCount)}`;
+            html += `<br><strong>${generateUpsideDownText('Zone Meal Breakdown:')}</strong> ${generateUpsideDownText(mealBreakdown || 'None')}`;
+            if (bbmlCount > 0) html += ` | ${generateUpsideDownText('BBML: ' + bbmlCount)}`;
             html += `</div>`;
             return html;
         }
@@ -2085,9 +2278,9 @@
                 }
             });
             const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${count}`).join(', ');
-            let html = `<div class="side-stats"><strong>${sideName}:</strong> Meals: ${specialMealCount} | EMER/PLAT: ${tierCount}`;
-            if (bbmlCount > 0) html += ` | BBML: ${bbmlCount}`;
-            if (mealBreakdown) html += `<br>${mealBreakdown}`;
+            let html = `<div class="side-stats"><strong>${generateUpsideDownText(sideName + ':')}</strong> ${generateUpsideDownText('Meals: ' + specialMealCount + ' | EMER/PLAT: ' + tierCount)}`;
+            if (bbmlCount > 0) html += ` | ${generateUpsideDownText('BBML: ' + bbmlCount)}`;
+            if (mealBreakdown) html += `<br>${generateUpsideDownText(mealBreakdown)}`;
             html += `</div>`;
             return html;
         }
@@ -2095,7 +2288,7 @@
         function generateTable(passengers, showSeat = false, aircraftType = 'narrowbody') {
             if (passengers.length === 0) {
                 const headers = showSeat ? '<th>SEAT</th><th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>' : '<th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>';
-                return `<table><thead><tr>${headers}</tr></thead><tbody><tr><td colspan="${showSeat ? 5 : 4}" style="text-align:center;">No passengers</td></tr></tbody></table>`;
+                return `<table><thead><tr>${headers}</tr></thead><tbody><tr><td colspan="${showSeat ? 5 : 4}" style="text-align:center;">${generateUpsideDownText('No passengers')}</td></tr></tbody></table>`;
             }
             
             const tableClass = aircraftType === 'widebody' ? 'widebody-table' : 'narrowbody-table';
@@ -2113,8 +2306,8 @@
             `;
             
             const headers = showSeat ? 
-                `<th>SEAT</th><th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>` : 
-                `<th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>`;
+                `<th>${generateUpsideDownText('SEAT')}</th><th>${generateUpsideDownText('TITLE')}</th><th>${generateUpsideDownText('NAME')}</th><th>${generateUpsideDownText('TIER')}</th><th>${generateUpsideDownText('MEAL')}</th>` : 
+                `<th>${generateUpsideDownText('TITLE')}</th><th>${generateUpsideDownText('NAME')}</th><th>${generateUpsideDownText('TIER')}</th><th>${generateUpsideDownText('MEAL')}</th>`;
                 
             html += `<thead><tr>${headers}</tr></thead><tbody>`;
             
@@ -2124,11 +2317,11 @@
                 const infantMeal = meals.find(m => m === 'BBML') || '';
                 let mealDisplay = '';
                 if (parentMeal && infantMeal) {
-                    mealDisplay = `<strong>${parentMeal}</strong><span class="infant-meal">(+${infantMeal})</span>`;
+                    mealDisplay = `<strong>${generateUpsideDownText(parentMeal)}</strong><span class="infant-meal">${generateUpsideDownText('(+' + infantMeal + ')')}</span>`;
                 } else if (parentMeal) {
-                    mealDisplay = `<strong>${parentMeal}</strong>`;
+                    mealDisplay = `<strong>${generateUpsideDownText(parentMeal)}</strong>`;
                 } else if (infantMeal) {
-                    mealDisplay = `<strong>${infantMeal}</strong>`;
+                    mealDisplay = `<strong>${generateUpsideDownText(infantMeal)}</strong>`;
                 }
                 
                 let remarkIndicator = '';
@@ -2141,12 +2334,12 @@
                 html += `<tr>`;
                 if (showSeat) {
                     if (p.seat) {
-                        html += `<td><strong>${p.seat}</strong>${remarkIndicator}</td>`;
+                        html += `<td><strong>${generateUpsideDownText(p.seat)}</strong>${remarkIndicator}</td>`;
                     } else {
                         html += `<td style="border: 1px dashed #999; background: #fffacd;">&nbsp;</td>`;
                     }
                 }
-                html += `<td>${p.title}</td><td>${p.name}</td><td><strong>${p.tier}</strong></td><td>${mealDisplay}</td></tr>`;
+                html += `<td>${generateUpsideDownText(p.title)}</td><td>${generateUpsideDownText(p.name)}</td><td><strong>${generateUpsideDownText(p.tier)}</strong></td><td>${mealDisplay}</td></tr>`;
             });
             
             html += `</tbody></table>${styles}`;
@@ -2160,7 +2353,7 @@
             
             const tableClass = aircraftType === 'widebody' ? 'widebody-table' : 'narrowbody-table';
             let html = `<table class="${tableClass}">`;
-            html += `<thead><tr><th>SEAT</th><th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th></tr></thead><tbody>`;
+            html += `<thead><tr><th>${generateUpsideDownText('SEAT')}</th><th>${generateUpsideDownText('TITLE')}</th><th>${generateUpsideDownText('NAME')}</th><th>${generateUpsideDownText('TIER')}</th><th>${generateUpsideDownText('MEAL')}</th></tr></thead><tbody>`;
             
             passengers.forEach(p => {
                 const meals = p.meal ? p.meal.split(',').map(m => m.trim()) : [];
@@ -2168,16 +2361,16 @@
                 const infantMeal = meals.find(m => m === 'BBML') || '';
                 let mealDisplay = '';
                 if (parentMeal && infantMeal) {
-                    mealDisplay = `<strong>${parentMeal}</strong><span class="infant-meal">(+${infantMeal})</span>`;
+                    mealDisplay = `<strong>${generateUpsideDownText(parentMeal)}</strong><span class="infant-meal">${generateUpsideDownText('(+' + infantMeal + ')')}</span>`;
                 } else if (parentMeal) {
-                    mealDisplay = `<strong>${parentMeal}</strong>`;
+                    mealDisplay = `<strong>${generateUpsideDownText(parentMeal)}</strong>`;
                 } else if (infantMeal) {
-                    mealDisplay = `<strong>${infantMeal}</strong>`;
+                    mealDisplay = `<strong>${generateUpsideDownText(infantMeal)}</strong>`;
                 }
                 
                 html += `<tr>`;
                 html += `<td style="border: 1px dashed #999; background: #fffacd;">&nbsp;</td>`;
-                html += `<td>${p.title}</td><td>${p.name}</td><td><strong>${p.tier}</strong></td><td>${mealDisplay}</td>`;
+                html += `<td>${generateUpsideDownText(p.title)}</td><td>${generateUpsideDownText(p.name)}</td><td><strong>${generateUpsideDownText(p.tier)}</strong></td><td>${mealDisplay}</td>`;
                 html += `</tr>`;
             });
             
@@ -2204,14 +2397,14 @@
             
             let html = `<div class="seat-chart-container">
                 <table class="seat-chart" data-font-size="${currentSettings.seatChartFontSize}">
-                <thead><tr><th class="row-header">Row</th>`;
+                <thead><tr><th class="row-header">${generateUpsideDownText('Row')}</th>`;
             
             // Create header row with seat letters
             columns.forEach(col => {
                 if (col === '|') {
                     html += `<th class="aisle"></th>`;
                 } else {
-                    html += `<th>${col}</th>`;
+                    html += `<th>${generateUpsideDownText(col)}</th>`;
                 }
             });
             
@@ -2231,7 +2424,7 @@
                 const rowClass = (row % 2 === 0) ? 'row-even' : 'row-odd';
                 const additionalClasses = isZoneBoundary ? `zone-boundary ${rowClass}` : rowClass;
                 
-                html += `<tr class="${additionalClasses}"><td class="row-header">${rowNum}</td>`;
+                html += `<tr class="${additionalClasses}"><td class="row-header">${generateUpsideDownText(rowNum)}</td>`;
                 
                 // Check if this is an A330-300 business class row that needs merging
                 const isA333BusinessRow = aircraftConfig === '333' && 
@@ -2239,10 +2432,11 @@
                                          seatMap.businessClassRows.includes(row) &&
                                          zone.name === 'B';
                 
-                if (isA333BusinessRow && seatMap.businessClassMerges) {
+                // FIXED: Changed isExceptio.nRow to isExceptionRow
+                const isExceptionRow = isA333BusinessRow && [2, 5, 7].includes(row);
+                
+                if (isA333BusinessRow && seatMap.businessClassMerges && !isExceptionRow) {
                     // A330-300 Business Class with merged seats
-                    const isExceptio.nRow = [2, 5, 7].includes(row);
-                    
                     let colIndex = 0;
                     while (colIndex < columns.length) {
                         const col = columns[colIndex];
@@ -2285,13 +2479,15 @@
                                 
                                 html += `<td class="${cellClass} ${tierClass}" colspan="${colspan}">`;
                                 if (passenger) {
+                                    // NEW: Enhanced tier display with stars for EMER/PLAT
+                                    const tierIcon = (passenger.tier === 'EMER' || passenger.tier === 'PLAT') ? '⭐ ' : '';
                                     html += `<div class="seat-cell">
-                                        <div class="seat-name">${passenger.title}/${passenger.name.split('/')[0]}</div>
-                                        <div class="seat-tier">${passenger.tier || ''}</div>
-                                        ${passenger.meal ? `<div class="seat-meal">${passenger.meal.split(',')[0]}</div>` : ''}
+                                        <div class="seat-name">${generateUpsideDownText(passenger.title + '/' + passenger.name.split('/')[0])}</div>
+                                        <div class="seat-tier">${tierIcon}${generateUpsideDownText(passenger.tier || '')}</div>
+                                        ${passenger.meal ? `<div class="seat-meal-info">${generateUpsideDownText(passenger.meal.split(',')[0])}</div>` : ''}
                                     </div>`;
                                 } else {
-                                    html += `<div class="seat-cell">${seatNumber}</div>`;
+                                    html += `<div class="seat-cell">${generateUpsideDownText(seatNumber)}</div>`;
                                 }
                                 html += `</td>`;
                                 
@@ -2310,13 +2506,15 @@
                             
                             html += `<td class="${cellClass} ${tierClass}">`;
                             if (passenger) {
+                                // NEW: Enhanced tier display with stars for EMER/PLAT
+                                const tierIcon = (passenger.tier === 'EMER' || passenger.tier === 'PLAT') ? '⭐ ' : '';
                                 html += `<div class="seat-cell">
-                                    <div class="seat-name">${passenger.title}/${passenger.name.split('/')[0]}</div>
-                                    <div class="seat-tier">${passenger.tier || ''}</div>
-                                    ${passenger.meal ? `<div class="seat-meal">${passenger.meal.split(',')[0]}</div>` : ''}
+                                    <div class="seat-name">${generateUpsideDownText(passenger.title + '/' + passenger.name.split('/')[0])}</div>
+                                    <div class="seat-tier">${tierIcon}${generateUpsideDownText(passenger.tier || '')}</div>
+                                    ${passenger.meal ? `<div class="seat-meal-info">${generateUpsideDownText(passenger.meal.split(',')[0])}</div>` : ''}
                                 </div>`;
                             } else {
-                                html += `<div class="seat-cell">${seatNumber}</div>`;
+                                html += `<div class="seat-cell">${generateUpsideDownText(seatNumber)}</div>`;
                             }
                             html += `</td>`;
                             colIndex++;
@@ -2335,13 +2533,15 @@
                             
                             html += `<td class="${cellClass} ${tierClass}">`;
                             if (passenger) {
+                                // NEW: Enhanced tier display with stars for EMER/PLAT
+                                const tierIcon = (passenger.tier === 'EMER' || passenger.tier === 'PLAT') ? '⭐ ' : '';
                                 html += `<div class="seat-cell">
-                                    <div class="seat-name">${passenger.title}/${passenger.name.split('/')[0]}</div>
-                                    <div class="seat-tier">${passenger.tier || ''}</div>
-                                    ${passenger.meal ? `<div class="seat-meal">${passenger.meal.split(',')[0]}</div>` : ''}
+                                    <div class="seat-name">${generateUpsideDownText(passenger.title + '/' + passenger.name.split('/')[0])}</div>
+                                    <div class="seat-tier">${tierIcon}${generateUpsideDownText(passenger.tier || '')}</div>
+                                    ${passenger.meal ? `<div class="seat-meal-info">${generateUpsideDownText(passenger.meal.split(',')[0])}</div>` : ''}
                                 </div>`;
                             } else {
-                                html += `<div class="seat-cell">${seatNumber}</div>`;
+                                html += `<div class="seat-cell">${generateUpsideDownText(seatNumber)}</div>`;
                             }
                             html += `</td>`;
                         }
@@ -2369,7 +2569,7 @@
             const controls = [
                 'aircraftType', 'layoutStyle', 'fontSizeSlider', 'tableWidthSlider',
                 'seatChartFontSlider', 'compactPrintMode', 'landscapeMode', 
-                'pageBreakBetweenZones', 'avoidOrphanRows',
+                'pageBreakBetweenZones', 'avoidOrphanRows', 'upsideDownMode',
                 'colSeatSlider', 'colTitleSlider', 'colNameSlider', 'colTierSlider', 'colMealSlider'
             ];
             
