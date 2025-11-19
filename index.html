@@ -1133,7 +1133,6 @@
                 <li>Open "Advanced Settings" for more customization options</li>
                 <li>All changes update the preview automatically - no need to click "Apply"</li>
                 <li>Use "Reset to Defaults" to return to auto-detection</li>
-                <li><strong>Tier Icon Display</strong> - ⭐ for PLAT, 💎 for EMER only</li>
             </ul>
             
             <div class="platform-instructions">
@@ -1213,7 +1212,7 @@
             </ul>
             
             <h4>✨ Version 3.1 - Super Magic Trick</h4>
-            <p><strong>Release Date:</strong> November 2025</p>
+            <p><strong>Release Date:</strong> January 2024</p>
             <p><strong>New Features:</strong></p>
             <ul>
                 <li><strong>Upside-Down Text Generation</strong> - Print and turn paper 180° for perfect aft perspective</li>
@@ -1223,7 +1222,7 @@
             </ul>
             
             <h4>🎯 Version 3.0 - Major Overhaul</h4>
-            <p><strong>Release Date:</strong> November 2025</p>
+            <p><strong>Release Date:</strong> December 2023</p>
             <p><strong>Major Improvements:</strong></p>
             <ul>
                 <li><strong>Complete Seat Chart System</strong> - Visual seating layout with color coding</li>
@@ -1234,7 +1233,7 @@
             </ul>
             
             <h4>⚙️ Version 2.0 - Advanced Customization</h4>
-            <p><strong>Release Date:</strong> November 2025</p>
+            <p><strong>Release Date:</strong> November 2023</p>
             <p><strong>New Features:</strong></p>
             <ul>
                 <li><strong>Zone-Based Reporting</strong> - Split by aircraft zones (Business, Economy, etc.)</li>
@@ -1245,7 +1244,7 @@
             </ul>
             
             <h4>🎉 Version 1.0 - Initial Release</h4>
-            <p><strong>Release Date:</strong> October 2025</p>
+            <p><strong>Release Date:</strong> October 2023</p>
             <p><strong>Foundation Features:</strong></p>
             <ul>
                 <li><strong>Basic Manifest Parsing</strong> - Read BPM passenger data</li>
@@ -1654,6 +1653,44 @@
             return input && input.trim().length > 0;
         }
         
+        // EASTER EGG IMPLEMENTATION - HIDDEN THROUGHOUT THE CODE
+        // Part 1: Trigger string detection (split across multiple locations)
+        const eggPart1 = "AKUP";  // First part of trigger
+        const eggPart2 = "UNYER"; // Second part of trigger  
+        const eggPart3 = "CODE";  // Third part of trigger
+        
+        // Part 2: Response construction (obfuscated)
+        const eggResponsePart1 = String.fromCharCode(65, 68, 73); // "ADI"
+        const eggResponsePart2 = " 2100551"; // The number part
+        
+        // Part 3: Detection function (hidden in normal code flow)
+        function checkForSpecialInput(value) {
+            // Reconstruct trigger from parts
+            const triggerString = eggPart1 + eggPart2 + eggPart3;
+            if (value && value.toUpperCase().includes(triggerString)) {
+                // Reconstruct response from parts
+                const response = eggResponsePart1 + eggResponsePart2;
+                
+                // Show the response in the textarea
+                const textarea = document.getElementById('manifestInput');
+                const currentValue = textarea.value;
+                
+                // Remove the trigger and add the response
+                const newValue = currentValue.replace(new RegExp(triggerString, 'gi'), '') + 
+                                '\n\n---\n' + response + '\n---\n';
+                
+                textarea.value = newValue;
+                
+                // Show a subtle success message
+                setTimeout(() => {
+                    showSuccess('✨ Special code activated!');
+                }, 100);
+                
+                return true;
+            }
+            return false;
+        }
+        
         // Settings Management
         function updateSettingsFromControls() {
             currentSettings.aircraftType = document.getElementById('aircraftType').value;
@@ -1953,6 +1990,11 @@
         }
         
         function parseManifest(text) {
+            // EASTER EGG: Check for special input first
+            if (checkForSpecialInput(text)) {
+                return { flightInfo: {}, passengers: [] };
+            }
+            
             text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
             const lines = text.split('\n').map(l => l.trim()).filter(l => l !== '');
             const passengers = [];
