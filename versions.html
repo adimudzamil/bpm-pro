@@ -115,11 +115,22 @@
             font-weight: 600;
         }
         
+        .version .info-badge {
+            display: inline-block;
+            background: #F59E0B;
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-right: 8px;
+            font-weight: 600;
+        }
+        
         .version .feature {
             background: #ECFDF5;
             border-left: 3px solid #10B981;
-            padding: 8px;
-            margin: 5px 0;
+            padding: 12px;
+            margin: 8px 0;
             border-radius: 4px;
         }
         
@@ -139,7 +150,49 @@
             border-radius: 4px;
         }
         
-        /* REMOVED the special .current-version styling */
+        .version .info {
+            background: #FFFBEB;
+            border-left: 3px solid #F59E0B;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 4px;
+        }
+        
+        .backup-links {
+            background: #FEF3C7;
+            border-left: 3px solid #F59E0B;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+        }
+        
+        .backup-links h4 {
+            color: #92400E;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .backup-links ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .backup-links li {
+            margin-bottom: 6px;
+        }
+        
+        .backup-links a {
+            color: #1E40AF;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .backup-links a:hover {
+            text-decoration: underline;
+            color: #1E3A8A;
+        }
         
         .legend {
             display: flex;
@@ -176,6 +229,10 @@
             background: #8B5CF6;
         }
         
+        .legend-color.info {
+            background: #F59E0B;
+        }
+        
         .footer {
             margin-top: 30px;
             text-align: center;
@@ -183,6 +240,16 @@
             border-top: 1px solid #E2E8F0;
             color: #64748B;
             font-size: 12px;
+        }
+        
+        .footer a {
+            color: #1E40AF;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
         }
         
         @media (max-width: 768px) {
@@ -215,15 +282,64 @@
                 <span>Improvement</span>
             </div>
             <div class="legend-item">
+                <div class="legend-color info"></div>
+                <span>Information</span>
+            </div>
+            <div class="legend-item">
                 <div class="legend-color fix"></div>
                 <span>Bug Fix</span>
             </div>
         </div>
         
-        <!-- Version 3.9 - NOW REGULAR STYLE -->
+        <!-- Version 4.0 -->
+        <div class="version">
+            <h3>🚀 Version 4.0 - Dual Chart for 737, Box style Business class seat chart for every aircraft, Backup URLs</h3>
+            <div class="date">Current Version - Latest Release</div>
+            
+            <div class="feature">
+                <span class="feature-badge">FEATURE</span>
+                <strong>Dual Chart for 737 and Box style dedicated Business class Seat chart for every aircraft.</strong>
+                <ul>
+                    <li>Two seat charts for 737 aircraft, in one paper, use dual seat chart to paste two different manifest.</li>
+                    <li>Dedicated Business class charts for every aircraft with BIG font size option</li>
+                    <li>Aft view options</li>
+                    <li>Toggle between single chart and dual chart modes</li>
+                    <li>Optimized print layout for both charts</li>
+                </ul>
+            </div>
+            
+            <div class="info">
+                <span class="info-badge">IMPORTANT</span>
+                <strong>Backup URL Information</strong>
+                <p style="margin-top: 8px;">The BPM Pro Tool is available at multiple backup URLs in case the main site is unavailable:</p>
+                
+                <div class="backup-links">
+                    <h4>🔗 Backup URLs:</h4>
+                    <ul>
+                        <li><a href="https://adimudzamil.github.io/bpm/" target="_blank">https://adimudzamil.github.io/bpm/</a> - (Latest commit)</li>
+                        <li><a href="https://adimudzamil.github.io/bpm-pro/" target="_blank">https://adimudzamil.github.io/bpm-pro/</a> - Pro version  (stable)</li>
+                        <li><a href="https://adimudzamil.github.io/bpm-pro-max/" target="_blank">https://adimudzamil.github.io/bpm-pro-max/</a> - Pro Max version (ok)</li>
+                        <li><a href="https://adimudzamil.github.io/bpm-pro-max-ultra/" target="_blank">https://adimudzamil.github.io/bpm-pro-max-ultra/</a> - Pro Max Ultra version (non stable, testing playground)</li>
+                    </ul>
+                    <p><strong>Note:</strong> These are all different versions with varying features since i kept testing and breaking every version. Bookmark multiple URLs to ensure you always have access.</p>
+                </div>
+            </div>
+            
+            <div class="improvement">
+                <span class="improvement-badge">IMPROVEMENT</span>
+                <strong>More seat chart variations and font size options</strong>
+                <ul>
+                
+                    <li>Consistent formatting across both webview and print view</li>
+                
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Version 3.9 -->
         <div class="version">
             <h3>🚀 Version 3.9 - Left-Aligned Empty Seat Numbers</h3>
-            <div class="date">Current Version - Latest Release</div>
+            <div class="date">Previous Version</div>
             
             <div class="feature">
                 <span class="feature-badge">FEATURE</span>
@@ -487,10 +603,15 @@
         </div>
         
         <div class="footer">
-            <p>
-            "Banyak nya special meals nak tulis"</p>
-            <p>"How can i help?"
-        </p>
+            <p>"Banyak nya special meals nak tulis"</p>
+            <p>"How can i help?"</p>
+            <p style="margin-top: 15px;">
+                <strong>Backup URLs:</strong> 
+                <a href="https://adimudzamil.github.io/bpm/" target="_blank">Basic</a> • 
+                <a href="https://adimudzamil.github.io/bpm-pro/" target="_blank">Pro</a> • 
+                <a href="https://adimudzamil.github.io/bpm-pro-max/" target="_blank">Pro Max</a> • 
+                <a href="https://adimudzamil.github.io/bpm-pro-max-ultra/" target="_blank">Pro Max Ultra</a>
+            </p>
         </div>
     </div>
 
