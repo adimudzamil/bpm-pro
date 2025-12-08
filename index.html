@@ -1081,6 +1081,7 @@
         }
         
         @media print {
+            
             /* Ultra-minimal margins for maximum printable area */
             @page {
                 margin: 0 !important;
@@ -1227,6 +1228,12 @@
             
             body { background: white; padding: 0; }
             .input-section, button, .help-section, .help-content, .seat-chart-controls { display: none; }
+            /* NEW: Add dual chart specific hiding */
+.dual-chart-toggle,
+#dualChartIndicator,
+#dualChartInstructions {
+    display: none !important;
+}
             body.landscape-mode @page { size: A4 landscape; }
             body.compact-print-mode @page { margin: 0.1cm !important; }
             body.avoid-orphan-rows tr { page-break-inside: avoid; }
