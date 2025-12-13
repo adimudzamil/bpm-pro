@@ -1285,26 +1285,49 @@ body.landscape-mode::before {
         height: 30px;
         font-size: 0.875rem;
     }
-    /* Simple iframe fix */
-.help-content .iframe-container {
+/* ===== IFRAME FULL-WIDTH FIX - HIGHEST PRIORITY ===== */
+.help-content {
+    max-width: none !important;
     width: 100% !important;
-    max-width: 100% !important;
-}
-
-.help-content iframe {
-    width: 100% !important;
-    height: 500px !important;
-    min-height: 400px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
 }
 
 .full-tutorial {
-    width: 100%;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 20px 0 !important;
 }
 
-.help-content {
-    width: 100%;
-    overflow: hidden;
+.iframe-container {
+    position: relative !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 600px !important;
+    border: 1px solid #E5E7EB !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    background: white !important;
+    box-sizing: border-box !important;
+}
+
+.iframe-container iframe {
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+    display: block !important;
+}
+
+#iframe-loading,
+#iframe-loading-version {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    z-index: 10 !important;
 }
 }
