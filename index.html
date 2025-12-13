@@ -2651,6 +2651,50 @@ manifestInput.addEventListener('input', debounce(() => {
         showAutoDetectionIndicator();
     }
 }, 500));
+
+// webview and print view mismatch colour fix
+function printWithColors() {
+    // Store print event listener
+    const beforePrint = () => {
+        // Force background colors before printing
+        document.body.style.webkitPrintColorAdjust = 'exact';
+        document.body.style.printColorAdjust = 'exact';
+    };
+    
+    const afterPrint = () => {
+        // Restore after printing
+        document.body.style.webkitPrintColorAdjust = '';
+        document.body.style.printColorAdjust = '';
+    };
+    
+    // Set up event listeners
+    if (window.matchMedia) {
+        const mediaQueryList = window.matchMedia('print');
+        mediaQueryList.addListener((mql) => {
+            if (mql.matches) {
+                beforePrint();
+            } else {
+                afterPrint();
+            }
+        });
+    }
+    
+    // Override the print button
+    const printButtons = document.querySelectorAll('[onclick*="window.print()"]');
+    printButtons.forEach(btn => {
+        btn.onclick = (e) => {
+            e.preventDefault();
+            beforePrint();
+            setTimeout(() => {
+                window.print();
+                setTimeout(afterPrint, 100);
+            }, 100);
+        };
+    });
+}
+
+// Call this function on page load
+document.addEventListener('DOMContentLoaded', printWithColors);
             // Keyboard shortcut
             document.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {

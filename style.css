@@ -488,7 +488,7 @@ tbody tr:nth-child(odd) { background-color: var(--color-white); }
 .seat-chart {
     border-collapse: collapse;
     min-width: 100%;
-    border: 2px solid var(--color-primary) !important;
+    border: 2px solid #1E3A8A !important;
     transition: all var(--transition-normal);
 }
 
@@ -503,21 +503,21 @@ tbody tr:nth-child(odd) { background-color: var(--color-white); }
     transition: all var(--transition-normal);
 }
 
-/* Seat chart headers */
+/* Seat chart headers - UPDATED WITH HEX VALUES */
 .seat-chart th,
 .seat-chart .row-header {
-    background: var(--color-primary) !important;
-    color: var(--color-white) !important;
+    background: #1E3A8A !important;
+    color: #FFFFFF !important;
     font-weight: bold;
     text-align: center;
-    border: 1px solid var(--color-primary) !important;
+    border: 1px solid #1E3A8A !important;
     padding: 0;
 }
 
 .seat-chart .aisle {
-    background: var(--color-primary) !important;
-    border-left: 2px solid var(--color-gray-200) !important;
-    border-right: 2px solid var(--color-gray-200) !important;
+    background: #1E3A8A !important;
+    border-left: 2px solid #E2E8F0 !important;
+    border-right: 2px solid #E2E8F0 !important;
 }
 
 /* Optimized column widths */
@@ -609,29 +609,29 @@ tbody tr:nth-child(odd) { background-color: var(--color-white); }
     margin-top: 2px;
 }
 
-/* Seat occupancy states */
+/* Seat occupancy states - UPDATED WITH HEX VALUES */
 .seat-occupied { 
-    background: #e0e0e0 !important; 
+    background: #E0E0E0 !important; 
     border: 1px solid #000000 !important;
 }
 .seat-empty { 
-    background: var(--color-white) !important; 
-    color: var(--color-gray-400);
-    border: 1px solid var(--color-gray-200) !important;
+    background: #FFFFFF !important; 
+    color: #94A3B8;
+    border: 1px solid #E2E8F0 !important;
 }
 .seat-business-regular { 
-    background: var(--color-white) !important; 
-    border: 1px solid var(--color-gray-200) !important;
+    background: #FFFFFF !important; 
+    border: 1px solid #E2E8F0 !important;
 }
 
-/* Tier overrides */
+/* Tier overrides - UPDATED WITH HEX VALUES */
 .seat-tier-emer, .seat-tier-plat { 
-    background: #d4d4d4 !important; 
+    background: #D4D4D4 !important; 
     border: 1px solid #000000 !important;
 }
 .seat-tier-gold { 
-    background: var(--color-white) !important; 
-    border: 1px solid var(--color-gray-200) !important;
+    background: #FFFFFF !important; 
+    border: 1px solid #E2E8F0 !important;
 }
 
 /* ===== MESSAGES & FEEDBACK ===== */
@@ -1001,17 +1001,46 @@ tbody tr:nth-child(odd) { background-color: var(--color-white); }
     font-style: italic;
 }
 
-/* ===== PRINT STYLES ===== */
+/* ===== PRINT STYLES - MINIMAL MARGINS EDGE-TO-EDGE ===== */
 @media print {
-    /* Remove all margins */
-    body, .container, .output-section {
-        margin: 0 !important;
-        padding: 0 !important;
+    /* FORCE PRINTING OF BACKGROUND COLORS - CRITICAL FIX */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
     }
     
-    body { 
-        background: var(--color-white); 
-        padding: 0; 
+    /* REMOVE ALL PAGE MARGINS FOR EDGE-TO-EDGE PRINTING */
+    @page {
+        margin: 3mm !important;
+    }
+    
+    body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        background: #FFFFFF !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+    
+    /* Container should be full width with NO margins/padding */
+    .container {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+    
+    /* Output section fills page */
+    .output-section {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
     }
     
     /* Hide interactive elements */
@@ -1024,7 +1053,9 @@ tbody tr:nth-child(odd) { background-color: var(--color-white); }
     .dual-chart-indicator,
     .dual-chart-instructions,
     .success,
-    .no-print {
+    .no-print,
+    .acknowledgments,
+    h1 {
         display: none !important;
     }
     
@@ -1032,30 +1063,44 @@ tbody tr:nth-child(odd) { background-color: var(--color-white); }
     .zone-section.unassigned-print { display: block !important; }
     .zone-section.unassigned-no-print { display: none !important; }
     
-    /* Seat chart print optimization */
+    /* Seat chart print optimization - FILLS PAGE */
     .seat-chart-container {
         margin: 0 !important;
         padding: 0 !important;
         width: 100% !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
     
     .seat-chart {
         margin: 0 !important;
         padding: 0 !important;
         width: 100% !important;
-        border: 2px solid var(--color-primary) !important;
+        border: 2px solid #1E3A8A !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
     
-    /* Ensure colors print correctly */
+    /* CRITICAL: Ensure colors print correctly with exact hex values */
     .seat-chart th,
     .seat-chart .row-header {
-        background: var(--color-primary) !important;
-        color: var(--color-white) !important;
-        font-weight: bold;
-        text-align: center;
-        border: 1px solid var(--color-primary) !important;
-        padding: 0;
-        height: 20px;
+        background: #1E3A8A !important;
+        color: #FFFFFF !important;
+        font-weight: bold !important;
+        text-align: center !important;
+        border: 1px solid #1E3A8A !important;
+        padding: 0 !important;
+        height: 20px !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    .seat-chart .aisle {
+        background: #1E3A8A !important;
+        border-left: 2px solid #E2E8F0 !important;
+        border-right: 2px solid #E2E8F0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
     
     .seat-line1,
@@ -1064,61 +1109,107 @@ tbody tr:nth-child(odd) { background-color: var(--color-white); }
     .seat-line4 {
         color: #000000 !important;
         font-weight: bold !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
     
     .seat-line4 {
-        border-top: 1px dotted #999 !important;
+        border-top: 1px dotted #999999 !important;
         height: 10px !important;
     }
     
     .seat-empty .seat-cell {
-        align-items: flex-start;
-        justify-content: center;
-        text-align: left;
-        padding-left: 4px;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        text-align: left !important;
+        padding-left: 4px !important;
     }
     
     .seat-cell.business-class {
-        min-height: 60px;
-        padding-top: 1px;
+        min-height: 60px !important;
+        padding-top: 1px !important;
     }
     
-    /* Zone styling */
+    /* Seat colors - use exact HEX values */
+    .seat-occupied {
+        background: #E0E0E0 !important;
+        border: 1px solid #000000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    .seat-tier-emer,
+    .seat-tier-plat {
+        background: #D4D4D4 !important;
+        border: 1px solid #000000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    .seat-tier-gold,
+    .seat-business-regular,
+    .seat-empty {
+        background: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* Zone styling - MINIMAL MARGINS */
     .zone-section {
         margin: 0 !important;
         padding: 0 !important;
-        page-break-inside: avoid;
+        page-break-inside: avoid !important;
     }
     
     .zone-section.page-break {
-        page-break-before: always;
+        page-break-before: always !important;
     }
     
     .zone-header {
-        margin: 2px 0 !important;
-        padding: 2px !important;
+        margin: 0 !important;
+        padding: 1px !important;
+        background: #1E3A8A !important;
+        color: #FFFFFF !important;
+    }
+    
+    .flight-info {
+        background: #FEF7CD !important;
+        color: #1E3A8A !important;
+        border: 2px solid #D4AF37 !important;
+        margin: 0 !important;
+        padding: 1px !important;
+    }
+    
+    .stats {
+        background: #f0f4ff !important;
+        border: 1px solid #2563EB !important;
+        border-left: 4px solid #2563EB !important;
+        margin: 0 !important;
+        padding: 1px !important;
     }
     
     /* Compact print mode */
     body.compact-print-mode .stats {
-        padding: 2px !important;
+        padding: 1px !important;
         font-size: 7px !important;
     }
     
-    /* Side-by-side tables for port-starboard layout */
+    /* Port/Starboard split table widths - MINIMAL SPACING */
     .tables-container {
         display: flex !important;
         flex-direction: row !important;
-        gap: 2mm !important;
         width: 100% !important;
-        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 1mm !important; /* MINIMAL GAP */
     }
     
     .tables-container .table-wrapper {
-        flex: 1 1 48% !important;
-        max-width: 48% !important;
-        min-width: 0 !important;
-        box-sizing: border-box !important;
+        flex: 1 !important;
+        max-width: calc(50% - 0.5mm) !important; /* MINIMAL CALCULATION */
+        margin: 0 !important;
+        padding: 0 !important;
     }
     
     .tables-container table {
@@ -1126,42 +1217,58 @@ tbody tr:nth-child(odd) { background-color: var(--color-white); }
         table-layout: fixed !important;
     }
     
-    /* Landscape mode adjustments */
-    body.landscape-mode .tables-container {
-        gap: 8mm !important;
+    /* Table column widths */
+    .tables-container .narrowbody-table th:nth-child(1),
+    .tables-container .narrowbody-table td:nth-child(1) { width: 12% !important; }
+    .tables-container .narrowbody-table th:nth-child(2),
+    .tables-container .narrowbody-table td:nth-child(2) { width: 12% !important; }
+    .tables-container .narrowbody-table th:nth-child(3),
+    .tables-container .narrowbody-table td:nth-child(3) { width: 48% !important; }
+    .tables-container .narrowbody-table th:nth-child(4),
+    .tables-container .narrowbody-table td:nth-child(4) { width: 12% !important; }
+    .tables-container .narrowbody-table th:nth-child(5),
+    .tables-container .narrowbody-table td:nth-child(5) { width: 16% !important; }
+    
+    .tables-container .widebody-table th:nth-child(1),
+    .tables-container .widebody-table td:nth-child(1) { width: 12% !important; }
+    .tables-container .widebody-table th:nth-child(2),
+    .tables-container .widebody-table td:nth-child(2) { width: 12% !important; }
+    .tables-container .widebody-table th:nth-child(3),
+    .tables-container .widebody-table td:nth-child(3) { width: 48% !important; }
+    .tables-container .widebody-table th:nth-child(4),
+    .tables-container .widebody-table td:nth-child(4) { width: 12% !important; }
+    .tables-container .widebody-table td:nth-child(5) { width: 16% !important; }
+    
+    .table-title {
+        background: #1E3A8A !important;
+        color: #FFFFFF !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     
-    body.landscape-mode .tables-container th,
-    body.landscape-mode .tables-container td {
-        padding: 2mm 3mm !important;
+    /* Ensure all table backgrounds print */
+    th {
+        background: #F1F5F9 !important;
+        color: #1E3A8A !important;
     }
     
-    body.landscape-mode .tables-container table {
-        font-size: 1.4em !important;
+    tbody tr:nth-child(even) { 
+        background-color: #F8FAFC !important;
     }
     
-    /* Hide acknowledgments in print */
-    .acknowledgments {
-        display: none !important;
+    tbody tr:nth-child(odd) { 
+        background-color: #FFFFFF !important;
     }
     
-    /* Ensure seat colors print correctly */
-    .seat-occupied {
-        background: #e0e0e0 !important;
-        border: 1px solid #000000 !important;
+    /* Tables in print - MINIMAL PADDING */
+    th, td {
+        padding: 1px 2px !important;
     }
     
-    .seat-tier-emer,
-    .seat-tier-plat {
-        background: #d4d4d4 !important;
-        border: 1px solid #000000 !important;
-    }
-    
-    .seat-tier-gold,
-    .seat-business-regular,
-    .seat-empty {
-        background: var(--color-white) !important;
-        border: 1px solid var(--color-gray-200) !important;
+    /* Side stats minimal */
+    .side-stats {
+        margin: 0 !important;
+        padding: 0 !important;
     }
 }
 
@@ -1285,49 +1392,50 @@ body.landscape-mode::before {
         height: 30px;
         font-size: 0.875rem;
     }
-/* ===== IFRAME FULL-WIDTH FIX - HIGHEST PRIORITY ===== */
-.help-content {
-    max-width: none !important;
-    width: 100% !important;
-}
-
-.full-tutorial {
-    width: 100% !important;
-    max-width: none !important;
-    margin: 20px 0 !important;
-}
-
-.iframe-container {
-    position: relative !important;
-    width: 100% !important;
-    max-width: none !important;
-    height: 600px !important;
-    border: 1px solid #E5E7EB !important;
-    border-radius: 8px !important;
-    overflow: hidden !important;
-    background: white !important;
-    box-sizing: border-box !important;
-}
-
-.iframe-container iframe {
-    width: 100% !important;
-    height: 100% !important;
-    border: none !important;
-    display: block !important;
-}
-
-#iframe-loading,
-#iframe-loading-version {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
-    background: rgba(255, 255, 255, 0.95) !important;
-    z-index: 10 !important;
-}
+    
+    /* ===== IFRAME FULL-WIDTH FIX - HIGHEST PRIORITY ===== */
+    .help-content {
+        max-width: none !important;
+        width: 100% !important;
+    }
+    
+    .full-tutorial {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 20px 0 !important;
+    }
+    
+    .iframe-container {
+        position: relative !important;
+        width: 100% !important;
+        max-width: none !important;
+        height: 600px !important;
+        border: 1px solid #E5E7EB !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        background: white !important;
+        box-sizing: border-box !important;
+    }
+    
+    .iframe-container iframe {
+        width: 100% !important;
+        height: 100% !important;
+        border: none !important;
+        display: block !important;
+    }
+    
+    #iframe-loading,
+    #iframe-loading-version {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        z-index: 10 !important;
+    }
 }
