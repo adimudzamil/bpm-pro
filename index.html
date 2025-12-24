@@ -1632,7 +1632,7 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
                 `;
                 zoneCheckboxes.appendChild(checkboxDiv);
                 
-                const checks = checkboxDiv.querySelector('input');
+                const checkbox = checkboxDiv.querySelector('input');
                 checkbox.addEventListener('change', () => {
                     currentSettings.activeZones[zone.name] = checkbox.checked;
                     if (hasValidManifest()) {
