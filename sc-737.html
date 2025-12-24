@@ -684,7 +684,7 @@
         }
         
         // Function to intelligently truncate names
-        function truncateIntelligently(text, maxLength = 15) {
+        function truncateIntelligently(text, maxLength = 20) {
             if (!text || text.length <= maxLength) return text;
             
             const truncated = text.substring(0, maxLength);
@@ -729,8 +729,8 @@
             
             // Update name lines
             seatBox.querySelector('.name-line.title-line').textContent = title.toUpperCase() || '';
-            seatBox.querySelector('.name-line.surname-line').textContent = truncateIntelligently(lastName, 15).toUpperCase() || '';
-            seatBox.querySelector('.name-line.firstname-line').textContent = truncateIntelligently(firstName, 15).toUpperCase() || '';
+            seatBox.querySelector('.name-line.surname-line').textContent = truncateIntelligently(lastName, 20).toUpperCase() || '';
+            seatBox.querySelector('.name-line.firstname-line').textContent = truncateIntelligently(firstName, 20).toUpperCase() || '';
             
             // Update meal field
             const mealField = seatBox.querySelector('.field-line.meal-line');
