@@ -1480,35 +1480,10 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
             
             // Apply visual settings
             const outputSection = document.querySelector('.output-section');
-if (outputSection) {
-  outputSection.setAttribute('data-font-size', currentSettings.fontSize);
-  outputSection.setAttribute('data-table-width', currentSettings.tableWidth);
-  
-  // Apply table width directly to all tables
-  const tables = outputSection.querySelectorAll('table');
-  tables.forEach(table => {
-    table.style.width = currentSettings.tableWidth + '%';
-  });
-  
-  // Apply width to flight info, global summary, and zone summaries
-  const flightInfo = outputSection.querySelector('.flight-info');
-  if (flightInfo) {
-    flightInfo.style.width = currentSettings.tableWidth + '%';
-    flightInfo.style.margin = '0 auto'; // Center it if width < 100%
-  }
-  
-  const stats = outputSection.querySelectorAll('.stats, .side-stats');
-  stats.forEach(stat => {
-    stat.style.width = currentSettings.tableWidth + '%';
-    stat.style.margin = '10px auto'; // Center it if width < 100%
-  });
-  
-  const zoneHeaders = outputSection.querySelectorAll('.zone-header');
-  zoneHeaders.forEach(header => {
-    header.style.width = currentSettings.tableWidth + '%';
-    header.style.margin = '0 auto'; // Center it if width < 100%
-  });
-}
+            if (outputSection) {
+                outputSection.setAttribute('data-font-size', currentSettings.fontSize);
+                outputSection.setAttribute('data-table-width', currentSettings.tableWidth);
+            }
             
             // Apply print settings
             document.body.classList.toggle('compact-print-mode', currentSettings.compactPrint);
