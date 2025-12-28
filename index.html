@@ -1494,19 +1494,19 @@ if (outputSection) {
   const flightInfo = outputSection.querySelector('.flight-info');
   if (flightInfo) {
     flightInfo.style.width = currentSettings.tableWidth + '%';
-    flightInfo.style.margin = '0 auto'; // Center it if width < 100%
+    //flightInfo.style.margin = '0 auto';  Center it if width < 100%
   }
   
   const stats = outputSection.querySelectorAll('.stats, .side-stats');
   stats.forEach(stat => {
     stat.style.width = currentSettings.tableWidth + '%';
-    stat.style.margin = '10px auto'; // Center it if width < 100%
+    //stat.style.margin = '10px auto';  Center it if width < 100%
   });
   
   const zoneHeaders = outputSection.querySelectorAll('.zone-header');
   zoneHeaders.forEach(header => {
     header.style.width = currentSettings.tableWidth + '%';
-    header.style.margin = '0 auto'; // Center it if width < 100%
+  //  header.style.margin = '0 auto';  Center it if width < 100%
   });
 }
             
