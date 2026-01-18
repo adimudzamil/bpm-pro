@@ -174,8 +174,31 @@
                 <button class="btn-secondary" onclick="clearAll()">Clear</button>
                 <button class="btn-info" id="toggleAdvanced" onclick="toggleSettings()">▼ Advanced Settings</button>
                 <button class="btn-success" onclick="window.print()">Print Report</button>
+                <button class="btn-info" onclick="toggleSavedSection()">📋Saved (<span id="savedCount">0</span>)</button>
             </div>
-            
+            <!-- ============================================
+     SIMPLE SAVED REPORTS SECTION
+     ============================================ -->
+<div class="saved-reports-simple" id="savedReportsSimple" style="display: none;">
+    <div class="saved-header">
+        <h2>📋 Saved Reports (<span id="savedCount">0</span>)</h2>
+        <button class="btn-secondary btn-small" onclick="toggleSavedSection()">Hide</button>
+    </div>
+    
+    <div class="saved-list" id="savedList">
+        <!-- Reports will appear here -->
+    </div>
+    
+    <div class="saved-actions">
+        <button class="btn-primary" onclick="printAllSelected()">🖨️ Print Selected Reports</button>
+        <button class="btn-danger btn-small" onclick="clearAllSaved()">Clear All</button>
+    </div>
+</div>
+
+<!-- Save button that appears after generating a report -->
+<div id="savePrompt" style="display: none; margin: 15px 0; text-align: center;">
+    <button class="btn-success" onclick="saveCurrentReport()">💾 Save This Report</button>
+</div>
             <div id="advancedSettings" class="advanced-settings">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <div class="settings-header">Advanced Configuration</div>
@@ -192,7 +215,7 @@
                     <optgroup label="Widebody">
                         <option value="333">A330-300: J:1-7, C:9-27, D:28-44</option>
                         <option value="332">A330-200: J:1-6, C:14-30, D:31-50</option>
-                        <option value="339">A330-900: J:1-8, C:9-25, D:26-44</option>
+                        <option value="339">A330-900: J:1-8, C:9-26, D:27-44</option>
                         <option value="359">A350-900: J:1-11, C:12-22, D:23-32, E:33-41</option>
                         <option value="350">A350-MAH: J:1-10, C:20-35, D:36-46, E:47-55</option>
                     </optgroup>
@@ -367,7 +390,6 @@
                 <li><strong>Amalina</strong> - For iOS testing and tutorial</li>
                 <li><strong>Dora</strong> - Teaching me how to open this in PC</li>
                 <li><strong>Hafizah</strong> - For the aircraft configurations</li>
-                <li><strong>Tan Lay Yen</strong> - For pointing out Iphone have to copy BPM in landscape mode</li>
                 <li><strong>LS Batch 3/25</strong> - For inspiring this project and testing</li>
                 <li><a href="https://spck.io/" target="_blank"><strong>SPCK editor</strong></a> - Spck editor for coding and git</li>
                 <li><a href="https://kaustubhpatange.github.io/XClipper/" target="_blank"><strong>Xclipper</strong></a> - Must have for android mobile</li>
@@ -2732,6 +2754,257 @@ document.addEventListener('DOMContentLoaded', printWithColors);
                 }
             });
         });
+        // ============================================
+// SIMPLE SAVE & PRINT MULTIPLE REPORTS
+// ============================================
+
+let savedReportsSimple = [];
+let currentReportData = null;
+
+// Initialize from localStorage
+function initSavedReports() {
+    const stored = localStorage.getItem('bpm_saved_reports_simple');
+    if (stored) {
+        try {
+            savedReportsSimple = JSON.parse(stored);
+            updateSavedList();
+            if (savedReportsSimple.length > 0) {
+                document.getElementById('savedReportsSimple').style.display = 'block';
+            }
+        } catch (e) {
+            console.error('Error loading saved reports:', e);
+            savedReportsSimple = [];
+        }
+    }
+}
+
+// Save to localStorage
+function saveToStorage() {
+    try {
+        localStorage.setItem('bpm_saved_reports_simple', JSON.stringify(savedReportsSimple));
+    } catch (e) {
+        if (e.name === 'QuotaExceededError') {
+            alert('Storage full! Please delete some old reports.');
+        } else {
+            alert('Error saving: ' + e.message);
+        }
+    }
+}
+
+// Save current report
+function saveCurrentReport() {
+    if (!currentReportData) {
+        alert('No report to save. Generate a report first.');
+        return;
+    }
+    
+    const name = prompt('Name this report:', currentReportData.flightInfo.flightNumber + ' - ' + currentReportData.flightInfo.sector);
+    if (!name) return;
+    
+    const report = {
+        id: 'report_' + Date.now(),
+        name: name,
+        timestamp: Date.now(),
+        flightInfo: currentReportData.flightInfo,
+        html: document.getElementById('reportContent').innerHTML,
+        settings: {
+            fontSize: currentSettings.fontSize,
+            layoutStyle: currentSettings.layoutStyle,
+            aircraftType: currentSettings.aircraftType
+        }
+    };
+    
+    savedReportsSimple.push(report);
+    saveToStorage();
+    updateSavedList();
+    
+    document.getElementById('savedReportsSimple').style.display = 'block';
+    showSuccess('✓ Report saved: ' + name);
+}
+
+// Update the saved reports list
+function updateSavedList() {
+    const list = document.getElementById('savedList');
+    const count = document.getElementById('savedCount');
+    
+    count.textContent = savedReportsSimple.length;
+    
+    if (savedReportsSimple.length === 0) {
+        list.innerHTML = '<p style="text-align: center; color: #64748B; padding: 20px;">No saved reports. Generate and save a report to get started!</p>';
+        return;
+    }
+    
+    list.innerHTML = '';
+    
+    savedReportsSimple.forEach(report => {
+        const date = new Date(report.timestamp);
+        const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        const item = document.createElement('div');
+        item.className = 'saved-item';
+        item.innerHTML = `
+            <input type="checkbox" id="check_${report.id}" onchange="toggleSelection('${report.id}')">
+            <div class="saved-item-info">
+                <div class="saved-item-name">${report.name}</div>
+                <div class="saved-item-details">
+                    ${report.flightInfo.flightNumber} | ${report.flightInfo.sector} | 
+                    Saved: ${dateStr}
+                </div>
+            </div>
+            <div class="saved-item-actions">
+                <button class="btn-info btn-small" onclick="previewReport('${report.id}')">👁️</button>
+                <button class="btn-danger btn-small" onclick="deleteReport('${report.id}')">🗑️</button>
+            </div>
+        `;
+        
+        list.appendChild(item);
+    });
+}
+
+// Toggle selection
+function toggleSelection(reportId) {
+    const checkbox = document.getElementById('check_' + reportId);
+    const item = checkbox.closest('.saved-item');
+    
+    if (checkbox.checked) {
+        item.classList.add('selected');
+    } else {
+        item.classList.remove('selected');
+    }
+}
+
+// Preview a saved report
+function previewReport(reportId) {
+    const report = savedReportsSimple.find(r => r.id === reportId);
+    if (!report) return;
+    
+    const content = document.getElementById('reportContent');
+    content.innerHTML = report.html;
+    content.scrollIntoView({ behavior: 'smooth' });
+    
+    showSuccess('Previewing: ' + report.name);
+}
+
+// Delete a report
+function deleteReport(reportId) {
+    if (!confirm('Delete this report?')) return;
+    
+    savedReportsSimple = savedReportsSimple.filter(r => r.id !== reportId);
+    saveToStorage();
+    updateSavedList();
+    
+    showSuccess('✓ Report deleted');
+}
+
+// Clear all saved reports
+function clearAllSaved() {
+    if (!confirm('Delete ALL saved reports? This cannot be undone.')) return;
+    
+    savedReportsSimple = [];
+    saveToStorage();
+    updateSavedList();
+    
+    showSuccess('✓ All reports cleared');
+}
+
+// Toggle saved section visibility
+function toggleSavedSection() {
+    const section = document.getElementById('savedReportsSimple');
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+// Print all selected reports (each on separate page)
+function printAllSelected() {
+    const checkboxes = document.querySelectorAll('.saved-item input[type="checkbox"]:checked');
+    
+    if (checkboxes.length === 0) {
+        alert('Please select at least one report to print.');
+        return;
+    }
+    
+    const selectedReports = Array.from(checkboxes).map(cb => {
+        const reportId = cb.id.replace('check_', '');
+        return savedReportsSimple.find(r => r.id === reportId);
+    }).filter(r => r);
+    
+    if (selectedReports.length === 0) return;
+    
+    // Create print window with all reports
+    const printContent = selectedReports.map((report, index) => {
+        return `
+            <div class="report-page">
+                ${report.html}
+            </div>
+        `;
+    }).join('');
+    
+    // Create a temporary div to hold all reports
+    const printDiv = document.createElement('div');
+    printDiv.className = 'print-multiple-reports';
+    printDiv.innerHTML = printContent;
+    printDiv.style.display = 'none';
+    
+    // Add to body
+    document.body.appendChild(printDiv);
+    
+    // Hide main content
+    const mainContent = document.getElementById('reportContent');
+    const originalDisplay = mainContent.style.display;
+    mainContent.style.display = 'none';
+    
+    // Show print div
+    printDiv.style.display = 'block';
+    
+    // Print
+    window.print();
+    
+    // Cleanup after print
+    setTimeout(() => {
+        document.body.removeChild(printDiv);
+        mainContent.style.display = originalDisplay;
+    }, 500);
+    
+    showSuccess(`✓ Printing ${selectedReports.length} report(s)...`);
+}
+
+// Modify the existing generateReportWithCurrentSettings to capture data
+const originalGenerate = generateReportWithCurrentSettings;
+generateReportWithCurrentSettings = function() {
+    originalGenerate.call(this);
+    
+    // Capture the report data
+    const input = document.getElementById('manifestInput').value;
+    if (input.trim()) {
+        try {
+            const { flightInfo, passengers } = parseManifest(input);
+            currentReportData = { flightInfo, passengers };
+            
+            // Show save button
+            document.getElementById('savePrompt').style.display = 'block';
+        } catch (e) {
+            // Error already handled by original function
+        }
+    }
+};
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initSavedReports();
+});
+
+// Keyboard shortcut: Ctrl+S to save
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (currentReportData) {
+            saveCurrentReport();
+        }
+    }
+});
     </script>
     <script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
 </body>
