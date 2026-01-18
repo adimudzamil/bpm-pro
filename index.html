@@ -1044,21 +1044,17 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
                     versionLabel.textContent = 'Show';
                 }
             } else {
-                const isChecked = document.getElementById('toggleVersion').checked;
-                version.style.display = isChecked ? 'block' : 'none';
-                versionLabel.textContent = isChecked ? 'Hide' : 'Show';
-                
-                if (isChecked) {
-                    // Show loading if version iframe hasn't loaded yet
-                    if (!versionIframeLoaded) {
-                        showVersionIframeLoading();
-                    }
-                    
-                    document.getElementById('toggleTutorial').checked = false;
-                    tutorial.style.display = 'none';
-                    tutorialLabel.textContent = 'Show';
-                }
-            }
+    // NEW: For version history, open in new tab instead of iframe
+    const checkbox = document.getElementById('toggleVersion');
+    
+    if (checkbox.checked) {
+        // Open versions.html in new tab
+        window.open('versions.html', '_blank');
+        
+        // Uncheck the toggle immediately after opening
+        checkbox.checked = false;
+    }
+}
         }
         
         // Listen for iframe messages from version history and tutorial

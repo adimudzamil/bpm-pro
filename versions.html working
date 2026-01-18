@@ -291,27 +291,10 @@
             </div>
         </div>
         
-        <!-- Version 4.0.1 -->
-        <div class="version">
-            <h3>📋 Version 4.0.1 - Layout Update to Service Procedure Manual Revision 8.0.0</h3>
-            <div class="date">Current Version - Latest Release | Updated: SPM 4 December 2025</div>
-            
-            <div class="info">
-                <span class="info-badge">UPDATE</span>
-                <strong>Layout Updated According to Service Procedure Manual Revision 8.0.0 (4 December 2025)</strong>
-                <ul>
-                    <li>Updated all seat chart layouts to match latest service procedure standards</li>
-                    <li>Adjusted spacing, alignment, and formatting per manual requirements</li>
-                    <li>Improved consistency across all aircraft types and configurations</li>
-                    <li>Enhanced readability and operational compliance</li>
-                </ul>
-            </div>
-        </div>
-        
         <!-- Version 4.0 -->
         <div class="version">
             <h3>🚀 Version 4.0 - Dual Chart for 737, Box style Business class seat chart for every aircraft, Backup URLs</h3>
-            <div class="date">Previous Version</div>
+            <div class="date">Current Version - Latest Release</div>
             
             <div class="feature">
                 <span class="feature-badge">FEATURE</span>
@@ -606,7 +589,7 @@
         <!-- Version 1.0 -->
         <div class="version">
             <h3>🎉 Version 1.0 - Initial Release</h3>
-            <div class="date">Foundation Version 25/10/25, Thanks to Fahrin and Alif for the ideas and testing</div>
+            <div class="date">Foundation Version</div>
             
             <div class="feature">
                 <span class="feature-badge">FEATURE</span>
