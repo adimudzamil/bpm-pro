@@ -6,8 +6,26 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Passenger Meal & Tier Report - by *2100551*</title>
     
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#2563EB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BPM Pro">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="BPM Pro">
+    <meta name="msapplication-TileColor" content="#2563EB">
+    <meta name="msapplication-TileImage" content="/icon-144.png">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <!-- iOS Splash Screens (Optional but recommended) -->
+    <link rel="apple-touch-startup-image" href="/icon-512.png">
+    <!-- Favicon alternatives -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon-152.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icon-72.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png">
+    <!-- Original icon fallback -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💺</text></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💺</text></svg>">
+    
     <link rel="stylesheet" href="style.css">
    
 </head>
@@ -2730,6 +2748,173 @@ document.addEventListener('DOMContentLoaded', printWithColors);
             });
         });
     </script>
+    
+    <!-- PWA Registration Script -->
+    <script>
+        // Inline PWA Registration - ensures it works offline (recommended for offline)
+        (function() {
+            'use strict';
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    registerServiceWorker();
+                    setupInstallPrompt();
+                    checkForUpdates();
+                });
+            }
+
+            async function registerServiceWorker() {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js', {
+                        scope: '/'
+                    });
+                    console.log('✅ Service Worker registered');
+                    setInterval(() => registration.update(), 60 * 60 * 1000);
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                showUpdateNotification();
+                            }
+                        });
+                    });
+                } catch (error) {
+                    console.error('❌ Service Worker registration failed:', error);
+                }
+            }
+
+            let deferredPrompt;
+            function setupInstallPrompt() {
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    deferredPrompt = e;
+                    showInstallButton();
+                });
+                window.addEventListener('appinstalled', () => {
+                    console.log('✅ BPM Pro installed!');
+                    deferredPrompt = null;
+                    hideInstallButton();
+                    showSuccess('✨ BPM Pro installed! You can now use it offline.');
+                });
+            }
+
+            function showInstallButton() {
+                let installBtn = document.getElementById('pwa-install-btn');
+                if (!installBtn) {
+                    installBtn = document.createElement('button');
+                    installBtn.id = 'pwa-install-btn';
+                    installBtn.className = 'btn-success';
+                    installBtn.innerHTML = '📲 Install App';
+                    installBtn.style.cssText = `
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        z-index: 9999;
+                        padding: 12px 24px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        background: #10B981;
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                        cursor: pointer;
+                        animation: pulse 2s infinite;
+                    `;
+                    installBtn.addEventListener('click', installApp);
+                    document.body.appendChild(installBtn);
+                }
+                installBtn.style.display = 'block';
+            }
+
+            function hideInstallButton() {
+                const installBtn = document.getElementById('pwa-install-btn');
+                if (installBtn) installBtn.style.display = 'none';
+            }
+
+            async function installApp() {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`Install prompt: ${outcome}`);
+                deferredPrompt = null;
+                hideInstallButton();
+            }
+
+            function showUpdateNotification() {
+                const banner = document.createElement('div');
+                banner.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #2563EB; color: white; position: fixed; top: 0; left: 0; right: 0; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                        <span style="font-weight: 600;">🔄 New version available!</span>
+                        <div>
+                            <button onclick="window.location.reload()" style="background: white; color: #2563EB; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 600; margin-right: 10px; cursor: pointer;">Update Now</button>
+                            <button onclick="this.parentElement.parentElement.remove()" style="background: transparent; color: white; border: 1px solid white; padding: 8px 16px; border-radius: 4px; font-weight: 600; cursor: pointer;">Later</button>
+                        </div>
+                    </div>
+                `;
+                document.body.prepend(banner);
+            }
+
+            function checkForUpdates() {
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (refreshing) return;
+                    refreshing = true;
+                });
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) {
+                        navigator.serviceWorker.getRegistration().then(reg => {
+                            if (reg) reg.update();
+                        });
+                    }
+                });
+            }
+
+            function updateOnlineStatus() {
+                let indicator = document.getElementById('online-status');
+                if (!indicator) {
+                    indicator = document.createElement('div');
+                    indicator.id = 'online-status';
+                    indicator.style.cssText = `
+                        position: fixed;
+                        top: 10px;
+                        left: 10px;
+                        padding: 8px 16px;
+                        border-radius: 20px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        z-index: 9998;
+                        transition: opacity 0.3s ease;
+                    `;
+                    document.body.appendChild(indicator);
+                }
+                if (navigator.onLine) {
+                    indicator.textContent = '🟢 Online';
+                    indicator.style.background = '#10B981';
+                    indicator.style.color = 'white';
+                    setTimeout(() => indicator.style.opacity = '0', 3000);
+                } else {
+                    indicator.textContent = '🔴 Offline Mode';
+                    indicator.style.background = '#EF4444';
+                    indicator.style.color = 'white';
+                    indicator.style.opacity = '1';
+                }
+            }
+
+            window.addEventListener('online', updateOnlineStatus);
+            window.addEventListener('offline', updateOnlineStatus);
+            window.addEventListener('load', updateOnlineStatus);
+
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes pulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.05); }
+                }
+            `;
+            document.head.appendChild(style);
+        })();
+    </script>
+
     <script src="https://gnrcounter.com/counter.php?accId=5a888a8c18748f69460d5c4fc6b40d8f"></script>
 </body>
 </html>
