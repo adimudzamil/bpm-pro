@@ -363,77 +363,6 @@
                     </div>
                 </div>
                 
-                <!-- Print Scale & Margins -->
-                <div class="settings-header" style="margin-top: 15px;">Print Scale & Margins</div>
-                <div class="print-layout-controls">
-
-                    <!-- Scale Slider -->
-                    <div class="control-group">
-                        <label>Print Scale: <span id="printScaleValue" style="font-weight: 600; color: #2563EB;">100%</span></label>
-                        <div class="font-size-selector">
-                            <input type="range" id="printScaleSlider" min="50" max="150" value="100" step="5">
-                            <span style="font-size: 10px; color: #64748B; margin-left: 6px;">50% — 150%</span>
-                        </div>
-                        <div style="font-size: 10px; color: #64748B; margin-top: 4px;">
-                            Scales the report content when printing or saving as PDF.
-                        </div>
-                    </div>
-
-                    <!-- Margin Inputs -->
-                    <div class="control-group" style="margin-top: 10px;">
-                        <label>Page Margins (mm)</label>
-
-                        <!-- Top -->
-                        <div style="display: flex; justify-content: center; margin-bottom: 4px;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 10px; color: #64748B; margin-bottom: 2px;">Top</div>
-                                <input type="number" id="marginTop" value="4" min="0" max="50"
-                                    style="width: 55px; text-align: center; font-size: 12px; padding: 4px;">
-                                <span style="font-size: 10px; color: #64748B;">mm</span>
-                            </div>
-                        </div>
-
-                        <!-- Left and Right -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding: 0 10px;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 10px; color: #64748B; margin-bottom: 2px;">Left</div>
-                                <input type="number" id="marginLeft" value="4" min="0" max="50"
-                                    style="width: 55px; text-align: center; font-size: 12px; padding: 4px;">
-                                <span style="font-size: 10px; color: #64748B;">mm</span>
-                            </div>
-                            <div style="font-size: 18px; color: #CBD5E1;">⊕</div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 10px; color: #64748B; margin-bottom: 2px;">Right</div>
-                                <input type="number" id="marginRight" value="4" min="0" max="50"
-                                    style="width: 55px; text-align: center; font-size: 12px; padding: 4px;">
-                                <span style="font-size: 10px; color: #64748B;">mm</span>
-                            </div>
-                        </div>
-
-                        <!-- Bottom -->
-                        <div style="display: flex; justify-content: center; margin-bottom: 4px;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 10px; color: #64748B; margin-bottom: 2px;">Bottom</div>
-                                <input type="number" id="marginBottom" value="4" min="0" max="50"
-                                    style="width: 55px; text-align: center; font-size: 12px; padding: 4px;">
-                                <span style="font-size: 10px; color: #64748B;">mm</span>
-                            </div>
-                        </div>
-
-                        <div style="font-size: 10px; color: #64748B; font-style: italic; margin-top: 6px; text-align: center;">
-                            These margins apply when printing or saving as PDF.<br>
-                            Default: 4mm (≈ 0.15 inches) on all sides.
-                        </div>
-                    </div>
-
-                    <!-- Reset Button -->
-                    <div style="margin-top: 10px;">
-                        <button class="btn-secondary btn-small" onclick="resetPrintDefaults()">
-                            ↺ Reset Print Defaults
-                        </button>
-                    </div>
-
-                </div>
                 <div class="settings-header">Display Zones</div>
                 <div id="zoneCheckboxes" class="zone-checkboxes"></div>
                 
@@ -1772,55 +1701,6 @@ if (outputSection) {
   return `${value}<span style="letter-spacing: 2px; color: #999; border-bottom: 1px solid #999; padding-bottom: 1px;">___</span>`;
 }
         
-        // ===== PRINT SCALE & MARGINS =====
-function applyPrintSettings() {
-    // Read margin values
-    const top = document.getElementById('marginTop').value || 4;
-    const right = document.getElementById('marginRight').value || 4;
-    const bottom = document.getElementById('marginBottom').value || 4;
-    const left = document.getElementById('marginLeft').value || 4;
-    
-    // Read scale value
-    const scale = document.getElementById('printScaleSlider').value || 100;
-    
-    // Update the live scale display label
-    document.getElementById('printScaleValue').textContent = scale + '%';
-    
-    // Apply margins via CSS custom properties on :root
-    document.documentElement.style.setProperty('--print-margin-top', top + 'mm');
-    document.documentElement.style.setProperty('--print-margin-right', right + 'mm');
-    document.documentElement.style.setProperty('--print-margin-bottom', bottom + 'mm');
-    document.documentElement.style.setProperty('--print-margin-left', left + 'mm');
-    
-    // Apply scale to report content for live preview and print
-    const reportContent = document.getElementById('reportContent');
-    if (reportContent) {
-        const scaleDecimal = scale / 100;
-        reportContent.style.zoom = scaleDecimal;
-    }
-}
-
-function resetPrintDefaults() {
-    document.getElementById('printScaleSlider').value = 100;
-    document.getElementById('marginTop').value = 4;
-    document.getElementById('marginRight').value = 4;
-    document.getElementById('marginBottom').value = 4;
-    document.getElementById('marginLeft').value = 4;
-    applyPrintSettings();
-}
-
-function initPrintControls() {
-    // Wire up scale slider
-    document.getElementById('printScaleSlider').addEventListener('input', applyPrintSettings);
-    
-    // Wire up all four margin inputs
-    ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'].forEach(function(id) {
-        document.getElementById(id).addEventListener('input', applyPrintSettings);
-    });
-    
-    // Apply defaults on page load
-    applyPrintSettings();
-}
         function setFontSize(size) {
             document.getElementById('fontSizeSlider').value = size;
             updateSettingsFromControls();
@@ -2766,8 +2646,6 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
         document.addEventListener('DOMContentLoaded', function() {
             updateZoneCheckboxes();
             updateUIFromSettings();
-            initPrintControls();
-            
             // Initialize dual chart mode
 const layoutValue = document.getElementById('layoutStyle').value;
 if (layoutValue === 'dual-chart-737') {

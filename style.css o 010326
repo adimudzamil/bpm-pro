@@ -249,16 +249,8 @@ button:disabled {
 }
 
 /* ===== FORM CONTROLS ===== */
-select, input[type="text"], input[type="range"] {
+select, input[type="text"], input[type="number"], input[type="range"] {
     width: 100%;
-    padding: var(--spacing-sm);
-    border: 2px solid var(--color-gray-200);
-    border-radius: var(--radius-md);
-    font-size: 0.875rem;
-    background: var(--color-white);
-}
-
-input[type="number"] {
     padding: var(--spacing-sm);
     border: 2px solid var(--color-gray-200);
     border-radius: var(--radius-md);
@@ -1009,10 +1001,6 @@ tbody tr:nth-child(odd) { background-color: var(--color-white); }
     font-style: italic;
 }
 
-/* ===== PAGE MARGINS - CONTROLLED BY SLIDERS ===== */
-@page {
-    margin: var(--print-margin-top, 4mm) var(--print-margin-right, 4mm) var(--print-margin-bottom, 4mm) var(--print-margin-left, 4mm);
-}
 /* ===== PRINT STYLES - MINIMAL MARGINS EDGE-TO-EDGE ===== */
 @media print {
     /* FORCE PRINTING OF BACKGROUND COLORS - CRITICAL FIX */
@@ -1022,7 +1010,10 @@ tbody tr:nth-child(odd) { background-color: var(--color-white); }
         color-adjust: exact !important;
     }
     
-
+    /* REMOVE ALL PAGE MARGINS FOR EDGE-TO-EDGE PRINTING */
+    @page {
+        margin: 3mm !important;
+    }
     
     body {
         -webkit-print-color-adjust: exact !important;
