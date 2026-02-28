@@ -246,18 +246,6 @@
                     </div>
                 </div>
                 
-                <!-- Summary Text Size -->
-                <div class="settings-header">Summary Text Size</div>
-                <div class="font-size-controls">
-                    <div class="font-size-selector">
-                        <input type="range" id="summaryFontSlider" min="9" max="14" value="9" step="1">
-                        <span id="summaryFontDisplay" style="font-weight: 600; color: #2563EB; min-width: 40px;">9px</span>
-                    </div>
-                    <div style="font-size: 10px; color: #64748B; margin-top: 5px;">
-                        Controls font size for Global Summary, Zone Summary, and Port/Starboard summary counts. Default 9px, max 14px.
-                    </div>
-                </div>
-                
                 <!-- Table Width & Column Controls -->
                 <div class="settings-header">Table Width & Column Layout</div>
                 <div class="table-controls">
@@ -960,7 +948,6 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
             fontSize: 9,
             tableWidth: 100,
             seatChartFontSize: 14,
-            summaryFontSize: 9,
             compactPrint: false,
             landscapeMode: false,
             pageBreakZones: true,
@@ -1473,7 +1460,6 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
             currentSettings.fontSize = parseInt(document.getElementById('fontSizeSlider').value);
             currentSettings.tableWidth = parseInt(document.getElementById('tableWidthSlider').value);
             currentSettings.seatChartFontSize = parseInt(document.getElementById('seatChartFontSlider').value);
-            currentSettings.summaryFontSize = parseInt(document.getElementById('summaryFontSlider').value);
             currentSettings.compactPrint = document.getElementById('compactPrintMode').checked;
             currentSettings.landscapeMode = document.getElementById('landscapeMode').checked;
             currentSettings.pageBreakZones = document.getElementById('pageBreakBetweenZones').checked;
@@ -1489,7 +1475,6 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
             document.getElementById('fontSizeDisplay').textContent = currentSettings.fontSize + 'px';
             document.getElementById('tableWidthValue').textContent = currentSettings.tableWidth + '%';
             document.getElementById('seatChartFontValue').textContent = currentSettings.seatChartFontSize + 'px';
-            document.getElementById('summaryFontDisplay').textContent = currentSettings.summaryFontSize + 'px';
             
             // Apply visual settings
             const outputSection = document.querySelector('.output-section');
@@ -1513,7 +1498,6 @@ if (outputSection) {
   const stats = outputSection.querySelectorAll('.stats, .side-stats');
   stats.forEach(stat => {
     stat.style.width = currentSettings.tableWidth + '%';
-    stat.style.fontSize = currentSettings.summaryFontSize + 'px';
     //stat.style.margin = '10px auto';  Center it if width < 100%
   });
   
@@ -1537,7 +1521,6 @@ if (outputSection) {
                 fontSize: 9,
                 tableWidth: 100,
                 seatChartFontSize: 14,
-                summaryFontSize: 9,
                 compactPrint: false,
                 landscapeMode: false,
                 pageBreakZones: true,
@@ -1555,7 +1538,6 @@ if (outputSection) {
             document.getElementById('fontSizeSlider').value = 9;
             document.getElementById('tableWidthSlider').value = 100;
             document.getElementById('seatChartFontSlider').value = 14;
-            document.getElementById('summaryFontSlider').value = 9;
             document.getElementById('compactPrintMode').checked = false;
             document.getElementById('landscapeMode').checked = false;
             document.getElementById('pageBreakBetweenZones').checked = true;
@@ -1694,9 +1676,6 @@ if (outputSection) {
             
             return zones;
         }
-        function n(value) {
-  return `${value}<span style="letter-spacing: 2px; color: #999; border-bottom: 1px solid #999; padding-bottom: 1px;">___</span>`;
-}
         
         function setFontSize(size) {
             document.getElementById('fontSizeSlider').value = size;
@@ -2141,12 +2120,12 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                     });
                 }
             });
-            const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${n(count)}`).join(', ');
-let html = `<div class="stats"><strong>Summary:</strong> Special Meals: ${n(specialMealCount)} | EMER/PLAT: ${n(tierCount)}`;
-if (bbmlCount > 0) html += ` | Infants (BBML): ${n(bbmlCount)}`;
-html += `<br><strong>Meal Breakdown:</strong> ${mealBreakdown || 'None'}`;
-if (bbmlCount > 0) html += ` | BBML: ${n(bbmlCount)}`;
-html += `</div>`;
+            const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${count}`).join(', ');
+            let html = `<div class="stats"><strong>Summary:</strong> Special Meals: ${specialMealCount} | EMER/PLAT: ${tierCount}`;
+            if (bbmlCount > 0) html += ` | Infants (BBML): ${bbmlCount}`;
+            html += `<br><strong>Meal Breakdown:</strong> ${mealBreakdown || 'None'}`;
+            if (bbmlCount > 0) html += ` | BBML: ${bbmlCount}`;
+            html += `</div>`;
             return html;
         }
         
@@ -2164,12 +2143,12 @@ html += `</div>`;
                     });
                 }
             });
-            const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${n(count)}`).join(', ');
-let html = `<div class="stats"><strong>Zone Summary:</strong> Special Meals: ${n(specialMealCount)} | EMER/PLAT: ${n(tierCount)}`;
-if (bbmlCount > 0) html += ` | Infants (BBML): ${n(bbmlCount)}`;
-html += `<br><strong>Zone Meal Breakdown:</strong> ${mealBreakdown || 'None'}`;
-if (bbmlCount > 0) html += ` | BBML: ${n(bbmlCount)}`;
-html += `</div>`;
+            const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${count}`).join(', ');
+            let html = `<div class="stats"><strong>Zone Summary:</strong> Special Meals: ${specialMealCount} | EMER/PLAT: ${tierCount}`;
+            if (bbmlCount > 0) html += ` | Infants (BBML): ${bbmlCount}`;
+            html += `<br><strong>Zone Meal Breakdown:</strong> ${mealBreakdown || 'None'}`;
+            if (bbmlCount > 0) html += ` | BBML: ${bbmlCount}`;
+            html += `</div>`;
             return html;
         }
         
@@ -2187,11 +2166,11 @@ html += `</div>`;
                     });
                 }
             });
-            const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${n(count)}`).join(', ');
-let html = `<div class="side-stats"><strong>${sideName}:</strong> Meals: ${n(specialMealCount)} | EMER/PLAT: ${n(tierCount)}`;
-if (bbmlCount > 0) html += ` | BBML: ${n(bbmlCount)}`;
-if (mealBreakdown) html += `<br>${mealBreakdown}`;
-html += `</div>`;
+            const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${count}`).join(', ');
+            let html = `<div class="side-stats"><strong>${sideName}:</strong> Meals: ${specialMealCount} | EMER/PLAT: ${tierCount}`;
+            if (bbmlCount > 0) html += ` | BBML: ${bbmlCount}`;
+            if (mealBreakdown) html += `<br>${mealBreakdown}`;
+            html += `</div>`;
             return html;
         }
         
@@ -2672,7 +2651,7 @@ document.getElementById('layoutStyle').addEventListener('change', function() {
             // Set up live preview for all controls
             const controls = [
                 'aircraftType', 'layoutStyle', 'fontSizeSlider', 'tableWidthSlider',
-                'seatChartFontSlider', 'summaryFontSlider', 'compactPrintMode', 'landscapeMode', 
+                'seatChartFontSlider', 'compactPrintMode', 'landscapeMode', 
                 'pageBreakBetweenZones', 'avoidOrphanRows', 'flipSeatChart', 'showAllBusiness',
                 'showUnassignedInPrint'
             ];
