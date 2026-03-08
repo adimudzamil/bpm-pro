@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Malaysia Airlines · Boarding Pass Verifier</title>
+<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Jost:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --navy:        #071829;
+  --navy-mid:    #0c2340;
+  --navy-light:  #163558;
+  --gold:        #c8a84b;
+  --gold-light:  #e2c97e;
+  --gold-pale:   #f4e8c0;
+  --red:         #b81c2c;
+  --cream:       #f9f5ec;
+  --text:        #dde4ef;
+  --muted:       #6b82a0;
+  --border:      rgba(200,168,75,0.15);
+  --border-med:  rgba(200,168,75,0.28);
+  --green:       #0f7a48;
+  --green-light: #12a360;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+
+body {
+  background: var(--navy);
+  color: var(--text);
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Atmospheric background ── */
+.bg-layer {
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 100% 60% at 50% 0%, rgba(22,53,88,0.8) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 50% at 100% 100%, rgba(7,24,41,1) 0%, transparent 55%),
+    linear-gradient(160deg, #071829 0%, #0c2340 50%, #071422 100%);
+}
+
+/* Horizon glow */
+.bg-layer::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 35%;
+  background: radial-gradient(ellipse 80% 100% at 50% 100%, rgba(200,168,75,0.04) 0%, transparent 70%);
+}
+
+/* Fine grid texture */
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(200,168,75,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,168,75,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.page {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px 64px;
+}
+
+/* ════════════════════════════
+   HEADER
+════════════════════════════ */
+.header {
+  width: 100%; max-width: 540px;
+  padding: 32px 0 26px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 32px;
+  animation: riseIn 0.7s ease both;
+}
+
+.mh-emblem {
+  flex-shrink: 0;
+  width: 52px; height: 52px;
+  border: 1px solid var(--border-med);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(200,168,75,0.05);
+}
+
+.header-text { flex: 1; }
+
+.header-text h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--cream);
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+}
+
+.header-text p {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.header-badge {
+  flex-shrink: 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--gold);
+  border: 1px solid var(--border-med);
+  padding: 5px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  background: rgba(200,168,75,0.05);
+}
+
+/* ════════════════════════════
+   CARD
+════════════════════════════ */
+.card {
+  width: 100%; max-width: 540px;
+  animation: riseIn 0.7s 0.1s ease both;
+}
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Section label ── */
+.step-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.step-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--navy-mid);
+  background: var(--gold);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.step-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Input block ── */
+.input-block {
+  background: rgba(12,35,64,0.6);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 24px;
+  backdrop-filter: blur(8px);
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 14px;
+}
+
+.field { display: flex; flex-direction: column; gap: 8px; }
+
+.field label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.field input {
+  background: rgba(7,24,41,0.7);
+  border: 1px solid rgba(200,168,75,0.2);
+  border-radius: 8px;
+  padding: 13px 14px;
+  color: var(--cream);
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  width: 100%;
+  text-transform: uppercase;
+}
+
+.field input::placeholder { color: rgba(255,255,255,0.15); font-size: 13px; }
+.field input[type="date"] { color-scheme: dark; cursor: pointer; font-size: 13px; letter-spacing: 1px; }
+
+.field input:focus {
+  border-color: var(--gold);
+  background: rgba(200,168,75,0.06);
+  box-shadow: 0 0 0 3px rgba(200,168,75,0.07);
+}
+
+/* Flight preview pill */
+.flight-pill {
+  margin-top: 16px;
+  padding: 12px 18px;
+  background: rgba(200,168,75,0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pill-item { display: flex; flex-direction: column; gap: 3px; }
+.pill-label { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+.pill-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  color: var(--gold-light);
+  letter-spacing: 1px;
+  min-width: 60px;
+}
+.pill-value.empty { color: rgba(255,255,255,0.12); font-size: 14px; font-style: italic; }
+
+.pill-sep {
+  color: var(--gold);
+  opacity: 0.3;
+  font-size: 22px;
+  flex: 1;
+  text-align: center;
+}
+
+/* ── Scanner block ── */
+.scanner-block {
+  background: rgba(12,35,64,0.6);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  backdrop-filter: blur(8px);
+}
+
+.scanner-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3/2;
+  background: #000;
+  overflow: hidden;
+}
+
+#video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Idle screen */
+.idle-screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px;
+  background: rgba(7,24,41,0.95);
+  z-index: 5;
+}
+
+.idle-icon {
+  position: relative;
+  width: 80px; height: 56px;
+}
+
+.barcode-preview {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 48px;
+  opacity: 0.25;
+}
+
+.barcode-preview span {
+  display: block;
+  background: var(--gold);
+  border-radius: 1px;
+  width: 3px;
+  animation: barFloat 1.8s ease-in-out infinite;
+}
+
+.barcode-preview span:nth-child(2)  { height: 70%; animation-delay: 0.1s; }
+.barcode-preview span:nth-child(3)  { height: 100%; width: 5px; }
+.barcode-preview span:nth-child(4)  { height: 55%; animation-delay: 0.15s; }
+.barcode-preview span:nth-child(5)  { height: 85%; animation-delay: 0.05s; }
+.barcode-preview span:nth-child(6)  { height: 40%; animation-delay: 0.2s; }
+.barcode-preview span:nth-child(7)  { height: 100%; width: 5px; }
+.barcode-preview span:nth-child(8)  { height: 65%; animation-delay: 0.12s; }
+.barcode-preview span:nth-child(9)  { height: 80%; animation-delay: 0.08s; }
+.barcode-preview span:nth-child(10) { height: 45%; animation-delay: 0.18s; }
+.barcode-preview span:nth-child(11) { height: 100%; width: 5px; }
+.barcode-preview span:nth-child(12) { height: 60%; animation-delay: 0.22s; }
+
+@keyframes barFloat {
+  0%,100% { transform: scaleY(1); opacity: 0.25; }
+  50%      { transform: scaleY(0.85); opacity: 0.4; }
+}
+
+.idle-text {
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  line-height: 1.8;
+  text-transform: uppercase;
+}
+
+/* Scan guide overlay (while active) */
+.scan-guide {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  display: none;
+}
+
+.scan-guide.active { display: block; }
+
+/* Dark vignette sides */
+.scan-guide::before {
+  content: '';
+  position: absolute; inset: 0;
+  box-shadow: inset 0 0 60px rgba(7,24,41,0.6);
+}
+
+/* Horizontal scan target zone */
+.scan-target {
+  position: absolute;
+  top: 50%; left: 8%; right: 8%;
+  transform: translateY(-50%);
+  height: 38%;
+  border: 1.5px solid rgba(200,168,75,0.5);
+  border-radius: 6px;
+}
+
+/* Corners */
+.sc { position: absolute; width: 18px; height: 18px; border-color: var(--gold); border-style: solid; border-width: 0; }
+.sc.tl { top: -1px; left: -1px; border-top-width: 2.5px; border-left-width: 2.5px; }
+.sc.tr { top: -1px; right: -1px; border-top-width: 2.5px; border-right-width: 2.5px; }
+.sc.bl { bottom: -1px; left: -1px; border-bottom-width: 2.5px; border-left-width: 2.5px; }
+.sc.br { bottom: -1px; right: -1px; border-bottom-width: 2.5px; border-right-width: 2.5px; }
+
+/* Animated scan beam */
+.scan-beam {
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold-light) 20%, var(--gold) 50%, var(--gold-light) 80%, transparent 100%);
+  box-shadow: 0 0 12px rgba(200,168,75,0.8), 0 0 24px rgba(200,168,75,0.3);
+  animation: scanBeam 1.8s ease-in-out infinite;
+}
+
+@keyframes scanBeam {
+  0%   { top: 0%; opacity: 0.9; }
+  50%  { opacity: 1; }
+  100% { top: 100%; opacity: 0.9; }
+}
+
+/* Hint label inside scanner */
+.scan-hint {
+  position: absolute;
+  bottom: 14px;
+  left: 0; right: 0;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: rgba(200,168,75,0.6);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  z-index: 4;
+  display: none;
+}
+.scan-hint.active { display: block; }
+
+/* ── Result overlay ── */
+.result-overlay {
+  position: absolute; inset: 0;
+  z-index: 10;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 24px;
+  animation: overlayPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.result-overlay.show { display: flex; }
+.result-overlay.approved { background: rgba(5,28,18,0.96); }
+.result-overlay.rejected { background: rgba(28,5,10,0.96); }
+
+@keyframes overlayPop {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.result-icon {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.approved .result-icon {
+  background: rgba(15,122,72,0.2);
+  border: 2px solid var(--green-light);
+  color: #4dd896;
+  box-shadow: 0 0 32px rgba(15,122,72,0.3);
+}
+
+.rejected .result-icon {
+  background: rgba(184,28,44,0.2);
+  border: 2px solid var(--red);
+  color: #f07080;
+  box-shadow: 0 0 32px rgba(184,28,44,0.3);
+}
+
+/* Ring pulse */
+.result-icon::after {
+  content: '';
+  position: absolute; inset: -8px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  opacity: 0;
+  animation: ringPulse 1.8s ease-out infinite;
+}
+
+@keyframes ringPulse {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.result-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  text-align: center;
+}
+.approved .result-title { color: #5dd8a0; }
+.rejected .result-title { color: #f07080; }
+
+.result-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+.result-checks {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  padding: 11px 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.check-icon {
+  font-size: 14px;
+  width: 20px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.check-row.pass .check-icon { color: #4dd896; }
+.check-row.fail .check-icon { color: #f07080; }
+
+.check-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  flex: 1;
+}
+
+.check-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cream);
+  letter-spacing: 1px;
+}
+
+.raw-data {
+  width: 100%;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+
+.raw-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.raw-value {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.5px;
+  word-break: break-all;
+  line-height: 1.6;
+  max-height: 56px;
+  overflow: hidden;
+}
+
+.btn-scan-again {
+  background: transparent;
+  border: 1px solid var(--border-med);
+  color: var(--gold-light);
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+.btn-scan-again:hover { background: rgba(200,168,75,0.1); border-color: var(--gold); }
+
+/* ── Controls ── */
+.controls {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-primary {
+  flex: 1;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #c8a84b 0%, #a8872c 100%);
+  color: var(--navy);
+  border: none;
+  border-radius: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  font-weight: 500;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-primary:hover { background: linear-gradient(135deg, #e2c97e 0%, #c8a84b 100%); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(200,168,75,0.25); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-secondary {
+  flex: 1;
+  padding: 14px 18px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  font-weight: 500;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-secondary:hover { border-color: rgba(200,168,75,0.35); color: var(--gold-light); }
+.btn-secondary:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ── Status bar ── */
+.status-bar {
+  padding: 11px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  border-top: 1px solid var(--border);
+}
+
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+.dot.live   { background: var(--gold); box-shadow: 0 0 8px var(--gold); animation: dotBlink 1.4s infinite; }
+.dot.ok     { background: #2ecc71; box-shadow: 0 0 10px rgba(46,204,113,0.7); }
+.dot.fail   { background: var(--red); box-shadow: 0 0 10px rgba(184,28,44,0.7); }
+@keyframes dotBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── Footer ── */
+footer {
+  margin-top: 36px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.1);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 400px) {
+  .input-row { grid-template-columns: 1fr; }
+  .controls  { flex-direction: column; }
+  .btn-primary, .btn-secondary { width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="bg-layer"></div>
+<div class="bg-grid"></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="mh-emblem">
+      <svg width="30" height="30" viewBox="0 0 40 40" fill="none">
+        <path d="M20 5 L35 20 L20 35 L5 20 Z" stroke="#c8a84b" stroke-width="1.5" fill="rgba(200,168,75,0.05)"/>
+        <path d="M20 5 L20 35M5 20 L35 20" stroke="#c8a84b" stroke-width="0.75" opacity="0.4"/>
+        <circle cx="20" cy="20" r="4" fill="#c8a84b" opacity="0.85"/>
+        <path d="M20 5 L35 20 L20 20Z" fill="rgba(200,168,75,0.1)"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>Boarding Pass Verifier</h1>
+      <p>Malaysia Airlines · Ground Operations</p>
+    </div>
+    <div class="header-badge">MH System</div>
+  </header>
+
+  <div class="card">
+
+    <!-- STEP 1 -->
+    <div class="step-label">
+      <div class="step-num">1</div>
+      <div class="step-title">Enter Flight Details</div>
+      <div class="step-line"></div>
+    </div>
+
+    <div class="input-block">
+      <div class="input-row">
+        <div class="field">
+          <label>Flight No.</label>
+          <input type="text" id="flightInput" placeholder="MH0021" maxlength="10" oninput="onInputChange()">
+        </div>
+        <div class="field">
+          <label>Departure Date</label>
+          <input type="date" id="dateInput" oninput="onInputChange()">
+        </div>
+      </div>
+
+      <div class="flight-pill">
+        <div class="pill-item">
+          <div class="pill-label">Flight</div>
+          <div class="pill-value empty" id="prevFlight">—</div>
+        </div>
+        <div class="pill-sep">✈</div>
+        <div class="pill-item" style="text-align:right">
+          <div class="pill-label">Date</div>
+          <div class="pill-value empty" id="prevDate">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step-label">
+      <div class="step-num">2</div>
+      <div class="step-title">Scan Boarding Pass Barcode</div>
+      <div class="step-line"></div>
+    </div>
+
+    <div class="scanner-block">
+
+      <!-- Viewport -->
+      <div class="scanner-viewport" id="viewport">
+
+        <video id="video" autoplay playsinline muted></video>
+
+        <!-- Idle -->
+        <div class="idle-screen" id="idleScreen">
+          <div class="barcode-preview">
+            <span style="height:60%"></span>
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+          </div>
+          <div class="idle-text">
+            Enter flight details above<br>then activate scanner
+          </div>
+        </div>
+
+        <!-- Scan guide -->
+        <div class="scan-guide" id="scanGuide">
+          <div class="scan-target">
+            <div class="sc tl"></div><div class="sc tr"></div>
+            <div class="sc bl"></div><div class="sc br"></div>
+            <div class="scan-beam"></div>
+          </div>
+        </div>
+        <div class="scan-hint" id="scanHint">Align barcode within frame</div>
+
+        <!-- Result overlay -->
+        <div class="result-overlay" id="resultOverlay">
+          <div class="result-icon" id="resIcon"></div>
+          <div class="result-title" id="resTitle"></div>
+          <div class="result-sub" id="resSub"></div>
+          <div class="result-checks" id="resChecks"></div>
+          <div class="raw-data" id="rawData" style="display:none">
+            <div class="raw-label">Raw Barcode Data</div>
+            <div class="raw-value" id="rawValue"></div>
+          </div>
+          <button class="btn-scan-again" onclick="resetScan()">↩ &nbsp; Scan Again</button>
+        </div>
+
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <button class="btn-primary" id="startBtn" onclick="startScan()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+          Activate Scanner
+        </button>
+        <button class="btn-secondary" id="stopBtn" onclick="stopScan()" disabled>
+          ▪ Stop
+        </button>
+      </div>
+
+      <!-- Status -->
+      <div class="status-bar">
+        <div class="dot" id="dot"></div>
+        <span id="statusText">Awaiting activation</span>
+      </div>
+
+    </div><!-- /scanner-block -->
+
+  </div><!-- /card -->
+
+  <footer>Malaysia Airlines · Boarding Verification System · Ground Ops v2.0</footer>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+let codeReader = null;
+let scanning   = false;
+let streamRef  = null;
+
+// DOM
+const video       = document.getElementById('video');
+const idleScreen  = document.getElementById('idleScreen');
+const scanGuide   = document.getElementById('scanGuide');
+const scanHint    = document.getElementById('scanHint');
+const startBtn    = document.getElementById('startBtn');
+const stopBtn     = document.getElementById('stopBtn');
+const dot         = document.getElementById('dot');
+const statusText  = document.getElementById('statusText');
+const resultOverlay = document.getElementById('resultOverlay');
+
+// ─────────────────────────────────────────────
+// Input preview
+// ─────────────────────────────────────────────
+function onInputChange() {
+  const f = getFlightNum();
+  const d = document.getElementById('dateInput').value;
+
+  const pf = document.getElementById('prevFlight');
+  const pd = document.getElementById('prevDate');
+
+  if (f) { pf.textContent = f; pf.classList.remove('empty'); }
+  else   { pf.textContent = '—'; pf.classList.add('empty'); }
+
+  if (d) {
+    const dt = new Date(d + 'T00:00:00');
+    pd.textContent = dt.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}).toUpperCase();
+    pd.classList.remove('empty');
+  } else {
+    pd.textContent = '—'; pd.classList.add('empty');
+  }
+}
+
+function getFlightNum() {
+  return document.getElementById('flightInput').value.trim().toUpperCase();
+}
+
+function getDateISO() {
+  return document.getElementById('dateInput').value;
+}
+
+// ─────────────────────────────────────────────
+// Scanner
+// ─────────────────────────────────────────────
+async function startScan() {
+  const flight = getFlightNum();
+  const date   = getDateISO();
+
+  if (!flight || !date) {
+    setStatus('fail', 'Please enter flight number and date first');
+    shakeEl(document.querySelector('.input-block'));
+    return;
+  }
+
+  try {
+    setStatus('live', 'Requesting camera…');
+
+    // Resolve ZXing namespace from UMD bundle
+    const zx = (typeof ZXing !== 'undefined') ? ZXing : null;
+    if (!zx || !zx.BrowserMultiFormatReader) {
+      throw new Error('Barcode library failed to load — please refresh the page.');
+    }
+
+    // Build format hints
+    const hints = new Map();
+    const formats = [
+      zx.BarcodeFormat.CODE_128,
+      zx.BarcodeFormat.PDF_417,
+      zx.BarcodeFormat.QR_CODE,
+      zx.BarcodeFormat.DATA_MATRIX,
+      zx.BarcodeFormat.AZTEC,
+      zx.BarcodeFormat.CODE_39,
+    ];
+    hints.set(zx.DecodeHintType.POSSIBLE_FORMATS, formats);
+    hints.set(zx.DecodeHintType.TRY_HARDER, true);
+
+    codeReader = new zx.BrowserMultiFormatReader(hints, 600);
+
+    // Get devices, prefer rear-facing camera
+    const devices = await zx.BrowserMultiFormatReader.listVideoInputDevices();
+    let deviceId = devices.length > 0 ? devices[0].deviceId : undefined;
+    for (const d of devices) {
+      if (/back|rear|environment/i.test(d.label)) { deviceId = d.deviceId; break; }
+    }
+
+    await codeReader.decodeFromVideoDevice(deviceId, 'video', (result, err) => {
+      if (result) { onDetected(result.getText()); }
+      // err fires every frame when no barcode in view — normal, ignore it
+    });
+
+    scanning = true;
+    idleScreen.style.display = 'none';
+    scanGuide.classList.add('active');
+    scanHint.classList.add('active');
+    startBtn.disabled = true;
+    stopBtn.disabled  = false;
+    setStatus('live', 'Scanning — hold barcode steady in the frame');
+
+  } catch (e) {
+    console.error(e);
+    setStatus('fail', e.message || 'Camera unavailable — check browser permissions');
+  }
+}
+
+function stopScan() {
+  if (codeReader) { codeReader.reset(); codeReader = null; }
+  scanning = false;
+  video.srcObject = null;
+  idleScreen.style.display = 'flex';
+  scanGuide.classList.remove('active');
+  scanHint.classList.remove('active');
+  startBtn.disabled = false;
+  stopBtn.disabled  = true;
+  setStatus('', 'Scanner stopped');
+}
+
+function resetScan() {
+  resultOverlay.className = 'result-overlay';
+  if (scanning || codeReader) {
+    // already running, just resume
+    setStatus('live', 'Scanning — hold barcode steady in the frame');
+  } else {
+    startScan();
+  }
+}
+
+// ─────────────────────────────────────────────
+// Detection & Verification
+// ─────────────────────────────────────────────
+function onDetected(rawText) {
+  if (!scanning) return; // ignore if already shown result
+  scanning = false; // pause until reset
+
+  if (navigator.vibrate) navigator.vibrate([40, 30, 60]);
+
+  const flight = getFlightNum();
+  const date   = getDateISO();
+
+  const flightOk = checkFlight(rawText, flight);
+  const dateOk   = checkDate(rawText, date);
+  const approved = flightOk && dateOk;
+
+  showResult(approved, rawText, flight, date, flightOk, dateOk);
+  setStatus(approved ? 'ok' : 'fail', approved ? 'Boarding pass verified ✓' : 'Verification failed ✗');
+}
+
+// ─── Flight matching ───
+// Boarding pass barcodes (IATA BCBP) embed flight as e.g. "MH 0021" or "MH0021"
+function checkFlight(raw, expected) {
+  const r = raw.toUpperCase().replace(/\s+/g, '');
+  const e = expected.replace(/\s+/g, '');
+  if (r.includes(e)) return true;
+
+  // Try without leading zeros: MH0021 → MH21
+  const stripped = e.replace(/^([A-Z]{2})0+/, '$1');
+  if (r.includes(stripped)) return true;
+
+  // Numeric part only
+  const numOnly = e.replace(/^[A-Z]+0*/, '');
+  if (numOnly && r.includes(numOnly)) return true;
+
+  // With space after carrier code: MH 0021
+  const withSpace = e.replace(/^([A-Z]{2})/, '$1 ');
+  if (raw.toUpperCase().includes(withSpace)) return true;
+
+  return false;
+}
+
+// ─── Date matching ───
+// IATA BCBP stores date as Julian day-of-year (3 digits, e.g. 067 for 08 Mar 2026)
+function checkDate(raw, isoDate) {
+  if (!isoDate) return false;
+  const dt = new Date(isoDate + 'T00:00:00');
+
+  // Julian day of year
+  const jan1 = new Date(dt.getFullYear(), 0, 1);
+  const julian = Math.round((dt - jan1) / 86400000) + 1;
+  const julStr = String(julian).padStart(3, '0');
+  if (raw.includes(julStr)) return true;
+
+  // ISO date variants
+  const variants = [
+    isoDate,                                          // 2026-03-08
+    isoDate.replace(/-/g, ''),                       // 20260308
+    dt.toLocaleDateString('en-GB').replace(/\//g,''),// 08032026
+    dt.toLocaleDateString('en-US').replace(/\//g,''),// 03082026
+  ];
+
+  // Month name short
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const day = String(dt.getDate()).padStart(2,'0');
+  const mon = months[dt.getMonth()];
+  variants.push(day + mon);       // 08MAR
+  variants.push(mon + day);       // MAR08
+  variants.push(day + ' ' + mon); // 08 MAR
+
+  const rawUp = raw.toUpperCase();
+  for (const v of variants) {
+    if (rawUp.includes(v.toUpperCase())) return true;
+  }
+  return false;
+}
+
+// ─────────────────────────────────────────────
+// Show result
+// ─────────────────────────────────────────────
+function showResult(approved, raw, flight, isoDate, flightOk, dateOk) {
+  const overlay = document.getElementById('resultOverlay');
+  overlay.className = 'result-overlay show ' + (approved ? 'approved' : 'rejected');
+
+  document.getElementById('resIcon').textContent  = approved ? '✓' : '✕';
+  document.getElementById('resTitle').textContent = approved ? 'Boarding Approved' : 'Access Denied';
+  document.getElementById('resSub').textContent   = approved
+    ? 'All details verified — passenger may board'
+    : 'Boarding pass does not match flight record';
+
+  const dt = new Date(isoDate + 'T00:00:00');
+  const dateStr = dt.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}).toUpperCase();
+
+  document.getElementById('resChecks').innerHTML = `
+    <div class="check-row ${flightOk ? 'pass' : 'fail'}">
+      <div class="check-icon">${flightOk ? '✓' : '✗'}</div>
+      <div class="check-label">Flight Number</div>
+      <div class="check-val">${flight}</div>
+    </div>
+    <div class="check-row ${dateOk ? 'pass' : 'fail'}">
+      <div class="check-icon">${dateOk ? '✓' : '✗'}</div>
+      <div class="check-label">Departure Date</div>
+      <div class="check-val">${dateStr}</div>
+    </div>
+  `;
+
+  const rawEl = document.getElementById('rawData');
+  rawEl.style.display = 'block';
+  document.getElementById('rawValue').textContent = raw.length > 120 ? raw.substring(0, 120) + '…' : raw;
+}
+
+// ─────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────
+function setStatus(type, msg) {
+  dot.className = 'dot' + (type ? ' ' + type : '');
+  statusText.textContent = msg;
+}
+
+function shakeEl(el) {
+  el.style.animation = 'none';
+  void el.offsetHeight;
+  el.style.animation = 'shake 0.4s ease';
+  setTimeout(() => el.style.animation = '', 500);
+}
+</script>
+
+<style>
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-7px)}
+  40%{transform:translateX(7px)}
+  60%{transform:translateX(-4px)}
+  80%{transform:translateX(4px)}
+}
+</style>
+</body>
+</html>
