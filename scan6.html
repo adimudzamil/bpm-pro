@@ -4,11 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>2100551 · Boarding Pass Verifier</title>
-<!-- QuaggaJS: pure JS barcode — Code128, PDF417, works on ALL platforms incl iOS -->
-<script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
-<!-- jsQR: QR code fallback -->
-<!-- jsQR: QR code fallback -->
+<!-- jsQR: QR code reader -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<!-- ZXing-wasm: PDF417 + Code128 decoder for all platforms including iOS -->
+<script src="https://cdn.jsdelivr.net/npm/zxing-wasm@1.2.13/dist/full/zxing_full.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
@@ -365,7 +364,7 @@ body::before {
 .scanner-viewport {
   position: relative;
   width: 100%;
-  aspect-ratio: 4/3;
+  min-height: 600px;
   background: #0a0e1a;
   overflow: hidden;
 }
@@ -490,7 +489,9 @@ body::before {
   align-items: stretch;
   justify-content: flex-start;
   padding: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .result-overlay.show { display: flex; }
@@ -500,10 +501,10 @@ body::before {
 
 /* Result top band */
 .res-band {
-  padding: 18px 20px 16px;
+  padding: 14px 16px 12px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   animation: slideDown 0.3s ease both;
 }
 
@@ -516,12 +517,12 @@ body::before {
 }
 
 .res-icon-wrap {
-  width: 46px; height: 46px;
+  width: 40px; height: 40px;
   background: rgba(255,255,255,0.18);
   border: 2px solid rgba(255,255,255,0.35);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 20px;
+  font-size: 18px;
   color: #fff;
   flex-shrink: 0;
   position: relative;
@@ -543,7 +544,7 @@ body::before {
 .res-heading { flex: 1; }
 
 .res-title {
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 700;
   color: #fff;
   letter-spacing: 0.3px;
@@ -561,21 +562,20 @@ body::before {
 
 /* Result body */
 .res-body {
-  padding: 16px 20px;
+  padding: 10px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   animation: slideDown 0.3s 0.05s ease both;
   opacity: 0;
   animation-fill-mode: both;
-  flex: 1;
 }
 
 .check-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: 10px;
+  padding: 9px 12px;
   border-radius: var(--radius-sm);
   border: 1.5px solid transparent;
 }
@@ -623,7 +623,7 @@ body::before {
 .counter-strip {
   display: flex;
   align-items: center;
-  padding: 10px 14px;
+  padding: 8px 12px;
   background: var(--mh-blue-faint);
   border: 1.5px solid rgba(0,59,142,0.1);
   border-radius: var(--radius-sm);
@@ -650,7 +650,7 @@ body::before {
 
 /* Countdown bar */
 .countdown-wrap {
-  padding: 0 20px 14px;
+  padding: 0 16px 10px;
   animation: slideDown 0.3s 0.1s ease both;
   opacity: 0;
   animation-fill-mode: both;
@@ -697,7 +697,7 @@ body::before {
 
 /* Action buttons */
 .res-actions {
-  padding: 0 20px 18px;
+  padding: 0 16px 14px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
@@ -707,7 +707,7 @@ body::before {
 }
 
 .btn-instant {
-  padding: 13px 10px;
+  padding: 11px 10px;
   border-radius: var(--radius-sm);
   font-family: 'Source Sans 3', sans-serif;
   font-size: 13px;
@@ -821,6 +821,49 @@ footer {
 }
 
 /* ════════════════════════════════════
+   GHOST TAP ZONE
+════════════════════════════════════ */
+.ghost-tap-zone {
+  flex: 1;                        /* fills ALL remaining blank space */
+  min-height: 80px;
+  cursor: pointer;
+  display: none;                  /* hidden by default */
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: rgba(0,87,184,0.06);
+  transition: background 0.15s;
+  position: relative;
+}
+
+/* Only show during countdown (when result is visible) */
+.result-overlay.show .ghost-tap-zone {
+  display: flex;
+}
+
+.ghost-tap-zone:active {
+  background: rgba(0,87,184,0.05);
+}
+
+.ghost-tap-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--grey-200);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  pointer-events: none;
+  animation: ghostPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes ghostPulse {
+  0%, 100% { opacity: 0.4; transform: translateY(0); }
+  50%       { opacity: 0.7; transform: translateY(3px); }
+}
+
+/* ════════════════════════════════════
    ANIMATIONS / RESPONSIVE
 ════════════════════════════════════ */
 @keyframes shake {
@@ -852,7 +895,7 @@ footer {
     </svg>
     <div class="nav-brand">
       <span class="nav-brand-main">2100551</span>
-      <span class="nav-brand-sub">Boarding pass verified</span>
+      <span class="nav-brand-sub">SCAN</span>
     </div>
   </div>
   <div class="nav-badge">Test Build</div>
@@ -993,6 +1036,14 @@ footer {
                 <button class="btn-instant btn-stop-session" onclick="stopScan()">▪ End Session</button>
               </div>
 
+              <!-- Ghost tap zone — large thumb-friendly area, only active during countdown -->
+              <div class="ghost-tap-zone" id="ghostTapZone" onclick="resetScanNow()">
+                <div class="ghost-tap-hint" id="ghostTapHint">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                  tap anywhere here to scan next
+                </div>
+              </div>
+
             </div><!-- /result-overlay -->
           </div><!-- /viewport -->
 
@@ -1016,68 +1067,87 @@ footer {
     </div><!-- /card-body -->
   </div><!-- /main-card -->
 
-  <footer>2100551 · Boarding Pass Verifier · Version 1.4 </footer>
+  <footer>2100551 · Boarding Verification System · Version 1.4</footer>
 </div>
 
 <script>
 // ══════════════════════════════════════════════
-// AUDIO — Web Audio API (no library, works everywhere)
+// AUDIO — Web Audio API, works on all platforms
 // ══════════════════════════════════════════════
 var audioCtx = null;
-
 function getAudio() {
   if (!audioCtx) {
-    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
   }
   return audioCtx;
 }
-
-function playTone(freq, type, startDelay, duration, vol) {
+function playTone(freq, type, startDelay, dur, vol) {
   try {
-    var ctx = getAudio();
-    if (!ctx) return;
-    var osc  = ctx.createOscillator();
-    var gain = ctx.createGain();
-    osc.type = type;
-    osc.frequency.value = freq;
+    var ctx = getAudio(); if (!ctx) return;
+    var osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.type = type; osc.frequency.value = freq;
     var t = ctx.currentTime + startDelay;
     gain.gain.setValueAtTime(0, t);
     gain.gain.linearRampToValueAtTime(vol, t + 0.015);
-    gain.gain.linearRampToValueAtTime(0,   t + duration);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(t);
-    osc.stop(t + duration + 0.02);
+    gain.gain.linearRampToValueAtTime(0, t + dur);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + dur + 0.02);
   } catch(e) {}
 }
-
 function playApproved() {
-  // Two ascending sine chimes — pleasant gate tone
-  playTone(880,  'sine', 0,    0.12, 0.28);
-  playTone(1108, 'sine', 0.14, 0.20, 0.30);
+  playTone(880,  'sine',   0,    0.12, 0.28);
+  playTone(1108, 'sine',   0.14, 0.20, 0.30);
 }
-
 function playDenied() {
-  // Two descending square buzzes — firm, distinct
   playTone(440, 'square', 0,    0.14, 0.22);
   playTone(330, 'square', 0.17, 0.22, 0.25);
+}
+
+// ══════════════════════════════════════════════
+// ZXING-WASM INIT — PDF417 + Code128 for iOS & all browsers
+// ══════════════════════════════════════════════
+var zxingReader = null;
+var zxingReady  = false;
+
+function initZxing() {
+  try {
+    if (typeof ZXing === 'undefined') return;
+    ZXing.then(function(instance) {
+      zxingReader = instance;
+      zxingReady  = true;
+      console.log('ZXing WASM ready');
+    }).catch(function(e) {
+      console.warn('ZXing init failed:', e);
+    });
+  } catch(e) {
+    console.warn('ZXing unavailable:', e);
+  }
+}
+
+// Try to init ZXing as soon as possible
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initZxing);
+} else {
+  setTimeout(initZxing, 100);
 }
 
 // ══════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════
 var scanning   = false;
-var quaggaRunning = false;
+var streamRef  = null;
+var rafId      = null;
 var detected   = false;
 var cdInterval = null;
 var passCount  = 0;
 var failCount  = 0;
+var zxingFrameCounter = 0; // throttle ZXing calls (heavier than jsQR)
 
-// QR fallback canvas
+// Off-screen canvas for frame analysis
 var offCanvas = document.createElement('canvas');
 var offCtx    = offCanvas.getContext('2d', { willReadFrequently: true });
-var qrRafId   = null;
 
+// DOM refs
 var idleScreen = document.getElementById('idleScreen');
 var scanGuide  = document.getElementById('scanGuide');
 var scanHint   = document.getElementById('scanHint');
@@ -1085,7 +1155,7 @@ var startBtn   = document.getElementById('startBtn');
 var stopBtn    = document.getElementById('stopBtn');
 var dot        = document.getElementById('dot');
 var statusEl   = document.getElementById('statusText');
-var video      = document.getElementById('video');
+var videoEl    = document.getElementById('video');
 
 // ══════════════════════════════════════════════
 // INPUT PREVIEW
@@ -1099,157 +1169,147 @@ function onInputChange() {
   else   { pf.textContent = '—'; pf.classList.add('empty'); }
   if (d) {
     var dt = new Date(d + 'T00:00:00');
-    pd.textContent = dt.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}).toUpperCase();
+    pd.textContent = dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
     pd.classList.remove('empty');
   } else { pd.textContent = '—'; pd.classList.add('empty'); }
 }
-
 function getFlightNum() { return document.getElementById('flightInput').value.trim().toUpperCase(); }
 function getDateISO()   { return document.getElementById('dateInput').value; }
-
-function lockInputs() {
-  document.getElementById('flightInput').disabled = true;
-  document.getElementById('dateInput').disabled   = true;
-}
-function unlockInputs() {
-  document.getElementById('flightInput').disabled = false;
-  document.getElementById('dateInput').disabled   = false;
-}
+function lockInputs()   { document.getElementById('flightInput').disabled = true;  document.getElementById('dateInput').disabled = true;  }
+function unlockInputs() { document.getElementById('flightInput').disabled = false; document.getElementById('dateInput').disabled = false; }
 
 // ══════════════════════════════════════════════
-// START SCAN — Quagga (v0.12) + jsQR dual engine
+// CAMERA — pure getUserMedia, no Quagga
 // ══════════════════════════════════════════════
-function startScan() {
-  var flight = getFlightNum();
-  var date   = getDateISO();
+async function startScan() {
+  var flight = getFlightNum(), date = getDateISO();
   if (!flight || !date) {
     setStatus('fail', 'Please enter flight number and date first');
     shakeEl(document.querySelector('.input-section'));
     return;
   }
-
-  // Warm up AudioContext on this user gesture
+  // Wake AudioContext on user gesture
   try { var ac = getAudio(); if (ac && ac.state === 'suspended') ac.resume(); } catch(e) {}
 
   setStatus('live', 'Starting camera…');
 
-  // Quagga v0.12.1 config — uses global Quagga object
-  Quagga.init({
-    inputStream: {
-      name: 'Live',
-      type: 'LiveStream',
-      target: document.getElementById('viewport'),
-      constraints: {
-        facingMode: 'environment',
-        width:  { min: 640, ideal: 1280 },
-        height: { min: 480, ideal: 720 }
+  try {
+    // Request rear camera explicitly
+    streamRef = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'environment' },
+        width:  { ideal: 1280 },
+        height: { ideal: 720 }
       },
-      area: { top: '20%', right: '5%', bottom: '20%', left: '5%' }
-    },
-    locator: { patchSize: 'medium', halfSample: true },
-    numOfWorkers: 0,
-    frequency: 12,
-    decoder: {
-      readers: [
-        'code_128_reader',
-        'pdf417_reader',
-        'code_39_reader',
-        'ean_reader'
-      ]
-    },
-    locate: true
-  }, function(err) {
-    if (err) {
-      console.error('Quagga init:', err);
-      setStatus('fail', 'Camera error: ' + (err.message || 'Permission denied'));
-      return;
-    }
+      audio: false
+    });
 
-    Quagga.start();
-    quaggaRunning = true;
-    scanning  = true;
-    detected  = false;
+    videoEl.srcObject = streamRef;
+    videoEl.setAttribute('playsinline', '');  // critical for iOS
+    videoEl.setAttribute('muted', '');
+    await videoEl.play();
 
+    detected = false;
+    scanning = true;
+    lockInputs();
     idleScreen.style.display = 'none';
     scanGuide.classList.add('active');
     scanHint.classList.add('active');
     startBtn.disabled = true;
     stopBtn.disabled  = false;
-    lockInputs();
     setStatus('live', 'Scanning — align barcode within frame');
+    rafId = requestAnimationFrame(scanLoop);
 
-    // Style Quagga-injected elements to fill viewport
-    setTimeout(function() {
-      var vp = document.getElementById('viewport');
-      // Quagga injects its own <video> and <canvas> — style them
-      vp.querySelectorAll('video').forEach(function(v) {
-        v.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;';
-      });
-      vp.querySelectorAll('canvas').forEach(function(c) {
-        c.style.cssText = 'display:none;';
-      });
-    }, 400);
-
-    // Run jsQR in parallel for QR codes
-    startQRLoop();
-  });
-
-  // Quagga barcode callback
-  Quagga.onDetected(function(result) {
-    if (!scanning || detected) return;
-    if (!result || !result.codeResult) return;
-    var code = result.codeResult.code;
-    if (!code || code.length < 4) return;
-    // Basic confidence: check decodedCodes error rate
-    var errors = result.codeResult.decodedCodes
-      ? result.codeResult.decodedCodes.filter(function(c){ return c.error !== undefined; })
-      : [];
-    var avgErr = errors.length
-      ? errors.reduce(function(s,c){ return s + c.error; }, 0) / errors.length
-      : 0;
-    if (avgErr > 0.25) return; // too many errors — skip
-    detected = true;
-    onDetected(code);
-  });
+  } catch(e) {
+    console.error(e);
+    setStatus('fail', 'Camera error: ' + (e.message || 'Permission denied'));
+  }
 }
 
 // ══════════════════════════════════════════════
-// jsQR parallel loop (QR code fallback)
+// SCAN LOOP — BarcodeDetector + jsQR dual engine
 // ══════════════════════════════════════════════
-function startQRLoop() {
-  function loop() {
-    if (!scanning || detected) return;
-    var vid = document.querySelector('#viewport video');
-    if (vid && vid.readyState >= 2 && vid.videoWidth > 0) {
-      offCanvas.width  = vid.videoWidth;
-      offCanvas.height = vid.videoHeight;
-      offCtx.drawImage(vid, 0, 0);
-      if (typeof jsQR !== 'undefined') {
-        var id = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
-        var qr = jsQR(id.data, id.width, id.height, { inversionAttempts: 'attemptBoth' });
-        if (qr && !detected) {
-          detected = true;
-          onDetected(qr.data);
-          return;
-        }
+function scanLoop() {
+  if (!scanning || detected) return;
+
+  if (videoEl.readyState >= videoEl.HAVE_ENOUGH_DATA && videoEl.videoWidth > 0) {
+    offCanvas.width  = videoEl.videoWidth;
+    offCanvas.height = videoEl.videoHeight;
+    offCtx.drawImage(videoEl, 0, 0);
+
+    // ── Engine 1: Native BarcodeDetector (Android Chrome, Samsung Internet)
+    // Handles Code128, PDF417, QR natively — fastest option when available
+    if ('BarcodeDetector' in window && !detected) {
+      // Get supported formats dynamically — avoids format name errors across browsers
+      BarcodeDetector.getSupportedFormats().then(function(supported) {
+        var want = ['pdf417','code_128','qr_code','aztec','data_matrix','code_39','ean_13'];
+        var formats = want.filter(function(f){ return supported.includes(f); });
+        if (formats.length === 0) formats = supported; // use all if none matched
+        var bd = new BarcodeDetector({ formats: formats });
+        bd.detect(offCanvas).then(function(codes) {
+          if (codes.length > 0 && !detected) {
+            detected = true;
+            onDetected(codes[0].rawValue);
+          }
+        }).catch(function() {});
+      }).catch(function() {
+        // Fallback: try with no format filter (detect anything)
+        try {
+          var bd2 = new BarcodeDetector();
+          bd2.detect(offCanvas).then(function(codes) {
+            if (codes.length > 0 && !detected) {
+              detected = true;
+              onDetected(codes[0].rawValue);
+            }
+          }).catch(function(){});
+        } catch(e2) {}
+      });
+    }
+
+    // ── Engine 2: jsQR (QR codes on all platforms including iOS)
+    if (!detected && typeof jsQR !== 'undefined') {
+      var imgData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
+      var qr = jsQR(imgData.data, imgData.width, imgData.height, {
+        inversionAttempts: 'attemptBoth'
+      });
+      if (qr && !detected) {
+        detected = true;
+        onDetected(qr.data);
+        return;
       }
     }
-    qrRafId = requestAnimationFrame(loop);
+
+    // ── Engine 3: ZXing-WASM (PDF417 + Code128 — works on ALL platforms incl iOS)
+    // Throttled to every 3rd frame to avoid blocking the main thread
+    zxingFrameCounter = (zxingFrameCounter || 0) + 1;
+    if (!detected && zxingReady && zxingReader && zxingFrameCounter % 3 === 0) {
+      (function() {
+        var imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
+        try {
+          var results = zxingReader.readBarcodesFromImageData(imageData, {
+            formats: ['PDF417', 'Code128', 'Code39', 'QRCode', 'DataMatrix'],
+            tryHarder: true
+          });
+          if (results && results.length > 0 && !detected) {
+            detected = true;
+            onDetected(results[0].text);
+          }
+        } catch(e) {}
+      })();
+    }
   }
-  qrRafId = requestAnimationFrame(loop);
+  rafId = requestAnimationFrame(scanLoop);
 }
 
 // ══════════════════════════════════════════════
-// STOP SCAN
+// STOP
 // ══════════════════════════════════════════════
 function stopScan() {
   clearCountdown();
   scanning = false; detected = false;
-  if (qrRafId) { cancelAnimationFrame(qrRafId); qrRafId = null; }
-  if (quaggaRunning) {
-    try { Quagga.stop(); } catch(e) {}
-    quaggaRunning = false;
-  }
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  if (streamRef) { streamRef.getTracks().forEach(function(t){ t.stop(); }); streamRef = null; }
+  videoEl.srcObject = null;
   document.getElementById('resultOverlay').className = 'result-overlay';
   idleScreen.style.display = 'flex';
   scanGuide.classList.remove('active');
@@ -1257,29 +1317,21 @@ function stopScan() {
   startBtn.disabled = false;
   stopBtn.disabled  = true;
   unlockInputs();
-  // Clean up any Quagga-injected video/canvas
-  var viewport = document.getElementById('viewport');
-  var injected = viewport.querySelectorAll('video:not(#video), canvas');
-  injected.forEach(function(el) { el.remove(); });
   var total = passCount + failCount;
   setStatus('', total > 0
     ? 'Session ended — ' + total + ' scanned · ' + passCount + ' approved · ' + failCount + ' denied'
     : 'Session ended');
 }
 
-function resetScanNow() {
-  clearCountdown();
-  doRescan();
-}
+function resetScanNow() { clearCountdown(); doRescan(); }
 
 function doRescan() {
   document.getElementById('resultOverlay').className = 'result-overlay';
   detected = false;
-  if (quaggaRunning) {
-    // Quagga already running — just resume
+  if (streamRef) {
     scanning = true;
     setStatus('live', 'Scanning — align barcode within frame');
-    startQRLoop();
+    rafId = requestAnimationFrame(scanLoop);
   } else {
     startScan();
   }
@@ -1291,11 +1343,10 @@ function doRescan() {
 function onDetected(rawText) {
   if (!rawText) return;
   detected = true; scanning = false;
-  if (qrRafId) { cancelAnimationFrame(qrRafId); qrRafId = null; }
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
   if (navigator.vibrate) navigator.vibrate([40, 30, 60]);
 
-  var flight = getFlightNum();
-  var date   = getDateISO();
+  var flight = getFlightNum(), date = getDateISO();
   var flightOk = checkFlight(rawText, flight);
   var dateOk   = checkDate(rawText, date);
   var approved = flightOk && dateOk;
@@ -1310,27 +1361,21 @@ function onDetected(rawText) {
   showResult(approved, flight, date, flightOk, dateOk);
   setStatus(approved ? 'ok' : 'fail',
     approved ? '✓ Approved — ready for next passenger' : '✗ Denied — boarding pass mismatch');
-
   startCountdown(approved ? 2000 : 4000);
 }
 
-// ── Flight matching ──
 function checkFlight(raw, expected) {
   var r = raw.toUpperCase().replace(/\s+/g, '');
   var e = expected.replace(/\s+/g, '');
   if (r.includes(e)) return true;
-  // Without leading zeros: MH0021 → MH21
   var stripped = e.replace(/^([A-Z]{2,3})0+/, '$1');
   if (r.includes(stripped)) return true;
-  // With space: "MH 0021"
   if (raw.toUpperCase().includes(e.slice(0,2) + ' ' + e.slice(2))) return true;
-  // Numeric only
   var numOnly = e.replace(/^[A-Z]+0*/, '');
   if (numOnly.length >= 2 && r.includes(numOnly)) return true;
   return false;
 }
 
-// ── Date matching (IATA BCBP Julian day-of-year) ──
 function checkDate(raw, isoDate) {
   if (!isoDate) return false;
   var dt   = new Date(isoDate + 'T00:00:00');
@@ -1338,16 +1383,12 @@ function checkDate(raw, isoDate) {
   var julian = Math.round((dt - jan1) / 86400000) + 1;
   if (raw.includes(String(julian).padStart(3, '0'))) return true;
   var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  var day = String(dt.getDate()).padStart(2,'0');
-  var mon = months[dt.getMonth()];
-  var variants = [
-    isoDate, isoDate.replace(/-/g,''),
-    day + mon + dt.getFullYear(), day + mon,
-    mon + day, day + ' ' + mon,
-    dt.toLocaleDateString('en-GB').replace(/\//g,'')
-  ];
+  var day = String(dt.getDate()).padStart(2,'0'), mon = months[dt.getMonth()];
+  var variants = [isoDate, isoDate.replace(/-/g,''),
+    day+mon+dt.getFullYear(), day+mon, mon+day, day+' '+mon,
+    dt.toLocaleDateString('en-GB').replace(/\//g,'')];
   var ru = raw.toUpperCase();
-  return variants.some(function(v) { return ru.includes(v.toUpperCase()); });
+  return variants.some(function(v){ return ru.includes(v.toUpperCase()); });
 }
 
 // ══════════════════════════════════════════════
@@ -1359,62 +1400,52 @@ function showResult(approved, flight, isoDate, flightOk, dateOk) {
   document.getElementById('resIcon').textContent  = approved ? '✓' : '✕';
   document.getElementById('resTitle').textContent = approved ? 'Boarding Approved' : 'Access Denied';
   document.getElementById('resSub').textContent   = approved ? 'Passenger may board' : 'Does not match record';
-
   var dt = new Date(isoDate + 'T00:00:00');
-  var ds = dt.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}).toUpperCase();
+  var ds = dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
   document.getElementById('resChecks').innerHTML =
     makeCheckRow(flightOk, 'Flight', flight) +
     makeCheckRow(dateOk,   'Date',   ds);
 }
-
 function makeCheckRow(pass, label, val) {
-  return '<div class="check-row ' + (pass ? 'pass' : 'fail') + '" style="margin-bottom:8px">' +
-    '<div class="check-icon-wrap">' + (pass ? '✓' : '✗') + '</div>' +
-    '<div class="check-label">' + label + '</div>' +
-    '<div class="check-val">'   + val   + '</div>' +
-  '</div>';
+  return '<div class="check-row '+(pass?'pass':'fail')+'" style="margin-bottom:8px">' +
+    '<div class="check-icon-wrap">'+(pass?'✓':'✗')+'</div>' +
+    '<div class="check-label">'+label+'</div>' +
+    '<div class="check-val">'+val+'</div></div>';
 }
 
 // ══════════════════════════════════════════════
-// COUNTDOWN BAR
+// COUNTDOWN
 // ══════════════════════════════════════════════
 function startCountdown(delay) {
   clearCountdown();
-  var fill    = document.getElementById('cdFill');
-  var cdNum   = document.getElementById('cdNum');
-  var elapsed = 0;
-  var step    = 50;
-  fill.style.transition = 'none';
-  fill.style.transform  = 'scaleX(1)';
+  var fill = document.getElementById('cdFill'), cdNum = document.getElementById('cdNum');
+  var elapsed = 0, step = 50;
+  fill.style.transition = 'none'; fill.style.transform = 'scaleX(1)';
   cdInterval = setInterval(function() {
     elapsed += step;
     var frac = Math.max(0, 1 - elapsed / delay);
-    fill.style.transition = 'transform ' + step + 'ms linear';
-    fill.style.transform  = 'scaleX(' + frac + ')';
+    fill.style.transition = 'transform '+step+'ms linear';
+    fill.style.transform  = 'scaleX('+frac+')';
     cdNum.textContent = Math.ceil((delay - elapsed) / 1000) + 's';
     if (elapsed >= delay) { clearCountdown(); doRescan(); }
   }, step);
 }
-
-function clearCountdown() {
-  if (cdInterval) { clearInterval(cdInterval); cdInterval = null; }
-}
+function clearCountdown() { if (cdInterval) { clearInterval(cdInterval); cdInterval = null; } }
 
 // ══════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════
 function setStatus(type, msg) {
-  dot.className = 'dot' + (type ? ' ' + type : '');
+  dot.className = 'dot' + (type ? ' '+type : '');
   statusEl.textContent = msg;
 }
-
 function shakeEl(el) {
-  el.style.animation = 'none';
-  void el.offsetHeight;
+  el.style.animation = 'none'; void el.offsetHeight;
   el.style.animation = 'shake 0.4s ease';
-  setTimeout(function() { el.style.animation = ''; }, 500);
+  setTimeout(function(){ el.style.animation = ''; }, 500);
 }
 </script>
+
 
 </body>
 </html>
