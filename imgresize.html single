@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2100551 Image Compressor</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗜️</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗜️</text></svg>">
+    <link rel="stylesheet" href="style.css">
+   
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --mh-navy:    #003580;
+    --mh-navy2:   #002660;
+    --mh-red:     #C8102E;
+    --mh-red2:    #a50d25;
+    --mh-gold:    #F0A500;
+    --mh-white:   #FFFFFF;
+    --mh-offwhite:#F4F6FA;
+    --mh-light:   #E8EDF6;
+    --mh-muted:   #6B7A99;
+    --mh-border:  #D0D8EC;
+    --mh-card:    #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background: var(--mh-offwhite);
+    color: #1a2540;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .mh-header {
+    background: var(--mh-navy);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  }
+
+  .mh-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .mh-logo-wau {
+    width: 38px;
+    height: 38px;
+  }
+
+  .mh-logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+
+  .mh-logo-text .airline {
+    color: var(--mh-white);
+    font-size: 0.65rem;
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+
+  .mh-logo-text .brand {
+    color: var(--mh-white);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .mh-header-tag {
+    color: rgba(255,255,255,0.55);
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── HERO BANNER ── */
+  .mh-hero {
+    background: linear-gradient(135deg, var(--mh-navy2) 0%, var(--mh-navy) 50%, #1a4a9e 100%);
+    padding: 40px 24px 52px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mh-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: rgba(200,16,46,0.12);
+  }
+
+  .mh-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: -40px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: rgba(240,165,0,0.08);
+  }
+
+  .mh-hero-icon {
+    font-size: 2.8rem;
+    margin-bottom: 10px;
+    display: block;
+    position: relative;
+    z-index: 1;
+  }
+
+  .mh-hero h1 {
+    color: var(--mh-white);
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .mh-hero p {
+    color: rgba(255,255,255,0.65);
+    font-size: 0.85rem;
+    font-weight: 400;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── RED ACCENT BAR ── */
+  .mh-accent-bar {
+    height: 4px;
+    background: linear-gradient(90deg, var(--mh-red) 0%, var(--mh-gold) 100%);
+  }
+
+  /* ── MAIN CONTENT ── */
+  .mh-main {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--mh-muted);
+    margin-bottom: 8px;
+  }
+
+  /* ── DROP ZONE ── */
+  .drop-zone {
+    background: var(--mh-card);
+    border: 2px dashed var(--mh-border);
+    border-radius: 12px;
+    padding: 40px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 4px rgba(0,53,128,0.06);
+  }
+
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--mh-navy);
+    background: #EEF2FB;
+    box-shadow: 0 4px 16px rgba(0,53,128,0.1);
+  }
+
+  .drop-zone .dz-icon {
+    font-size: 2.4rem;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .drop-zone .dz-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1a2540;
+    margin-bottom: 4px;
+  }
+
+  .drop-zone .dz-sub {
+    font-size: 0.82rem;
+    color: var(--mh-muted);
+  }
+
+  .drop-zone .dz-sub span {
+    color: var(--mh-navy);
+    font-weight: 600;
+    text-decoration: underline;
+  }
+
+  #fileInput { display: none; }
+
+  /* ── TARGET SIZE CARD ── */
+  .target-card {
+    background: var(--mh-card);
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: 0 1px 4px rgba(0,53,128,0.06);
+    border: 1px solid var(--mh-border);
+  }
+
+  .target-card label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--mh-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .size-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .size-btn {
+    background: var(--mh-offwhite);
+    border: 1.5px solid var(--mh-border);
+    border-radius: 8px;
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+
+  .size-btn .size-val {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1a2540;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .size-btn .size-unit {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--mh-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .size-btn:hover {
+    border-color: var(--mh-navy);
+    background: #EEF2FB;
+  }
+
+  .size-btn.active {
+    background: var(--mh-navy);
+    border-color: var(--mh-navy);
+  }
+
+  .size-btn.active .size-val,
+  .size-btn.active .size-unit {
+    color: white;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-card {
+    background: var(--mh-card);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--mh-border);
+    box-shadow: 0 1px 4px rgba(0,53,128,0.06);
+    display: none;
+  }
+
+  .progress-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .progress-dot {
+    width: 8px; height: 8px;
+    background: var(--mh-red);
+    border-radius: 50%;
+    animation: pulse 1s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .progress-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1a2540;
+  }
+
+  .progress-bar-bg {
+    background: var(--mh-light);
+    border-radius: 99px;
+    height: 6px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--mh-navy), var(--mh-red));
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  .progress-text {
+    font-size: 0.75rem;
+    color: var(--mh-muted);
+  }
+
+  /* ── RESULT CARD ── */
+  .result-card {
+    background: var(--mh-card);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--mh-border);
+    box-shadow: 0 2px 12px rgba(0,53,128,0.08);
+    display: none;
+  }
+
+  .result-card-header {
+    background: var(--mh-navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .result-card-header span {
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .preview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--mh-border);
+  }
+
+  .preview-box {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .preview-box:first-child {
+    border-right: 1px solid var(--mh-border);
+  }
+
+  .preview-box img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .preview-footer {
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .preview-tag {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--mh-muted);
+  }
+
+  .preview-size {
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .size-original { color: var(--mh-red); }
+  .size-compressed { color: #1a7a3f; }
+
+  /* ── STATS TABLE ── */
+  .stats-table {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--mh-border);
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid #f0f2f7;
+  }
+
+  .stat-row:last-child { border-bottom: none; }
+
+  .stat-key {
+    font-size: 0.78rem;
+    color: var(--mh-muted);
+    font-weight: 500;
+  }
+
+  .stat-val {
+    font-size: 0.82rem;
+    color: #1a2540;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 99px;
+  }
+
+  .badge-green { background: #e6f7ec; color: #1a7a3f; }
+  .badge-orange { background: #fff3e0; color: #b85c00; }
+
+  /* ── SAVINGS PILL ── */
+  .savings-pill {
+    background: linear-gradient(135deg, var(--mh-navy), #1a4a9e);
+    color: white;
+    text-align: center;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .savings-num {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .savings-label {
+    font-size: 0.75rem;
+    opacity: 0.75;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .savings-divider {
+    width: 1px;
+    height: 36px;
+    background: rgba(255,255,255,0.2);
+  }
+
+  /* ── DOWNLOAD BUTTON ── */
+  .btn-download {
+    display: block;
+    width: calc(100% - 32px);
+    margin: 16px;
+    background: var(--mh-red);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-download:hover { background: var(--mh-red2); }
+  .btn-download:active { transform: scale(0.98); }
+
+  /* ── FOOTER ── */
+  .mh-footer {
+    text-align: center;
+    padding: 8px 16px 24px;
+    font-size: 0.72rem;
+    color: var(--mh-muted);
+  }
+
+  .mh-footer a { color: var(--mh-navy); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="mh-header">
+  <div class="mh-logo">
+    <!-- Wau Bulan SVG mark -->
+    <svg class="mh-logo-wau" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="19" cy="19" r="19" fill="#C8102E"/>
+      <path d="M19 6 C10 10, 7 19, 10 28 C13 22, 16 18, 19 17 C22 18, 25 22, 28 28 C31 19, 28 10, 19 6Z" fill="white" opacity="0.95"/>
+      <path d="M19 17 C19 17, 14 24, 12 32 C15 30, 17 27, 19 26 C21 27, 23 30, 26 32 C24 24, 19 17, 19 17Z" fill="white" opacity="0.7"/>
+      <circle cx="19" cy="14" r="2.2" fill="#F0A500"/>
+    </svg>
+    <div class="mh-logo-text">
+      <span class="airline">2100551</span>
+      <span class="brand">Image Size Compressor</span>
+    </div>
+  </div>
+  <span class="mh-header-tag">Test build</span>
+</header>
+
+<div class="mh-accent-bar"></div>
+
+<!-- HERO -->
+<div class="mh-hero">
+  <span class="mh-hero-icon">🗜️</span>
+  <h1>Image Compressor</h1>
+  <p>Reduce photo file size instantly · Private · No upload required</p>
+</div>
+
+<!-- MAIN -->
+<div class="mh-main">
+
+  <!-- DROP ZONE -->
+  <div>
+    <div class="section-label">Select Image</div>
+    <div class="drop-zone" id="dropZone">
+      <span class="dz-icon">📂</span>
+      <div class="dz-title">Drop your photo here</div>
+      <div class="dz-sub">or <span>tap to browse files</span></div>
+      <input type="file" id="fileInput" accept="image/*">
+    </div>
+  </div>
+
+  <!-- TARGET SIZE -->
+  <div class="target-card">
+    <label>Target File Size</label>
+    <div class="size-options">
+      <button class="size-btn active" data-val="1024">
+        <span class="size-val">1</span>
+        <span class="size-unit">MB</span>
+      </button>
+      <button class="size-btn" data-val="500">
+        <span class="size-val">500</span>
+        <span class="size-unit">KB</span>
+      </button>
+      <button class="size-btn" data-val="250">
+        <span class="size-val">250</span>
+        <span class="size-unit">KB</span>
+      </button>
+      <button class="size-btn" data-val="100">
+        <span class="size-val">100</span>
+        <span class="size-unit">KB</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-card" id="progressCard">
+    <div class="progress-header">
+      <div class="progress-dot"></div>
+      <span class="progress-title">Compressing image…</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-text" id="progressText">Initialising…</div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-card" id="resultCard">
+    <div class="result-card-header">
+      <span>✅ Compression Complete</span>
+    </div>
+
+    <div class="preview-grid">
+      <div class="preview-box">
+        <img id="originalPreview" src="" alt="Original">
+        <div class="preview-footer">
+          <span class="preview-tag">Original</span>
+          <span class="preview-size size-original" id="originalSizeLabel"></span>
+        </div>
+      </div>
+      <div class="preview-box">
+        <img id="compressedPreview" src="" alt="Compressed">
+        <div class="preview-footer">
+          <span class="preview-tag">Compressed</span>
+          <span class="preview-size size-compressed" id="compressedSizeLabel"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="savings-pill" id="savingsPill">
+      <div>
+        <div class="savings-num" id="savingsNum">—</div>
+        <div class="savings-label">% Smaller</div>
+      </div>
+      <div class="savings-divider"></div>
+      <div>
+        <div class="savings-num" id="savedBytes">—</div>
+        <div class="savings-label">Saved</div>
+      </div>
+    </div>
+
+    <div class="stats-table" id="statsTable"></div>
+
+    <button class="btn-download" id="downloadBtn">⬇ Download Compressed Image</button>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="mh-footer">
+  All processing happens locally on your device. No data is sent to any server.<br>
+  <a href="#">2100551</a> · Image Size Compressor
+</div>
+
+<script>
+  const dropZone     = document.getElementById('dropZone');
+  const fileInput    = document.getElementById('fileInput');
+  const progressCard = document.getElementById('progressCard');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  const resultCard   = document.getElementById('resultCard');
+  const originalPreview    = document.getElementById('originalPreview');
+  const compressedPreview  = document.getElementById('compressedPreview');
+  const originalSizeLabel  = document.getElementById('originalSizeLabel');
+  const compressedSizeLabel= document.getElementById('compressedSizeLabel');
+  const statsTable   = document.getElementById('statsTable');
+  const downloadBtn  = document.getElementById('downloadBtn');
+  const savingsNum   = document.getElementById('savingsNum');
+  const savedBytes   = document.getElementById('savedBytes');
+
+  let selectedKB = 1024;
+
+  // Size buttons
+  document.querySelectorAll('.size-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedKB = parseInt(btn.dataset.val);
+    });
+  });
+
+  // Drop zone
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) processFile(file);
+  });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) processFile(fileInput.files[0]); });
+
+  function formatSize(bytes) {
+    if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    return (bytes / 1024).toFixed(1) + ' KB';
+  }
+
+  async function compressToTarget(img, originalBytes, targetKB) {
+    const targetBytes = targetKB * 1024;
+    if (originalBytes <= targetBytes) return null;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const W = img.naturalWidth, H = img.naturalHeight;
+    let quality = 0.88, scaleFactor = 1.0, result = null;
+
+    for (let attempt = 0; attempt < 26; attempt++) {
+      canvas.width  = Math.round(W * scaleFactor);
+      canvas.height = Math.round(H * scaleFactor);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      const dataUrl  = canvas.toDataURL('image/jpeg', quality);
+      const byteSize = Math.round((dataUrl.length - 'data:image/jpeg;base64,'.length) * 3 / 4);
+
+      progressFill.style.width = Math.min(95, Math.round((attempt / 26) * 100)) + '%';
+      progressText.textContent = `Quality ${Math.round(quality * 100)}% · Scale ${Math.round(scaleFactor * 100)}% · ${formatSize(byteSize)}`;
+      await new Promise(r => setTimeout(r, 15));
+
+      if (byteSize <= targetBytes) { result = { dataUrl, byteSize, quality, scaleFactor }; break; }
+
+      if (quality > 0.22) quality = Math.max(0.22, quality - 0.09);
+      else { scaleFactor = Math.max(0.1, scaleFactor - 0.1); quality = 0.75; }
+    }
+    return result;
+  }
+
+  async function processFile(file) {
+    resultCard.style.display = 'none';
+    progressCard.style.display = 'block';
+    progressFill.style.width = '5%';
+    progressText.textContent = 'Loading image…';
+
+    const originalURL = URL.createObjectURL(file);
+    originalPreview.src = originalURL;
+    originalSizeLabel.textContent = formatSize(file.size);
+
+    const img = new Image();
+    img.src = originalURL;
+    await new Promise(r => { img.onload = r; });
+
+    const compressed = await compressToTarget(img, file.size, selectedKB);
+
+    progressFill.style.width = '100%';
+    progressText.textContent = 'Done!';
+    await new Promise(r => setTimeout(r, 350));
+    progressCard.style.display = 'none';
+
+    const targetLabel = selectedKB >= 1024 ? (selectedKB / 1024) + ' MB' : selectedKB + ' KB';
+
+    if (!compressed) {
+      compressedPreview.src = originalURL;
+      compressedSizeLabel.textContent = formatSize(file.size);
+      savingsNum.textContent = '0';
+      savedBytes.textContent = '0 KB';
+
+      statsTable.innerHTML = statRow('Filename', file.name) +
+        statRow('Original size', formatSize(file.size)) +
+        statRow('Dimensions', img.naturalWidth + ' × ' + img.naturalHeight + ' px') +
+        statRow('Status', `<span class="badge badge-green">✓ Already under ${targetLabel}</span>`);
+
+      downloadBtn.onclick = () => triggerDownload(originalURL, file.name);
+    } else {
+      compressedPreview.src = compressed.dataUrl;
+      compressedSizeLabel.textContent = formatSize(compressed.byteSize);
+      const savings = Math.round((1 - compressed.byteSize / file.size) * 100);
+      const saved   = file.size - compressed.byteSize;
+      const withinTarget = compressed.byteSize <= selectedKB * 1024;
+      const outName = file.name.replace(/\.[^.]+$/, '') + '_compressed.jpg';
+
+      savingsNum.textContent = savings + '%';
+      savedBytes.textContent = formatSize(saved);
+
+      statsTable.innerHTML =
+        statRow('Output filename', outName) +
+        statRow('Original size', formatSize(file.size)) +
+        statRow('Compressed size', formatSize(compressed.byteSize) + ' ' +
+          `<span class="badge ${withinTarget ? 'badge-green' : 'badge-orange'}">${withinTarget ? '✓ Under ' + targetLabel : '⚠ Best effort'}</span>`) +
+        statRow('Dimensions', img.naturalWidth + ' × ' + img.naturalHeight + ' px') +
+        statRow('JPEG quality', Math.round(compressed.quality * 100) + '%') +
+        statRow('Scale used', Math.round(compressed.scaleFactor * 100) + '%');
+
+      downloadBtn.onclick = () => triggerDownload(compressed.dataUrl, outName);
+    }
+
+    resultCard.style.display = 'block';
+    fileInput.value = '';
+  }
+
+  function statRow(key, val) {
+    return `<div class="stat-row"><span class="stat-key">${key}</span><span class="stat-val">${val}</span></div>`;
+  }
+
+  function triggerDownload(href, filename) {
+    const a = document.createElement('a');
+    a.href = href; a.download = filename; a.click();
+  }
+</script>
+</body>
+</html>
