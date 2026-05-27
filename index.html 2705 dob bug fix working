@@ -467,7 +467,7 @@
             <p style="margin-top: 10px; font-style: italic; text-align: center;">Thank you all for your help during testing and for helping make this tool better for everyone! ✈️</p>
             
             <div class="version-info">
-                Version 4.0 | 4th Line for Business Class Writing | Left-Aligned Empty Seat Numbers | Show Unassigned Table in Print | Birthday Detection (🎂)
+                Version 4.0 | 4th Line for Business Class Writing | Left-Aligned Empty Seat Numbers | Show Unassigned Table in Print
                 <br>Any bugs or feedback please contact Zayn Ikhlas when he is 21. I only do this when i'm <a href="http://fids.mas.net:8080/#/home?station=KUL" target="_blank">🚼♿</a> babysitting Zayn or n/s lol XP
             </div>
         </div>
@@ -853,8 +853,7 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
             PNR_PATTERN: /^[A-Z0-9]{6,7}$/i,
             CLASS_PATTERN: /^[JY]$/i,
             TITLES: ['MR', 'MS', 'MRS', 'MISS', 'MSTR', 'DATO', 'DATIN', 'DTUK', 'TSRI', 'MDM', 'DR', 'PROF'],
-            TIERS: ['ELIT', 'PLAT', 'GOLD', 'RUBY', 'SLVR', 'BLUE', 'SAPH', 'EMER'],
-            DOB_PATTERN: /^\d{1,2}\/\d{1,2}$/
+            TIERS: ['ELIT', 'PLAT', 'GOLD', 'RUBY', 'SLVR', 'BLUE', 'SAPH', 'EMER']
         };
         
         const AIRCRAFT_CONFIGS = {
@@ -1846,35 +1845,6 @@ function initPrintControls() {
             return currentSettings.layoutStyle;
         }
         
-        // --- Birthday Helpers ---
-        function parseFlightDate(stdLt) {
-            if (!stdLt) return null;
-            const months = {JAN:0,FEB:1,MAR:2,APR:3,MAY:4,JUN:5,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11};
-            const match = stdLt.trim().match(/^(\d{1,2})([A-Z]{3})/i);
-            if (!match) return null;
-            const day = parseInt(match[1]);
-            const mon = months[match[2].toUpperCase()];
-            if (mon === undefined) return null;
-            return new Date(new Date().getFullYear(), mon, day);
-        }
-
-        function checkBirthday(dob, flightDate) {
-            if (!dob || !flightDate) return false;
-            const match = dob.match(/^(\d{1,2})\/(\d{1,2})$/);
-            if (!match) return false;
-            const dobDay = parseInt(match[1]);
-            const dobMonth = parseInt(match[2]) - 1;
-            const tomorrow = new Date(flightDate);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            if (dobDay === flightDate.getDate() && dobMonth === flightDate.getMonth()) return true;
-            if (dobDay === tomorrow.getDate() && dobMonth === tomorrow.getMonth()) return true;
-            return false;
-        }
-
-        function countBirthdays(passengers) {
-            return passengers.filter(p => p.hasBirthday).length;
-        }
-        
         // Manifest Parsing and Report Generation
         function parseManifest(text) {
             // EASTER EGG: Check for special input first
@@ -1900,8 +1870,6 @@ function initPrintControls() {
                 }
             }
             
-            const flightDate = parseFlightDate(flightInfo.date);
-            
             let startIndex = -1;
             for (let i = 0; i < lines.length; i++) {
                 if (lines[i] === 'MEALS' || lines[i].includes('Passenger & Meal Count')) {
@@ -1918,7 +1886,7 @@ function initPrintControls() {
                 if (line.includes('-- END of PAX List') || (line.includes('Showing') && line.includes('entries'))) break;
                 if (line === '-- CUT HERE --') { i++; continue; }
                 
-                const passenger = { title: '', name: '', seat: '', pnr: '', class: '', fqtv: '', tier: '', meal: '', remark: '', dob: '', hasBirthday: false };
+                const passenger = { title: '', name: '', seat: '', pnr: '', class: '', fqtv: '', tier: '', meal: '', remark: '' };
                 
                 if (CONFIG.TITLES.includes(line)) {
                     passenger.title = line;
@@ -1927,19 +1895,15 @@ function initPrintControls() {
                 }
                 
                 if (i < lines.length && lines[i].includes('/')) {
-                    if (CONFIG.DOB_PATTERN.test(lines[i])) { i++; continue; } // slash line is a DOB, not a name
                     passenger.name = truncateName(lines[i]);
                     i++;
+                    // Skip DOB line if present (format: DD/MM like 27/05)
+if (i < lines.length && /^\d{1,2}\/\d{1,2}$/.test(lines[i])) {
+  i++; // skip the date line
+}
                 } else {
                     i++;
                     continue;
-                }
-                
-                // Skip DOB line if present after name (DD/MM format)
-                if (i < lines.length && CONFIG.DOB_PATTERN.test(lines[i])) {
-                    passenger.dob = lines[i];
-                    passenger.hasBirthday = checkBirthday(lines[i], flightDate);
-                    i++;
                 }
                 
                 while (i < lines.length) {
@@ -2011,10 +1975,10 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                     return;
                 }
                 
-                const filtered = passengers.filter(p => p.meal || p.tier === 'EMER' || p.tier === 'PLAT' || p.hasBirthday);
+                const filtered = passengers.filter(p => p.meal || p.tier === 'EMER' || p.tier === 'PLAT');
                 
                 if (filtered.length === 0 && !currentSettings.showAllBusiness) {
-                    showError('No passengers found with special meals, EMER/PLAT tier, or birthdays.');
+                    showError('No passengers found with special meals or EMER/PLAT tier.');
                     return;
                 }
                 
@@ -2066,7 +2030,7 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                                         break;
                                     } else if (!currentSettings.showAllBusiness || !isBusinessClassZone(zone.name)) {
                                         // Only add if passenger has special requirements
-                                        if (p.meal || p.tier === 'EMER' || p.tier === 'PLAT' || p.hasBirthday) {
+                                        if (p.meal || p.tier === 'EMER' || p.tier === 'PLAT') {
                                             zonePassengers[zone.name].push(p);
                                             assigned = true;
                                             break;
@@ -2266,9 +2230,9 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
                     if (businessZones.length > 0) {
                         successMessage += `Showing ALL passengers in ${businessZones.length} business class zone${businessZones.length > 1 ? 's' : ''}. `;
                     }
-                    successMessage += `${filtered.length} passengers with special requirements or birthdays found.`;
+                    successMessage += `${filtered.length} passengers with special requirements found.`;
                 } else {
-                    successMessage += `${filtered.length} passengers with special requirements or birthdays found.`;
+                    successMessage += `${filtered.length} passengers with special requirements found.`;
                 }
                 
                 // NEW: Apply seat chart flipping if enabled
@@ -2295,7 +2259,6 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
         function generateGlobalSummary(filtered) {
             const specialMealCount = filtered.filter(p => p.meal).length;
             const tierCount = filtered.filter(p => p.tier === 'EMER' || p.tier === 'PLAT').length;
-            const birthdayCount = countBirthdays(filtered);
             let bbmlCount = 0;
             const mealCounts = {};
             filtered.forEach(p => {
@@ -2309,7 +2272,6 @@ if (isDualChartMode || layoutStyle === 'dual-chart-737') {
             });
             const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${n(count)}`).join(', ');
 let html = `<div class="stats"><strong>Summary:</strong> Special Meals: ${n(specialMealCount)} | EMER/PLAT: ${n(tierCount)}`;
-if (birthdayCount > 0) html += ` | 🎂 ${n(birthdayCount)}`;
 if (bbmlCount > 0) html += ` | Infants (BBML): ${n(bbmlCount)}`;
 html += `<br><strong>Meal Breakdown:</strong> ${mealBreakdown || 'None'}`;
 if (bbmlCount > 0) html += ` | BBML: ${n(bbmlCount)}`;
@@ -2320,7 +2282,6 @@ html += `</div>`;
         function generateZoneStats(passengers) {
             const specialMealCount = passengers.filter(p => p.meal).length;
             const tierCount = passengers.filter(p => p.tier === 'EMER' || p.tier === 'PLAT').length;
-            const birthdayCount = countBirthdays(passengers);
             let bbmlCount = 0;
             const mealCounts = {};
             passengers.forEach(p => {
@@ -2334,7 +2295,6 @@ html += `</div>`;
             });
             const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${n(count)}`).join(', ');
 let html = `<div class="stats"><strong>Zone Summary:</strong> Special Meals: ${n(specialMealCount)} | EMER/PLAT: ${n(tierCount)}`;
-if (birthdayCount > 0) html += ` | 🎂 ${n(birthdayCount)}`;
 if (bbmlCount > 0) html += ` | Infants (BBML): ${n(bbmlCount)}`;
 html += `<br><strong>Zone Meal Breakdown:</strong> ${mealBreakdown || 'None'}`;
 if (bbmlCount > 0) html += ` | BBML: ${n(bbmlCount)}`;
@@ -2345,7 +2305,6 @@ html += `</div>`;
         function generateSideStats(passengers, sideName) {
             const specialMealCount = passengers.filter(p => p.meal).length;
             const tierCount = passengers.filter(p => p.tier === 'EMER' || p.tier === 'PLAT').length;
-            const birthdayCount = countBirthdays(passengers);
             let bbmlCount = 0;
             const mealCounts = {};
             passengers.forEach(p => {
@@ -2359,7 +2318,6 @@ html += `</div>`;
             });
             const mealBreakdown = Object.entries(mealCounts).sort((a, b) => b[1] - a[1]).map(([meal, count]) => `${meal}: ${n(count)}`).join(', ');
 let html = `<div class="side-stats"><strong>${sideName}:</strong> Meals: ${n(specialMealCount)} | EMER/PLAT: ${n(tierCount)}`;
-if (birthdayCount > 0) html += ` | 🎂 ${n(birthdayCount)}`;
 if (bbmlCount > 0) html += ` | BBML: ${n(bbmlCount)}`;
 if (mealBreakdown) html += `<br>${mealBreakdown}`;
 html += `</div>`;
@@ -2392,9 +2350,6 @@ html += `</div>`;
                     mealDisplay = `<strong>${parentMeal}</strong>`;
                 } else if (infantMeal) {
                     mealDisplay = `<strong>${infantMeal}</strong>`;
-                }
-                if (p.hasBirthday) {
-                    mealDisplay += (mealDisplay ? ' ' : '') + '🎂';
                 }
                 
                 let remarkIndicator = '';
@@ -2440,9 +2395,6 @@ html += `</div>`;
                 } else if (infantMeal) {
                     mealDisplay = `<strong>${infantMeal}</strong>`;
                 }
-                if (p.hasBirthday) {
-                    mealDisplay += (mealDisplay ? ' ' : '') + '🎂';
-                }
                 
                 html += `<tr>`;
                 html += `<td style="border: 1px dashed #999; background: #fffacd;">&nbsp;</td>`;
@@ -2463,7 +2415,7 @@ html += `</div>`;
         
         // NEW: Check if passenger has special requirements
         function hasSpecialRequirements(passenger) {
-            return passenger.meal || passenger.tier === 'EMER' || passenger.tier === 'PLAT' || passenger.hasBirthday;
+            return passenger.meal || passenger.tier === 'EMER' || passenger.tier === 'PLAT';
         }
         
         // Helper function to format meal display with BBML
@@ -2634,10 +2586,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                                 html += `<td class="${cellClass} ${tierClass}" colspan="${colspan}">`;
                                 if (passenger) {
                                     // UPDATED: Different format for business class vs economy
-                                    let mealDisplay = formatMealDisplay(passenger.meal);
-                                    if (passenger.hasBirthday) {
-                                        mealDisplay += (mealDisplay ? ' ' : '') + '🎂';
-                                    }
+                                    const mealDisplay = formatMealDisplay(passenger.meal);
                                     const tierIcon = passenger.tier === 'PLAT' ? '❤️ ' : (passenger.tier === 'EMER' ? '🔴 ' : '');
                                     
                                     if (isBusinessZone) {
@@ -2665,7 +2614,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                                 } else {
                                     html += `<div class="seat-cell">${seatNumber}</div>`;
                                 }
-                                html += `<table>`;
+                                html += `</td>`;
                                 
                                 colIndex += colspan;
                                 merged = true;
@@ -2695,10 +2644,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                             html += `<td class="${cellClass} ${tierClass}">`;
                             if (passenger) {
                                 // UPDATED: Different format for business class vs economy
-                                let mealDisplay = formatMealDisplay(passenger.meal);
-                                if (passenger.hasBirthday) {
-                                    mealDisplay += (mealDisplay ? ' ' : '') + '🎂';
-                                }
+                                const mealDisplay = formatMealDisplay(passenger.meal);
                                 const tierIcon = passenger.tier === 'PLAT' ? '❤️ ' : (passenger.tier === 'EMER' ? '🔴 ' : '');
                                 
                                 if (isBusinessZone) {
@@ -2726,7 +2672,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                             } else {
                                 html += `<div class="seat-cell">${seatNumber}</div>`;
                             }
-                            html += `</table>`;
+                            html += `</td>`;
                             colIndex++;
                         }
                     }
@@ -2756,10 +2702,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                             html += `<td class="${cellClass} ${tierClass}">`;
                             if (passenger) {
                                 // UPDATED: Different format for business class vs economy
-                                let mealDisplay = formatMealDisplay(passenger.meal);
-                                if (passenger.hasBirthday) {
-                                    mealDisplay += (mealDisplay ? ' ' : '') + '🎂';
-                                }
+                                const mealDisplay = formatMealDisplay(passenger.meal);
                                 const tierIcon = passenger.tier === 'PLAT' ? '❤️ ' : (passenger.tier === 'EMER' ? '🔴 ' : '');
                                 
                                 if (isBusinessZone) {
@@ -2787,7 +2730,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                             } else {
                                 html += `<div class="seat-cell">${seatNumber}</div>`;
                             }
-                            html += `</tr>`;
+                            html += `</td>`;
                         }
                     });
                 }
