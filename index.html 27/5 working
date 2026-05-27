@@ -32,7 +32,7 @@
                     <span class="toggle-slider"></span>
                 </label>
                 <label class="help-toggle-label version-glow" for="toggleVersion">
-                    <span id="versionLabel">🔴</span> 1 Update 27/05/26
+                    <span id="versionLabel">🔴</span> 1 Update 18/01/26
                 </label>
             </div>
             
@@ -1897,10 +1897,6 @@ function initPrintControls() {
                 if (i < lines.length && lines[i].includes('/')) {
                     passenger.name = truncateName(lines[i]);
                     i++;
-                    // Skip DOB line if present (format: DD/MM like 27/05)
-if (i < lines.length && /^\d{1,2}\/\d{1,2}$/.test(lines[i])) {
-  i++; // skip the date line
-}
                 } else {
                     i++;
                     continue;

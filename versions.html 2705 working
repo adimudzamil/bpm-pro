@@ -291,23 +291,6 @@
             </div>
         </div>
         
-        <!-- Version 4.0.2 -->
-<div class="version">
-  <h3>🐞 Version 4.0.2- DOB Parsing Fix</h3>
-  <div class="date">Released: 27 May 2026</div>
-  
-  <div class="fix">
-    <span class="fix-badge">FIX</span>
-    <strong>PAX DOB lines no longer mistaken as passenger names</strong>
-    <ul>
-      <li>Lines containing only a date like <code>mm/dd</code> are now correctly skipped</li>
-      <li>Prevents the passenger name from being overwritten by a PAX DOB field</li>
-      <li>Ensures accurate extraction of name, seat, PNR, class, tier, and meal information</li>
-      <li>Improves manifest parsing reliability when date fields appear after the name</li>
-    </ul>
-  </div>
-</div>
-        
         <!-- Version 4.0.1 -->
         <div class="version">
             <h3>📋 Version 4.0.1 - Layout Update to Service Procedure Manual Revision 8.0.0</h3>
