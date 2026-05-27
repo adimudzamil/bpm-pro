@@ -291,56 +291,22 @@
             </div>
         </div>
         
-        <!-- Version 4.0.3 - Birthday Detection (NEW) -->
-        <div class="version">
-            <h3>🎂 Version 4.0.3 - Birthday Detection & Celebration Integration</h3>
-            <div class="date">Released: 27 May 2026</div>
-            
-            <div class="feature">
-                <span class="feature-badge">FEATURE</span>
-                <strong>Passenger Birthday Detection</strong>
-                <ul>
-                    <li>Detects passenger birthdays from manifest DOB lines (<code>DD/MM</code> format)</li>
-                    <li>Identifies birthdays on the flight date or the next day (for long-haul flights crossing midnight)</li>
-                    <li>Adds 🎂 icon in meal column and summary counters</li>
-                    <li>Birthday passengers automatically included in filtered reports (even without special meals or elite tier)</li>
-                </ul>
-            </div>
-            
-            <div class="improvement">
-                <span class="improvement-badge">IMPROVEMENT</span>
-                <strong>Enhanced Parsing & Summary Integration</strong>
-                <ul>
-                    <li>Added <code>DOB_PATTERN</code> to correctly skip date lines without affecting passenger name</li>
-                    <li>Birthday counts now appear in Global Summary, Zone Summary, and Port/Starboard side stats</li>
-                    <li>Seat chart also shows 🎂 next to meal (if present) or standalone for business class passengers</li>
-                    <li>Helps crew offer small celebrations, handwritten cards, or extra service on board</li>
-                </ul>
-            </div>
-            
-            <div class="info">
-                <span class="info-badge">NOTE</span>
-                <strong>Birthday Check Logic</strong>
-                <p style="margin-top: 6px;">Birthday is considered valid if the passenger’s <code>DD/MM</code> matches either the flight date or the following day – useful for long-haul flights where the meal service may occur after midnight local time.</p>
-            </div>
-        </div>
-        
-        <!-- Version 4.0.2 - DOB Parsing Fix -->
-        <div class="version">
-            <h3>🐞 Version 4.0.2 - DOB Parsing Fix</h3>
-            <div class="date">Released: 27 May 2026</div>
-            
-            <div class="fix">
-                <span class="fix-badge">FIX</span>
-                <strong>PAX DOB lines no longer mistaken as passenger names</strong>
-                <ul>
-                    <li>Lines containing only a date like <code>dd/mm</code> are now correctly skipped</li>
-                    <li>Prevents the passenger name from being overwritten by a PAX DOB field</li>
-                    <li>Ensures accurate extraction of name, seat, class, tier, and meal information</li>
-                    <li>Improves manifest parsing reliability when date fields appear after the name</li>
-                </ul>
-            </div>
-        </div>
+        <!-- Version 4.0.2 -->
+<div class="version">
+  <h3>🐞 Version 4.0.2- DOB Parsing Fix</h3>
+  <div class="date">Released: 27 May 2026</div>
+  
+  <div class="fix">
+    <span class="fix-badge">FIX</span>
+    <strong>PAX DOB lines no longer mistaken as passenger names</strong>
+    <ul>
+      <li>Lines containing only a date like <code>mm/dd</code> are now correctly skipped</li>
+      <li>Prevents the passenger name from being overwritten by a PAX DOB field</li>
+      <li>Ensures accurate extraction of name, seat, class, tier, and meal information</li>
+      <li>Improves manifest parsing reliability when date fields appear after the name</li>
+    </ul>
+  </div>
+</div>
         
         <!-- Version 4.0.1 -->
         <div class="version">
@@ -384,8 +350,8 @@
                 <div class="backup-links">
                     <h4>🔗 Backup URLs:</h4>
                     <ul>
-                        <li><a href="https://adimudzamil.github.io/bpm/" target="_blank">https://adimudzamil.github.io/bpm/</a> - (Latest commit) closed on 26/01/26</li>
-                        <li><a href="https://adimudzamil.github.io/bpm-pro/" target="_blank">https://adimudzamil.github.io/bpm-pro/</a> - Pro version (stable)</li>
+                        <li><a href="https://adimudzamil.github.io/bpm/" target="_blank">https://adimudzamil.github.io/bpm/</a> - (Latest commit)closed on 26/01/26</li>
+                        <li><a href="https://adimudzamil.github.io/bpm-pro/" target="_blank">https://adimudzamil.github.io/bpm-pro/</a> - Pro version  (stable)</li>
                         <li><a href="https://adimudzamil.github.io/bpm-pro-max/" target="_blank">https://adimudzamil.github.io/bpm-pro-max/</a> - Pro Max version (ok) closed on 26/01/26</li>
                         <li><a href="https://adimudzamil.github.io/bpm-pro-max-ultra/" target="_blank">https://adimudzamil.github.io/bpm-pro-max-ultra/</a> - Pro Max Ultra version (non stable, testing playground) closed on 26/01/26</li>
                     </ul>
@@ -397,7 +363,9 @@
                 <span class="improvement-badge">IMPROVEMENT</span>
                 <strong>More seat chart variations and font size options</strong>
                 <ul>
+                
                     <li>Consistent formatting across both webview and print view</li>
+                
                 </ul>
             </div>
         </div>
