@@ -2376,11 +2376,10 @@ html += `</div>`;
             return html;
         }
         
-        // MODIFIED generateTable function to show a simple div when no passengers
         function generateTable(passengers, showSeat = false, aircraftType = 'narrowbody') {
-            // NEW: If no passengers, return simple message instead of empty table
             if (passengers.length === 0) {
-                return `<div style="padding: 8px; color: #64748B; font-style: italic; font-size: 11px;">No passengers</div>`;
+                const headers = showSeat ? '<th>SEAT</th><th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>' : '<th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>';
+                return `<tr><thead><tr>${headers}</table></thead><tbody><tr><td colspan="${showSeat ? 5 : 4}" style="text-align:center;">No passengers</td></tr></tbody></table>`;
             }
             
             const tableClass = aircraftType === 'widebody' ? 'widebody-table' : 'narrowbody-table';
@@ -2595,7 +2594,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                         const col = columns[colIndex];
                         
                         if (col === '|') {
-                            html += `<td class="aisle"></td>`;
+                            html += `<td class="aisle"><table>`;
                             colIndex++;
                             continue;
                         }
