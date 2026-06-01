@@ -968,33 +968,31 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
             }
         };
         
-        // ===================== MODIFIED SEAT_MAPS =====================
+        // Seat maps for each aircraft configuration - UPDATED for 737 business class
         const SEAT_MAPS = {
             '737NG': {
                 columns: ['A', 'B', 'C', '|', 'D', 'E', 'F'],
-                businessColumns: ['A', 'C', '|', 'D', 'F'],
+                businessColumns: ['A', 'C', '|', 'D', 'F'], // No B and E in business class
                 aisles: [3],
                 businessSeats: ['A', 'C', 'D', 'F'],
                 economySeats: ['A', 'B', 'C', 'D', 'E', 'F']
             },
             '737MAX': {
                 columns: ['A', 'B', 'C', '|', 'D', 'E', 'F'],
-                businessColumns: ['A', 'C', '|', 'D', 'F'],
+                businessColumns: ['A', 'C', '|', 'D', 'F'], // No B and E in business class
                 aisles: [3],
                 businessSeats: ['A', 'C', 'D', 'F'],
                 economySeats: ['A', 'B', 'C', 'D', 'E', 'F']
             },
             '737NR': {
                 columns: ['A', 'B', 'C', '|', 'D', 'E', 'F'],
-                businessColumns: ['A', 'C', '|', 'D', 'F'],
+                businessColumns: ['A', 'C', '|', 'D', 'F'], // No B and E in business class
                 aisles: [3],
                 businessSeats: ['A', 'C', 'D', 'F'],
                 economySeats: ['A', 'B', 'C', 'D', 'E', 'F']
             },
             '333': {
                 columns: ['A', 'C', '|', 'D', 'E', 'F', 'G', '|', 'H', 'K'],
-                businessColumns: ['A', '|', 'D', '|', 'G', '|', 'K'],
-                businessAisles: [1,3],
                 aisles: [2, 7],
                 businessSeats: ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'K'],
                 economySeats: ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'K'],
@@ -1008,32 +1006,24 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
             },
             '332': {
                 columns: ['A', 'C', '|', 'D', 'E', 'F', 'G', '|', 'H', 'K'],
-                businessColumns: ['A', 'C', '|', 'D', '|', 'G', 'H', '|', 'K'],
-                businessAisles: [2,5],
                 aisles: [2, 7],
                 businessSeats: ['A', 'C', 'D', 'G', 'H', 'K'],
                 economySeats: ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'K']
             },
             '339': {
                 columns: ['A', 'C', '|', 'D', 'E', 'F', 'G', '|', 'H', 'K'],
-                businessColumns: ['A', '|', 'D', '|', 'G', '|', 'K'],
-                businessAisles: [1,3],
                 aisles: [2, 7],
                 businessSeats: ['A', 'C', 'D', 'G', 'H', 'K'],
                 economySeats: ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'K']
             },
             '359': {
                 columns: ['A', 'B', 'C', '|', 'D', 'F', 'G', '|', 'H', 'J', 'K'],
-                businessColumns: ['A', '|', 'D', '|', 'G', '|', 'K'],
-                businessAisles: [1,3],
                 aisles: [3, 7],
                 businessSeats: ['A', 'C', 'D', 'G', 'H', 'K'],
                 economySeats: ['A', 'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K']
             },
             '350': {
                 columns: ['A', 'B', 'C', '|', 'D', 'E', 'F', '|', 'G', 'H', 'J'],
-                businessColumns: ['A', '|', 'D', 'F', '|', 'H'],
-                businessAisles: [1,4],
                 aisles: [3, 7],
                 businessSeats: ['A', 'C', 'D', 'F', 'G', 'J'],
                 economySeats: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J']
@@ -2379,7 +2369,7 @@ html += `</div>`;
         function generateTable(passengers, showSeat = false, aircraftType = 'narrowbody') {
             if (passengers.length === 0) {
                 const headers = showSeat ? '<th>SEAT</th><th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>' : '<th>TITLE</th><th>NAME</th><th>TIER</th><th>MEAL</th>';
-                return `<tr><thead><tr>${headers}</table></thead><tbody><tr><td colspan="${showSeat ? 5 : 4}" style="text-align:center;">No passengers</td></tr></tbody></table>`;
+                return `<table><thead><tr>${headers}</tr></thead><tbody><tr><td colspan="${showSeat ? 5 : 4}" style="text-align:center;">No passengers</td></tr></tbody></table>`;
             }
             
             const tableClass = aircraftType === 'widebody' ? 'widebody-table' : 'narrowbody-table';
@@ -2514,24 +2504,26 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
         return businessConfig.businessRows.includes(rowNum);
     });
 }
-        // UPDATED: generateSeatChart with improved business class column selection
+        // UPDATED: Generate seat chart with optimized multi-line format for business class and 737 business class layout
+        // NOW WITH 4TH BLANK LINE FOR WRITING IN BUSINESS CLASS
         function generateSeatChart(passengers, zone, aircraftConfig) {
             const seatMap = SEAT_MAPS[aircraftConfig];
             if (!seatMap) {
                 return `<div class="error">Seat chart not available for selected aircraft configuration.</div>`;
             }
             
-            // Determine if this is a business class zone
+            // Determine if this is a business class zone and narrowbody aircraft
             const isBusinessZone = isBusinessClassZone(zone.name);
             const isNarrowbody = ['737NG', '737MAX', '737NR'].includes(aircraftConfig);
             
-            // CHOOSE COLUMNS: if business zone and businessColumns exist, use them, otherwise use standard columns
-            // Use businessColumns and businessAisles for any business zone (widebody or narrowbody) if available
+            // Choose the appropriate columns based on aircraft type and zone
             let columns, aisles;
-            if (isBusinessZone && seatMap.businessColumns) {
+            if (isNarrowbody && isBusinessZone && seatMap.businessColumns) {
+                // Use business class columns for 737 business class (no B and E seats)
                 columns = seatMap.businessColumns;
-                aisles = seatMap.businessAisles || [2];
+                aisles = [2]; // Aisle after C in business class layout
             } else {
+                // Use standard columns for all other cases
                 columns = seatMap.columns;
                 aisles = seatMap.aisles;
             }
@@ -2578,7 +2570,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                 
                 html += `<tr class="${additionalClasses}"><td class="row-header">${rowNum}</td>`;
                 
-                // Check if this is an A330-300 business class row that needs merging (only if using standard columns, not businessColumns)
+                // Check if this is an A330-300 business class row that needs merging
                 const isA333BusinessRow = aircraftConfig === '333' && 
                                          seatMap.businessClassRows && 
                                          seatMap.businessClassRows.includes(row) &&
@@ -2586,15 +2578,14 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                 
                 const isExceptionRow = isA333BusinessRow && [2, 5, 7].includes(row);
                 
-                // For simplicity when using businessColumns we skip merging (businessColumns already simplifies layout)
-                if (isA333BusinessRow && seatMap.businessClassMerges && !isExceptionRow && !isBusinessZone) {
-                    // A330-300 Business Class with merged seats (only if not using businessColumns)
+                if (isA333BusinessRow && seatMap.businessClassMerges && !isExceptionRow) {
+                    // A330-300 Business Class with merged seats
                     let colIndex = 0;
                     while (colIndex < columns.length) {
                         const col = columns[colIndex];
                         
                         if (col === '|') {
-                            html += `<td class="aisle"><table>`;
+                            html += `<td class="aisle"></td>`;
                             colIndex++;
                             continue;
                         }
@@ -2674,7 +2665,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                                 } else {
                                     html += `<div class="seat-cell">${seatNumber}</div>`;
                                 }
-                                html += `</td>`;
+                                html += `<table>`;
                                 
                                 colIndex += colspan;
                                 merged = true;
@@ -2735,12 +2726,12 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                             } else {
                                 html += `<div class="seat-cell">${seatNumber}</div>`;
                             }
-                            html += `</td>`;
+                            html += `</table>`;
                             colIndex++;
                         }
                     }
                 } else {
-                    // Normal row generation (using selected columns, possibly businessColumns)
+                    // Normal row generation
                     columns.forEach(col => {
                         if (col === '|') {
                             html += `<td class="aisle"></td>`;
@@ -2796,7 +2787,7 @@ function getBusinessClassPassengers(passengers, aircraftConfig) {
                             } else {
                                 html += `<div class="seat-cell">${seatNumber}</div>`;
                             }
-                            html += `</td>`;
+                            html += `</tr>`;
                         }
                     });
                 }
