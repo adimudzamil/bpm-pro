@@ -291,43 +291,7 @@
             </div>
         </div>
         
-        <!-- NEW: Version 4.0.4 - 737 Row 4 Toggle -->
-        <div class="version">
-            <h3>🪑 Version 4.0.4 - 737 Business Class Row 4 Toggle</h3>
-            <div class="date">Released: 2 June 2026</div>
-            
-            <div class="feature">
-                <span class="feature-badge">FEATURE</span>
-                <strong>Toggle Between 3‑Row and 4‑Row Business Class Layouts</strong>
-                <ul>
-                    <li>New button in 737 seat chart control bar to switch between 3 rows (737NG/MAX) and 4 rows (737NR)</li>
-                    <li>Identical styling to Aft View toggle for consistency</li>
-                    <li>When switching to 3‑row mode, row 4 is completely removed (not just hidden) to match actual aircraft configuration</li>
-                    <li>If any passengers are assigned to row 4, a temporary warning appears in the zone summary</li>
-                    <li>Passenger data is preserved and repopulated when toggling back to 4‑row mode</li>
-                    <li>Works seamlessly with Aft View and font size adjustments</li>
-                </ul>
-            </div>
-            
-            <div class="improvement">
-                <span class="improvement-badge">IMPROVEMENT</span>
-                <strong>Improved 737 Seat Chart Flexibility</strong>
-                <ul>
-                    <li>Crew can now match the exact business class row count of the aircraft (3 rows for NG/MAX, 4 rows for NR)</li>
-                    <li>Prevents confusion of seeing an extra blank row when row 4 is not present</li>
-                    <li><i>"Reduces paper and ink usage by removing unnecessary rows when printing"</i> - Fahrin</li>
-                    <li>Regeneration logic preserves existing chart data and aft view orientation</li>
-                </ul>
-            </div>
-            
-            <div class="info">
-                <span class="info-badge">NOTE</span>
-                <strong>How It Works</strong>
-                <p style="margin-top: 6px;">The 737 seat chart now has a checkbox labeled “4‑Row Mode (737NR)” – checked = 4 rows, unchecked = 3 rows. When unchecked, the seat grid regenerates with only rows 1–3. Any passengers originally seated in row 4 will not be displayed, and a warning appears. Re‑checking the box restores row 4 and all passengers. This gives crews full control to match the actual aircraft they are working on.</p>
-            </div>
-        </div>
-        
-        <!-- Version 4.0.3 - Birthday Detection -->
+        <!-- Version 4.0.3 - Birthday Detection (NEW) -->
         <div class="version">
             <h3>🎂 Version 4.0.3 - Birthday Detection displayed using 🎂</h3>
             <div class="date">Released: 27 May 2026</div>
@@ -357,7 +321,7 @@
             <div class="info">
                 <span class="info-badge">NOTE</span>
                 <strong>Birthday Check Logic</strong>
-                <p style="margin-top: 6px;">Birthday is considered valid if the passenger’s <code>DD/MM</code> matches either the flight date or the following day – useful for long-haul flights where the meal service may occur after midnight local time. Do note that PAX DOB column in BPM is live and only display the birthdate according to real date(today) and the day after(tomorrow).</p>
+                <p style="margin-top: 6px;">Birthday is considered valid if the passenger’s <code>DD/MM</code> matches either the flight date or the following day – useful for long-haul flights where the meal service may occur after midnight local time. Do note that PAX DOB column in BPM is live and only display the birthdate according to real date(today) and the day after(tomorrow) </p>
             </div>
         </div>
         
