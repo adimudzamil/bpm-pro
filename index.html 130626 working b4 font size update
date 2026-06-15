@@ -235,7 +235,7 @@
                 <div class="settings-header" style="margin-top: 15px;">Font Size</div>
                 <div class="font-size-controls">
                     <div class="font-size-selector">
-                        <input type="range" id="fontSizeSlider" min="7" max="20" value="9" step="1">
+                        <input type="range" id="fontSizeSlider" min="7" max="14" value="9" step="1">
                         <span id="fontSizeDisplay" style="font-weight: 600; color: #2563EB; min-width: 40px;">9px</span>
                     </div>
                     <div class="font-size-presets">
@@ -1580,7 +1580,6 @@ showSuccess('First chart loaded successfully. You can now paste the second manif
             document.getElementById('seatChartFontValue').textContent = currentSettings.seatChartFontSize + 'px';
             document.getElementById('summaryFontDisplay').textContent = currentSettings.summaryFontSize + 'px';
             
-            document.documentElement.style.setProperty('--report-font-size', currentSettings.fontSize + 'px');
             // Apply visual settings
             const outputSection = document.querySelector('.output-section');
 if (outputSection) {
