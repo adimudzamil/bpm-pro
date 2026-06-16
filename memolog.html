@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MEMO.LOG by 2100551</title>
+<title>MEMO.LOG — by 2100551</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -635,7 +635,7 @@
     </div>
     <div class="logo-wordmark">
       <div class="logo-name">MEMO<em>.LOG</em></div>
-      <div class="logo-sub">by 2100551. Local storage only</div>
+      <div class="logo-sub">by 2100551 · Local storage</div>
     </div>
   </div>
   <div class="header-right">
@@ -745,7 +745,7 @@
 
 <!-- FOOTER -->
 <footer class="site-footer">
-  <em>MEMO.LOG</em> &nbsp;·&nbsp; Briefing/VR · Local storage, nothing saved online &nbsp;·&nbsp; by <em>2100551</em>
+  <em>MEMO.LOG</em> &nbsp;·&nbsp; Briefing and VR . Local storage, nothing saved online &nbsp;·&nbsp; by <em>2100551</em>
 </footer>
 
 <!-- TOAST -->
@@ -810,38 +810,100 @@ function detectCat(ref) {
 }
 
 // Extract REF from raw text block
+// Priority: 1) REF table row label  2) numeric-only FO/CAT/NNN/YYYY  3) loose OCR fallback
+// Key rule: only match FO/CAT/NNN/YYYY — reject word-based footers like FO/FSOC/MEMO/MAR2025
 function extractRef(text) {
-  // Match patterns like: FO-IFS-132-2026 / FO/IFS/132/2026 / FO/OPS/024/2026 / FO/FSOC/057/2026
-  const rx = /FO[-\/](IFS|OPS|FSOC|FSO)[-\/](\d{1,4})[-\/](20\d{2})/i;
-  const m = text.match(rx);
-  if (m) return `FO/${m[1].toUpperCase()}/${m[2]}/${m[3]}`;
+  const SEP   = '[\\s\\/\\-\\.]+';          // any separator(s)
+  const OSEP  = '[\\s\\/\\-\\.]*';          // optional separator (OCR sometimes drops it)
+  const CAT   = '(FSOC|IFS|OPS)';
+  const NUM   = '(\\d{1,4})';              // memo number — MUST be numeric, not a word
+  const YEAR  = '(20\\d{2})';
 
-  // Looser fallback: any token that looks like a ref
-  const rx2 = /(FO[-\/\s]?(?:IFS|OPS|FSOC|FSO)[-\/\s]?\d{1,4}[-\/\s]?20\d{2})/i;
-  const m2 = text.match(rx2);
-  if (m2) return normaliseRef(m2[1]);
+  // ── STRATEGY 1: anchored to REF row label ──────────────────────────────────
+  // Matches lines like: "REF   FO/FSOC/057/2026"  or  "REF FO-IFS-132-2026"
+  // The key: value appears on same line after REF label, within ~60 chars
+  const rxRefRow = new RegExp(
+    `REF\\b[\\s\\|\\:]+` +
+    `(?:F[O0]${SEP}${CAT}${SEP}${NUM}${SEP}${YEAR})`,
+    'i'
+  );
+  const mRow = text.match(rxRefRow);
+  if (mRow) {
+    return `FO/${mRow[1].toUpperCase()}/${mRow[2]}/${mRow[3]}`;
+  }
+
+  // ── STRATEGY 2: REF label on one line, value on next line (OCR line-break) ─
+  const lines = text.split(/\n/).map(l => l.trim());
+  for (let i = 0; i < lines.length; i++) {
+    if (/^REF\s*$/i.test(lines[i]) && lines[i + 1]) {
+      const next = lines[i + 1];
+      const rxVal = new RegExp(
+        `F[O0]${SEP}${CAT}${SEP}${NUM}${SEP}${YEAR}`, 'i'
+      );
+      const mv = next.match(rxVal);
+      if (mv) return `FO/${mv[1].toUpperCase()}/${mv[2]}/${mv[3]}`;
+    }
+  }
+
+  // ── STRATEGY 3: any FO/CAT/NNN/YYYY token — numeric number required ────────
+  // This filters out FO/FSOC/MEMO/MAR2025 because MEMO and MAR are not \d+
+  const rxAny = new RegExp(
+    `F[O0]${OSEP}${CAT}${OSEP}${NUM}${OSEP}${YEAR}`, 'gi'
+  );
+  const allMatches = [...text.matchAll(rxAny)];
+  if (allMatches.length) {
+    // Prefer the first one (table is near top of OCR output)
+    const m = allMatches[0];
+    return `FO/${m[1].toUpperCase()}/${m[2]}/${m[3]}`;
+  }
 
   return null;
 }
 
 // Extract SUBJECT from raw text block
+// Table layouts vary: SUBJECT on same line, adjacent cell, or next line after label
+const TABLE_WORDS = /^(TO|FROM|REF|DATE|EFFECTIVE|VALIDITY|CATEGORY|LEVEL|INFORMATION|COMPLIANCE|LOW|MEDIUM|HIGH|ALL CREW|ALL FLIGHT|HEAD|CHIEF|SENIOR|INTRODUCTION|INSTRUCTIONS|MANUAL|ISSUED|INTERNAL|DEAR|FOR YOUR|N\/A)$/i;
+
+function isValidSubject(s) {
+  return s && s.length > 5 && !TABLE_WORDS.test(s.trim()) && !/^\d+$/.test(s.trim());
+}
+
 function extractSubject(text) {
-  // Strategy 1: text after "SUBJECT" label on same or next line
-  const rx1 = /SUBJECT[\s\|:]+([A-Z][^\n]{5,120})/i;
-  const m1 = text.match(rx1);
-  if (m1) return m1[1].trim().toUpperCase();
+  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
 
-  // Strategy 2: for email-style, grab title from first line (FO-OPS-024-2026 : TITLE)
-  const rx2 = /FO[-\/](?:IFS|OPS|FSOC|FSO)[-\/]\d+[-\/]\d+\s*[:\-–]\s*([A-Z].{5,})/i;
-  const m2 = text.match(rx2);
-  if (m2) return m2[1].trim().toUpperCase();
+  // ── S1: "SUBJECT" + content on the SAME line (most common in text PDFs + OCR) ──
+  // Handles: "SUBJECT   CRS USAGE POLICY UPDATE"
+  //          "SUBJECT | CRS USAGE POLICY UPDATE"
+  //          "SUBJECT CRS USAGE POLICY UPDATE"   (no separator, OCR merge)
+  for (const line of lines) {
+    const m = line.match(/^SUBJECT[\s\|\:\-]*\s+(.{4,})/i);
+    if (m && isValidSubject(m[1])) return m[1].trim().toUpperCase();
+  }
 
-  // Strategy 3: look for a line after "SUBJECT" keyword
-  const lines = text.split(/\n/);
+  // ── S2: "SUBJECT" alone on a line → next non-empty, non-table line ──────────
   for (let i = 0; i < lines.length; i++) {
-    if (/^\s*SUBJECT\s*$/i.test(lines[i].trim()) && lines[i+1]) {
-      const s = lines[i+1].trim();
-      if (s.length > 5) return s.toUpperCase();
+    if (/^SUBJECT\s*$/i.test(lines[i])) {
+      for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
+        if (isValidSubject(lines[j])) return lines[j].toUpperCase();
+      }
+    }
+  }
+
+  // ── S3: Email subject line — "FO-OPS-024-2026 : CMS 2.0 ROLL OUT…" ─────────
+  const rxEmail = /FO[-\/](?:IFS|OPS|FSOC)[-\/]\d+[-\/]\d+\s*[:\-–]+\s*(.{6,})/i;
+  const mEmail = text.match(rxEmail);
+  if (mEmail && isValidSubject(mEmail[1])) return mEmail[1].trim().toUpperCase();
+
+  // ── S4: email notification title before body — first ALL-CAPS line > 10 chars
+  //    that is not a table label and appears after the REF area ─────────────────
+  const refIdx = lines.findIndex(l => /\bREF\b/i.test(l));
+  const startIdx = refIdx > -1 ? refIdx : 0;
+  for (let i = startIdx; i < Math.min(startIdx + 15, lines.length); i++) {
+    const l = lines[i];
+    // Skip lines containing the REF value itself
+    if (/FO[\/\-](IFS|OPS|FSOC)/i.test(l)) continue;
+    if (/^[A-Z0-9\s\.\-–\/\(\)&]{10,}$/.test(l) && isValidSubject(l)) {
+      return l.toUpperCase();
     }
   }
 
