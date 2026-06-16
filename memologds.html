@@ -40,6 +40,14 @@
             --radius: 12px;
         }
 
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background: var(--grey-50);
@@ -49,7 +57,6 @@
             flex-direction: column;
         }
 
-        /* ── SCROLLBAR ── */
         ::-webkit-scrollbar {
             width: 5px;
             height: 5px;
@@ -1298,11 +1305,11 @@
         // ════════════════════════════════════════
         //  STATE
         // ════════════════════════════════════════
-        const STORE_KEY = 'mhMemoLog_v4';
+        const STORE_KEY = 'mhMemoLog_v5';
         let memos = [];
         let tab = 'all';
         let sortAsc = false;
-        let currentCategory = null; // 'ifs' | 'ops' | 'fsoc' | null
+        let currentCategory = null;
 
         pdfjsLib.GlobalWorkerOptions.workerSrc =
             'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -1314,11 +1321,12 @@
 
         function hydrate() {
             try { memos = JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch { memos = []; }
-            // ensure each memo has effective/validity fields
+            // ensure fields exist
             memos = memos.map(m => ({
                 ...m,
                 effective: m.effective || '',
-                validity: m.validity || ''
+                validity: m.validity || '',
+                memoDate: m.memoDate || m.ts || new Date().toISOString() // fallback
             }));
         }
 
@@ -1362,7 +1370,6 @@
             const NUM = '(\\d{1,4})';
             const YEAR = '(20\\d{2})';
 
-            // Strategy 1: REF row label
             const rxRefRow = new RegExp(
                 `REF\\b[\\s\\|\\:]+` +
                 `(?:F[O0]${SEP}${CAT}${SEP}${NUM}${SEP}${YEAR})`,
@@ -1373,7 +1380,6 @@
                 return `FO/${mRow[1].toUpperCase()}/${mRow[2]}/${mRow[3]}`;
             }
 
-            // Strategy 2: REF label on one line, value on next
             const lines = text.split(/\n/).map(l => l.trim());
             for (let i = 0; i < lines.length; i++) {
                 if (/^REF\s*$/i.test(lines[i]) && lines[i + 1]) {
@@ -1386,7 +1392,6 @@
                 }
             }
 
-            // Strategy 3: any FO/CAT/NNN/YYYY token
             const rxAny = new RegExp(
                 `F[O0]${OSEP}${CAT}${OSEP}${NUM}${OSEP}${YEAR}`, 'gi'
             );
@@ -1409,13 +1414,11 @@
         function extractSubject(text) {
             const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
 
-            // S1: "SUBJECT" + content on same line
             for (const line of lines) {
                 const m = line.match(/^SUBJECT[\s\|\:\-]*\s+(.{4,})/i);
                 if (m && isValidSubject(m[1])) return m[1].trim().toUpperCase();
             }
 
-            // S2: "SUBJECT" alone on a line → next non-empty
             for (let i = 0; i < lines.length; i++) {
                 if (/^SUBJECT\s*$/i.test(lines[i])) {
                     for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
@@ -1424,12 +1427,10 @@
                 }
             }
 
-            // S3: Email subject line
             const rxEmail = /FO[-\/](?:IFS|OPS|FSOC)[-\/]\d+[-\/]\d+\s*[:\-–]+\s*(.{6,})/i;
             const mEmail = text.match(rxEmail);
             if (mEmail && isValidSubject(mEmail[1])) return mEmail[1].trim().toUpperCase();
 
-            // S4: first ALL-CAPS line > 10 chars after REF area
             const refIdx = lines.findIndex(l => /\bREF\b/i.test(l));
             const startIdx = refIdx > -1 ? refIdx : 0;
             for (let i = startIdx; i < Math.min(startIdx + 15, lines.length); i++) {
@@ -1446,21 +1447,15 @@
         // ── Extract EFFECTIVE and VALIDITY ──
         function extractEffective(text) {
             const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
-
-            // Look for EFFECTIVE label followed by date
-            // Date formats: DD MMM YYYY, DD-MMM-YYYY, DD/MM/YYYY, etc.
             const datePattern = '(\\d{1,2}[\\s\\/\\-–—]+[A-Z]{3,4}[\\s\\/\\-–—]+\\d{4})';
 
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
-                // Check if line contains EFFECTIVE label
                 const m = line.match(/^EFFECTIVE\s*[:\-]?\s*(.+)/i);
                 if (m) {
                     const raw = m[1].trim();
-                    // Try to extract date from the same line
                     const dateMatch = raw.match(/(\d{1,2}[\/\s\-–—]+[A-Z]{3,4}[\/\s\-–—]+\d{4})/i);
                     if (dateMatch) return dateMatch[1].trim().toUpperCase();
-                    // If no date on same line, look at next few lines
                     for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
                         const dMatch = lines[j].match(/(\d{1,2}[\/\s\-–—]+[A-Z]{3,4}[\/\s\-–—]+\d{4})/i);
                         if (dMatch) return dMatch[1].trim().toUpperCase();
@@ -1468,7 +1463,6 @@
                 }
             }
 
-            // Fallback: scan for date patterns near EFFECTIVE
             const rx = /EFFECTIVE\s*[:\-]?\s*([^\n]{0,30})/i;
             const m = text.match(rx);
             if (m) {
@@ -1482,7 +1476,6 @@
 
         function extractValidity(text) {
             const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
-
             const datePattern = '(\\d{1,2}[\\s\\/\\-–—]+[A-Z]{3,4}[\\s\\/\\-–—]+\\d{4})';
 
             for (let i = 0; i < lines.length; i++) {
@@ -1508,6 +1501,95 @@
             }
 
             return '';
+        }
+
+        // ── Extract MEMO DATE (from DATE or EFFECTIVE) ──
+        function extractMemoDate(text) {
+            // Try to find a DATE field first, then EFFECTIVE, then fallback to current
+            const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+            const datePattern = '(\\d{1,2}[\\s\\/\\-–—]+[A-Z]{3,4}[\\s\\/\\-–—]+\\d{4})';
+
+            // Look for DATE label
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const m = line.match(/^DATE\s*[:\-]?\s*(.+)/i);
+                if (m) {
+                    const raw = m[1].trim();
+                    const dateMatch = raw.match(/(\d{1,2}[\/\s\-–—]+[A-Z]{3,4}[\/\s\-–—]+\d{4})/i);
+                    if (dateMatch) {
+                        const parsed = parseDateString(dateMatch[1]);
+                        if (parsed) return parsed.toISOString();
+                    }
+                    for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
+                        const dMatch = lines[j].match(/(\d{1,2}[\/\s\-–—]+[A-Z]{3,4}[\/\s\-–—]+\d{4})/i);
+                        if (dMatch) {
+                            const parsed = parseDateString(dMatch[1]);
+                            if (parsed) return parsed.toISOString();
+                        }
+                    }
+                }
+            }
+
+            // If no DATE, try EFFECTIVE
+            const eff = extractEffective(text);
+            if (eff) {
+                const parsed = parseDateString(eff);
+                if (parsed) return parsed.toISOString();
+            }
+
+            // Fallback: try to find any date in the first few lines
+            for (let i = 0; i < Math.min(lines.length, 10); i++) {
+                const m = lines[i].match(/(\d{1,2}[\/\s\-–—]+[A-Z]{3,4}[\/\s\-–—]+\d{4})/i);
+                if (m) {
+                    const parsed = parseDateString(m[1]);
+                    if (parsed) return parsed.toISOString();
+                }
+            }
+
+            return null; // not found
+        }
+
+        // Parse a date string like "15 JAN 2025", "15-Jan-2025", "15/01/2025"
+        function parseDateString(str) {
+            const cleaned = str.replace(/[–—]/g, '-').trim();
+            // Try to parse with multiple formats
+            const parts = cleaned.split(/[\/\s\-]+/);
+            if (parts.length !== 3) return null;
+            let day = parseInt(parts[0]);
+            let monthStr = parts[1].toUpperCase();
+            let year = parseInt(parts[2]);
+
+            if (isNaN(day) || isNaN(year) || year < 2000 || year > 2100) return null;
+
+            const months = {
+                'JAN': 0,
+                'FEB': 1,
+                'MAR': 2,
+                'APR': 3,
+                'MAY': 4,
+                'JUN': 5,
+                'JUL': 6,
+                'AUG': 7,
+                'SEP': 8,
+                'OCT': 9,
+                'NOV': 10,
+                'DEC': 11
+            };
+            let month;
+            if (monthStr in months) {
+                month = months[monthStr];
+            } else {
+                // Try numeric month
+                let m = parseInt(monthStr);
+                if (!isNaN(m) && m >= 1 && m <= 12) {
+                    month = m - 1;
+                } else {
+                    return null;
+                }
+            }
+            const date = new Date(year, month, day);
+            if (isNaN(date.getTime())) return null;
+            return date;
         }
 
         // ════════════════════════════════════════
@@ -1608,6 +1690,13 @@
                     const effective = extractEffective(rawText) || '';
                     const validity = extractValidity(rawText) || '';
 
+                    // Extract memo date
+                    let memoDate = extractMemoDate(rawText);
+                    if (!memoDate) {
+                        // fallback to current date
+                        memoDate = new Date().toISOString();
+                    }
+
                     memos.unshift({
                         id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
                         ref,
@@ -1615,7 +1704,8 @@
                         cat,
                         effective,
                         validity,
-                        ts: new Date().toISOString()
+                        memoDate, // store as ISO string
+                        ts: new Date().toISOString() // keep for reference
                     });
                     added++;
 
@@ -1765,7 +1855,6 @@
             badge.className = 'badge-cat ' + cat;
 
             renderCategory();
-            // scroll to top of category view
             vc.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
@@ -1794,11 +1883,15 @@
                 return;
             }
 
-            // Sort by date (newest first)
-            const sorted = [...list].sort((a, b) => new Date(b.ts) - new Date(a.ts));
+            // Sort by memoDate (newest first)
+            const sorted = [...list].sort((a, b) => {
+                const da = new Date(a.memoDate || a.ts);
+                const db = new Date(b.memoDate || b.ts);
+                return db - da;
+            });
 
             tbody.innerHTML = sorted.map(m => {
-                const d = new Date(m.ts);
+                const d = new Date(m.memoDate || m.ts);
                 const dateStr = d.toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' });
                 const eff = m.effective || '—';
                 const val = m.validity || '—';
@@ -1826,7 +1919,11 @@
             const list = memos.filter(m => m.cat === currentCategory);
             if (!list.length) { toast('No records to export.', 'err'); return; }
 
-            const sorted = [...list].sort((a, b) => new Date(b.ts) - new Date(a.ts));
+            const sorted = [...list].sort((a, b) => {
+                const da = new Date(a.memoDate || a.ts);
+                const db = new Date(b.memoDate || b.ts);
+                return db - da;
+            });
             const label = currentCategory.toUpperCase();
 
             let content = '';
@@ -1836,7 +1933,8 @@
                 ext = 'txt';
                 const header = `MEMO.LOG — ${label} Category Export\nGenerated: ${new Date().toLocaleString()}\n${'='.repeat(60)}\n\n`;
                 const rows = sorted.map(m => {
-                    const d = new Date(m.ts).toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' });
+                    const d = new Date(m.memoDate || m.ts).toLocaleDateString('en-MY', { day: '2-digit', month: 'short',
+                        year: 'numeric' });
                     return `Date: ${d}\nRef: ${m.ref}\nSubject: ${m.subject}\nEffective: ${m.effective || '—'}\nValidity: ${m.validity || '—'}\n${'-'.repeat(40)}`;
                 });
                 content = header + rows.join('\n\n');
@@ -1844,7 +1942,8 @@
                 ext = 'csv';
                 const header = 'Date,Ref,Subject,Effective,Validity\n';
                 const rows = sorted.map(m => {
-                    const d = new Date(m.ts).toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' });
+                    const d = new Date(m.memoDate || m.ts).toLocaleDateString('en-MY', { day: '2-digit', month: 'short',
+                        year: 'numeric' });
                     const ref = `"${m.ref.replace(/"/g, '""')}"`;
                     const subj = `"${m.subject.replace(/"/g, '""')}"`;
                     const eff = `"${(m.effective || '—').replace(/"/g, '""')}"`;
@@ -1885,14 +1984,20 @@
             document.getElementById('tb-ops').textContent = counts.ops || 0;
             document.getElementById('tb-fsoc').textContent = counts.fsoc || 0;
 
-            // filter + sort
+            // filter + sort by memoDate
             let list = memos.filter(m => {
                 const inTab = (tab === 'all') || m.cat === tab;
                 const inQ = !q || m.ref.toLowerCase().includes(q) || m.subject.toLowerCase().includes(q);
                 return inTab && inQ;
             });
 
-            if (sortAsc) list = list.slice().reverse();
+            // Sort by memoDate (newest first by default)
+            list.sort((a, b) => {
+                const da = new Date(a.memoDate || a.ts);
+                const db = new Date(b.memoDate || b.ts);
+                return db - da;
+            });
+            if (sortAsc) list.reverse();
 
             document.getElementById('panelInfo').textContent =
                 `${list.length} record${list.length !== 1 ? 's' : ''}`;
@@ -1910,7 +2015,7 @@
             }
 
             container.innerHTML = list.map(m => {
-                const d = new Date(m.ts);
+                const d = new Date(m.memoDate || m.ts);
                 const dateStr = d.toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' });
                 return `
               <div class="memo-row" data-id="${m.id}">
@@ -1984,7 +2089,6 @@
         render();
         setFavicon();
 
-        // If category view was open before reload, close it
         if (currentCategory) {
             goHome();
         }
