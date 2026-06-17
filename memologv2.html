@@ -80,7 +80,7 @@ body{font-family:'Inter',sans-serif;background:var(--g50);color:var(--text);min-
 .drop-hint strong{color:var(--g600);}
 .browse-btn{background:var(--navy);color:var(--white);border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:9px 24px;cursor:pointer;transition:background .15s;}
 .browse-btn:hover{background:var(--navy-mid);}
-#fileInput{display:none;}
+#fileInput{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;}
 .proc-overlay{display:none;position:absolute;inset:0;background:rgba(255,255,255,.96);flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:10px;}
 .drop-zone.busy .proc-overlay{display:flex;}
 .proc-bar-wrap{width:220px;height:4px;background:var(--g100);border-radius:2px;overflow:hidden;}
@@ -362,7 +362,7 @@ td.td-subj{color:var(--text);max-width:320px;}
       </div>
       <div class="drop-title">Drop Memo Files Here</div>
       <div class="drop-hint">Accepts <strong>PDF</strong> and <strong>screenshot images</strong> (PNG · JPG)<br>Auto-detects IFS · OPS · FSOC — reads REF, Subject, Date, Effective, Validity</div>
-      <button class="browse-btn" onclick="document.getElementById('fileInput').click()">Browse Files</button>
+      <label class="browse-btn" for="fileInput" style="display:inline-block;cursor:pointer;">Browse Files</label>
       <input type="file" id="fileInput" multiple accept=".pdf,image/png,image/jpeg,image/jpg,image/webp">
       <div class="proc-overlay">
         <div class="proc-label" id="procLabel">Processing…</div>
@@ -1251,13 +1251,36 @@ function updateDbBarInfo(){
 
 // ═══════════════════════════════════════════════
 //  MODAL & IMPORT EVENT LISTENERS
+//  Wrapped in DOMContentLoaded — modal HTML sits
+//  after </script> so elements don't exist yet
+//  when the script first executes.
 // ═══════════════════════════════════════════════
-document.getElementById('importModal').addEventListener('click',e=>{ if(e.target===document.getElementById('importModal')) closeImportModal(); });
-const importDZ=document.getElementById('importDropZone');
-importDZ.addEventListener('dragover', e=>{e.preventDefault();importDZ.classList.add('drag-over');});
-importDZ.addEventListener('dragleave',()=>importDZ.classList.remove('drag-over'));
-importDZ.addEventListener('drop',e=>{e.preventDefault();importDZ.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)importJSON(f);});
-document.getElementById('importJsonInput').addEventListener('change',e=>{if(e.target.files[0]){importJSON(e.target.files[0]);e.target.value='';}});
+document.addEventListener('DOMContentLoaded', () => {
+  const importModal = document.getElementById('importModal');
+  const importDZ    = document.getElementById('importDropZone');
+  const importInput = document.getElementById('importJsonInput');
+
+  if (importModal) {
+    importModal.addEventListener('click', e => {
+      if (e.target === importModal) closeImportModal();
+    });
+  }
+  if (importDZ) {
+    importDZ.addEventListener('dragover',  e => { e.preventDefault(); importDZ.classList.add('drag-over'); });
+    importDZ.addEventListener('dragleave', ()  => importDZ.classList.remove('drag-over'));
+    importDZ.addEventListener('drop', e => {
+      e.preventDefault();
+      importDZ.classList.remove('drag-over');
+      const f = e.dataTransfer.files[0];
+      if (f) importJSON(f);
+    });
+  }
+  if (importInput) {
+    importInput.addEventListener('change', e => {
+      if (e.target.files[0]) { importJSON(e.target.files[0]); e.target.value = ''; }
+    });
+  }
+});
 
 // ═══════════════════════════════════════════════
 //  BOOT — async to await IndexedDB init
