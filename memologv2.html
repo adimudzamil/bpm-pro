@@ -224,6 +224,64 @@ td.td-subj{color:var(--text);max-width:320px;}
   .stats-row{grid-template-columns:1fr;}
   .stat-card::after{display:none;}
 }
+
+/* ── IMPORT/EXPORT TOOLBAR ── */
+.db-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--gold-pale);border:1px solid #E8D9A0;border-radius:10px;margin-bottom:20px;flex-wrap:wrap;}
+.db-bar-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);flex-shrink:0;margin-right:4px;}
+.db-btn{display:flex;align-items:center;gap:5px;border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:7px 13px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.db-btn.primary{background:var(--navy);color:var(--white);}
+.db-btn.primary:hover{background:var(--navy-mid);}
+.db-btn.secondary{background:var(--white);color:var(--navy);border:1px solid var(--g200);}
+.db-btn.secondary:hover{border-color:var(--navy);}
+.db-btn.gold{background:var(--gold);color:var(--navy-dark);}
+.db-btn.gold:hover{background:var(--gold-light);}
+.db-bar-spacer{flex:1;}
+.db-bar-info{font-size:10px;color:var(--g600);font-style:italic;}
+
+/* ── MODAL OVERLAY ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,15,40,.6);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:14px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,31,78,.4);overflow:hidden;animation:modalIn .2s ease;}
+@keyframes modalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.modal-hdr{background:linear-gradient(135deg,var(--navy-dark),var(--navy));padding:18px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--gold);}
+.modal-title{font-size:15px;font-weight:800;color:var(--white);letter-spacing:.02em;}
+.modal-title em{color:var(--gold);font-style:normal;}
+.modal-close{background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:20px;line-height:1;padding:0 2px;transition:color .15s;}
+.modal-close:hover{color:var(--white);}
+.modal-body{padding:20px;}
+.modal-body p{font-size:13px;color:var(--g600);line-height:1.6;margin-bottom:14px;}
+.modal-body p strong{color:var(--text);}
+.modal-drop{border:2px dashed var(--g200);border-radius:8px;padding:28px 16px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px;}
+.modal-drop:hover,.modal-drop.drag-over{border-color:var(--gold);background:var(--gold-pale);}
+.modal-drop-icon{font-size:28px;margin-bottom:8px;}
+.modal-drop-text{font-size:12px;color:var(--g400);}
+.modal-drop-text strong{color:var(--navy);}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:4px;}
+.modal-btn{display:flex;align-items:center;gap:5px;border:none;border-radius:7px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;padding:9px 18px;cursor:pointer;transition:background .15s;letter-spacing:.04em;}
+.modal-btn.primary{background:var(--navy);color:var(--white);}
+.modal-btn.primary:hover{background:var(--navy-mid);}
+.modal-btn.cancel{background:var(--g50);color:var(--g600);border:1px solid var(--g200);}
+.modal-btn.cancel:hover{background:var(--g100);}
+.import-status{font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px;display:none;}
+.import-status.ok{background:#DCFCE7;color:#166534;display:block;}
+.import-status.err{background:#FEE2E2;color:#991B1B;display:block;}
+
+/* ── WARN BANNER ── */
+.warn-banner{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--navy-dark);border-top:3px solid var(--gold);padding:12px 20px;z-index:400;flex-direction:column;gap:10px;box-shadow:0 -4px 20px rgba(0,31,78,.4);}
+.warn-banner.show{display:flex;}
+.warn-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.warn-icon{font-size:20px;flex-shrink:0;}
+.warn-text{flex:1;font-size:12px;color:rgba(255,255,255,.85);line-height:1.5;}
+.warn-text strong{color:var(--gold-light);}
+.warn-btns{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;}
+.warn-btn{display:flex;align-items:center;gap:5px;border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:11px;font-weight:700;padding:7px 13px;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;transition:all .15s;white-space:nowrap;}
+.warn-btn.gold{background:var(--gold);color:var(--navy-dark);}
+.warn-btn.gold:hover{background:var(--gold-light);}
+.warn-btn.ghost{background:rgba(255,255,255,.1);color:var(--white);border:1px solid rgba(255,255,255,.2);}
+.warn-btn.ghost:hover{background:rgba(255,255,255,.18);}
+.warn-btn.dismiss{background:none;border:none;color:rgba(255,255,255,.35);font-size:18px;padding:0 4px;cursor:pointer;}
+.warn-btn.dismiss:hover{color:rgba(255,255,255,.7);}
+#importJsonInput{display:none;}
 </style>
 </head>
 <body>
@@ -273,6 +331,25 @@ td.td-subj{color:var(--text);max-width:320px;}
           <div class="stat-hint">Flight Safety</div>
         </div>
       </div>
+    </div>
+
+    <!-- DB TOOLBAR -->
+    <div class="db-bar">
+      <span class="db-bar-label">🗄️ Database</span>
+      <button class="db-btn primary" onclick="openImportModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Import Database
+      </button>
+      <button class="db-btn gold" onclick="exportJSON()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Save Database
+      </button>
+      <button class="db-btn secondary" onclick="exportFullHTML()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Export HTML
+      </button>
+      <div class="db-bar-spacer"></div>
+      <span class="db-bar-info" id="dbBarInfo">Save your database before leaving</span>
     </div>
 
     <!-- DROP ZONE -->
@@ -409,12 +486,87 @@ const CAT_META = {
 };
 
 // ═══════════════════════════════════════════════
-//  STORAGE
+//  DATABASE — IndexedDB (persistent across tabs/sessions)
 // ═══════════════════════════════════════════════
-function persist() { localStorage.setItem(STORE_KEY, JSON.stringify(memos)); }
+const DB_NAME    = 'MemoLogDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'memos';
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains(STORE_NAME)) {
+        const store = d.createObjectStore(STORE_NAME, { keyPath: 'id' });
+        store.createIndex('cat', 'cat', { unique: false });
+        store.createIndex('ts',  'ts',  { unique: false });
+      }
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+// Write entire memos array to IndexedDB (clear + re-add)
+function persist() {
+  if (!db) return;
+  const tx    = db.transaction(STORE_NAME, 'readwrite');
+  const store = tx.objectStore(STORE_NAME);
+  store.clear();
+  memos.forEach(m => store.put(m));
+  // Also mirror to localStorage as backup fallback
+  try { localStorage.setItem('mhMemoLog_backup', JSON.stringify(memos)); } catch(e) {}
+}
+
+// Add or update a single memo (more efficient for single inserts)
+function persistOne(memo) {
+  if (!db) return;
+  const tx = db.transaction(STORE_NAME, 'readwrite');
+  tx.objectStore(STORE_NAME).put(memo);
+  try { localStorage.setItem('mhMemoLog_backup', JSON.stringify(memos)); } catch(e) {}
+}
+
+// Delete a single memo by id
+function dbDelete(id) {
+  if (!db) return;
+  const tx = db.transaction(STORE_NAME, 'readwrite');
+  tx.objectStore(STORE_NAME).delete(id);
+  try { localStorage.setItem('mhMemoLog_backup', JSON.stringify(memos)); } catch(e) {}
+}
+
+// Load all memos from IndexedDB into the memos array
 function hydrate() {
-  try { memos = JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
-  catch { memos = []; }
+  return new Promise((resolve) => {
+    if (!db) { resolve(); return; }
+    const tx      = db.transaction(STORE_NAME, 'readonly');
+    const store   = tx.objectStore(STORE_NAME);
+    const req     = store.index('ts').getAll();
+    req.onsuccess = e => {
+      const rows = e.target.result || [];
+      // Sort newest first
+      memos = rows.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+      // If DB was empty, try localStorage backup migration
+      if (!memos.length) {
+        try {
+          const bk = JSON.parse(localStorage.getItem('mhMemoLog_backup') ||
+                                localStorage.getItem('mhMemoLog_v4') || '[]');
+          if (bk.length) {
+            memos = bk;
+            persist(); // migrate to IndexedDB
+            toast('Migrated ' + bk.length + ' saved memos to local database', 'ok');
+          }
+        } catch(e) {}
+      }
+      resolve();
+    };
+    req.onerror = () => {
+      // Fallback to localStorage if IndexedDB fails
+      try { memos = JSON.parse(localStorage.getItem('mhMemoLog_backup') || '[]'); } catch(e) { memos = []; }
+      resolve();
+    };
+  });
 }
 
 // ═══════════════════════════════════════════════
@@ -454,10 +606,19 @@ function extractRef(text) {
     }
   }
 
-  // S3: any numeric FO/CAT/NNN/YYYY token (filters word-only footers)
-  const rx3 = new RegExp('F[O0]' + OSEP + CAT + OSEP + NUM + OSEP + YEAR, 'gi');
+  // S3: any FO/CAT/NNN/YYYY — strictly numeric memo number, sanity-checked 1–999
+  // Rejects footers like FO/FSOC/MEMO/MAR2025 because MEMO is not \d+
+  const rx3 = new RegExp('F[O0]' + OSEP + CAT + OSEP + '(\\d{1,4})' + OSEP + YEAR, 'gi');
   const all  = [...text.matchAll(rx3)];
-  if (all.length) { const m=all[0]; return `FO/${m[1].toUpperCase()}/${m[2]}/${m[3]}`; }
+  if (all.length) {
+    for (const m of all) {
+      if (parseInt(m[2],10) >= 1 && parseInt(m[2],10) <= 9999) {
+        return `FO/${m[1].toUpperCase()}/${m[2]}/${m[3]}`;
+      }
+    }
+    const m = all[0];
+    return `FO/${m[1].toUpperCase()}/${m[2]}/${m[3]}`;
+  }
 
   return null;
 }
@@ -496,85 +657,93 @@ function extractSubject(text) {
 // ═══════════════════════════════════════════════
 //  PARSING — DATE / EFFECTIVE / VALIDITY
 // ═══════════════════════════════════════════════
-const MONTHS_RX = 'JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER';
-const RX_DATESTR = new RegExp(`\\d{1,2}\\s+(?:${MONTHS_RX})\\s+20\\d{2}`, 'i');
-const RX_DATESLASH = /\d{1,2}[\/\-]\d{1,2}[\/\-]20\d{2}/;
+const MONTHS_RX = 'JAN(?:UARY)?|FEB(?:RUARY)?|MAR(?:CH)?|APR(?:IL)?|MAY|JUN(?:E)?|JUL(?:Y)?|AUG(?:UST)?|SEP(?:TEMBER)?|OCT(?:OBER)?|NOV(?:EMBER)?|DEC(?:EMBER)?';
+
+function parseDate(raw) {
+  if (!raw) return null;
+  const s = raw.trim();
+  // "13 June 2026" or "13th June 2026"
+  const mL = s.match(new RegExp('(\\d{1,2})(?:st|nd|rd|th)?\\s+(' + MONTHS_RX + ')\\s+(20\\d{2})', 'i'));
+  if (mL) return (parseInt(mL[1],10) + ' ' + mL[2] + ' ' + mL[3]).toUpperCase();
+  // "13/06/2026" or "13-06-2026"
+  const m4 = s.match(/(\d{1,2})[\/-](\d{1,2})[\/-](20\d{2})/);
+  if (m4) {
+    const mo=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][parseInt(m4[2],10)-1]||m4[2];
+    return parseInt(m4[1],10)+' '+mo+' '+m4[3];
+  }
+  // "13/06/26" or "13-06-26"
+  const m2 = s.match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{2}$)/);
+  if (m2) {
+    const mo=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][parseInt(m2[2],10)-1]||m2[2];
+    return parseInt(m2[1],10)+' '+mo+' 20'+m2[3];
+  }
+  const sp = s.match(/^(UFN|N\/A|TBD|IMMEDIATE EFFECT|IMMEDIATE)$/i);
+  if (sp) return sp[0].toUpperCase();
+  return null;
+}
+
 const RX_SPECIAL = /\b(UFN|N\/A|TBD|IMMEDIATE|IMMEDIATE EFFECT)\b/i;
 
-// Extract a date-like value associated with a given row label.
-// Handles: same-line, next-line, and table-row-with-multiple-values layouts.
+// Generic: find a date value after a label (same line or next line)
+// Handles all date formats via parseDate()
 function extractDateField(text, label) {
   const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+  const labelRx = new RegExp(`^${label}\\b[\\s\\|\\:]*`, 'i');
+  const testRx  = new RegExp(`^${label}\\b`, 'i');
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    // Does this line start with or contain the label?
-    const labelRx = new RegExp(`^${label}\\b`, 'i');
-    if (!labelRx.test(line)) continue;
-
-    // The value may be on this line (after the label) or the next line
-    const candidates = [line, lines[i+1]||'', lines[i+2]||''];
+    if (!testRx.test(lines[i])) continue;
+    // Check same line (after stripping label) and up to 2 next lines
+    const candidates = [
+      lines[i].replace(labelRx, ''),
+      lines[i+1]||'',
+      lines[i+2]||''
+    ];
     for (const c of candidates) {
-      // Strip the label itself if present
-      const stripped = c.replace(new RegExp(`^${label}\\b[\\s\\|\\:]*`, 'i'), '').trim();
-      // Try full date string first
-      const dm = stripped.match(new RegExp(`\\d{1,2}\\s+(?:${MONTHS_RX})\\s+20\\d{2}`, 'i'));
-      if (dm) return dm[0].trim().toUpperCase();
-      const ds = stripped.match(/\d{1,2}[\/\-]\d{1,2}[\/\-]20\d{2}/);
-      if (ds) return ds[0].trim().toUpperCase();
-      // Special keywords
+      // For EFFECTIVE row: strip anything from VALIDITY onwards
+      const stripped = c.replace(/\s*VALIDITY\b.*/i, '').trim();
+      const d = parseDate(stripped) || parseDate(c);
+      if (d) return d;
       const sp = stripped.match(/\b(UFN|N\/A|TBD|IMMEDIATE EFFECT|IMMEDIATE)\b/i);
-      if (sp && stripped.length < 40) return sp[0].trim().toUpperCase();
+      if (sp && stripped.length < 40) return sp[1].toUpperCase();
     }
   }
   return null;
 }
 
 function extractDate(text)      { return extractDateField(text, 'DATE'); }
+
 function extractEffective(text) {
-  // "EFFECTIVE" row often contains both the date AND "VALIDITY   <value>" on same line
-  // e.g. "EFFECTIVE   11 JUNE 2026   VALIDITY   10 JUNE 2027"
-  // We just want the part before VALIDITY
   const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
   for (const line of lines) {
     if (!/^EFFECTIVE\b/i.test(line)) continue;
-    // Strip everything from VALIDITY onward
     const stripped = line.replace(/^EFFECTIVE\b[\s\|:]*/i, '')
                          .replace(/\s*VALIDITY\b.*/i, '').trim();
-    const dm = stripped.match(new RegExp(`\\d{1,2}\\s+(?:${MONTHS_RX})\\s+20\\d{2}`, 'i'));
-    if (dm) return dm[0].trim().toUpperCase();
-    const ds = stripped.match(/\d{1,2}[\/\-]\d{1,2}[\/\-]20\d{2}/);
-    if (ds) return ds[0].trim().toUpperCase();
+    const d = parseDate(stripped);
+    if (d) return d;
     const sp = stripped.match(/\b(UFN|N\/A|TBD|IMMEDIATE EFFECT|IMMEDIATE)\b/i);
-    if (sp) return sp[0].trim().toUpperCase();
+    if (sp) return sp[1].toUpperCase();
   }
   return extractDateField(text, 'EFFECTIVE');
 }
 
 function extractValidity(text) {
-  // VALIDITY often appears inline after EFFECTIVE on the same line
-  // e.g. "EFFECTIVE  11 JUNE 2026  VALIDITY  10 JUNE 2027"
   const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
   for (const line of lines) {
-    // Check lines that contain VALIDITY anywhere (could be on EFFECTIVE row or its own row)
     if (!/VALIDITY\b/i.test(line)) continue;
     const after = line.replace(/.*?VALIDITY\b[\s\|:]*/i, '').trim();
-    // Strip trailing noise
     const clean = after.split(/\s{2,}|\|/)[0].trim();
-    const dm = clean.match(new RegExp(`\\d{1,2}\\s+(?:${MONTHS_RX})\\s+20\\d{2}`, 'i'));
-    if (dm) return dm[0].trim().toUpperCase();
-    const ds = clean.match(/\d{1,2}[\/\-]\d{1,2}[\/\-]20\d{2}/);
-    if (ds) return ds[0].trim().toUpperCase();
+    const d = parseDate(clean);
+    if (d) return d;
     const sp = clean.match(/^(UFN|N\/A|TBD)\b/i);
-    if (sp) return sp[0].trim().toUpperCase();
-    // Value might be on next line
+    if (sp) return sp[1].toUpperCase();
+    // Try next line
     const idx = lines.indexOf(line);
     if (lines[idx+1]) {
-      const nxt = lines[idx+1];
-      const nm = nxt.match(new RegExp(`\\d{1,2}\\s+(?:${MONTHS_RX})\\s+20\\d{2}`, 'i'));
-      if (nm) return nm[0].trim().toUpperCase();
-      const ns = nxt.match(/\b(UFN|N\/A|TBD)\b/i);
-      if (ns) return ns[0].trim().toUpperCase();
+      const d2 = parseDate(lines[idx+1]);
+      if (d2) return d2;
+      const ns = lines[idx+1].match(/\b(UFN|N\/A|TBD)\b/i);
+      if (ns) return ns[1].toUpperCase();
     }
   }
   return extractDateField(text, 'VALIDITY');
@@ -667,12 +836,14 @@ async function processFiles(files) {
       const validity  = extractValidity(raw)  || '';
       const cat       = detectCat(ref);
 
-      memos.unshift({
+      const newMemo = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
         ref, subject, cat,
         dateIssued, effective, validity,
         ts: new Date().toISOString()
-      });
+      };
+      memos.unshift(newMemo);
+      persistOne(newMemo);
       added++;
     } catch(err) {
       console.error(file.name, err);
@@ -748,7 +919,8 @@ function copyMemo(id, btnEl) {
 }
 function delMemo(id) {
   memos=memos.filter(m=>m.id!==id);
-  persist(); render();
+  dbDelete(id);
+  render();
   if (document.getElementById('pageDetail').classList.contains('active')) renderDetail();
 }
 
@@ -766,6 +938,7 @@ function render() {
   document.getElementById('tb-ifs').textContent   = counts.ifs||0;
   document.getElementById('tb-ops').textContent   = counts.ops||0;
   document.getElementById('tb-fsoc').textContent  = counts.fsoc||0;
+  updateDbBarInfo();
 
   let list = memos.filter(m=>{
     const inTab=(tab==='all')||m.cat===tab;
@@ -962,11 +1135,183 @@ document.getElementById('fileInput').addEventListener('change', e=>{
   if (files.length){processFiles(files);e.target.value='';}
 });
 
+
 // ═══════════════════════════════════════════════
-//  BOOT
+//  DATABASE EXPORT — JSON (full backup, re-importable)
 // ═══════════════════════════════════════════════
-hydrate();
-render();
+function exportJSON() {
+  if (!memos.length) { toast('No memos to save','err'); return; }
+  const payload = {
+    _type:    'MemoLogDB',
+    _version: 1,
+    _exported: new Date().toISOString(),
+    _count:   memos.length,
+    memos:    memos
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = 'MemoLog_Database_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('Database saved — ' + memos.length + ' memos', 'ok');
+  updateDbBarInfo();
+}
+
+// ═══════════════════════════════════════════════
+//  DATABASE EXPORT — Full HTML (offline-viewable)
+// ═══════════════════════════════════════════════
+function exportFullHTML() {
+  if (!memos.length) { toast('No memos to export','err'); return; }
+  const now = new Date().toLocaleDateString('en-MY',{day:'2-digit',month:'long',year:'numeric'});
+  const cats = ['ifs','ops','fsoc'];
+  const catName  = {ifs:'In-Flight Services',ops:'Ops Planning & Support',fsoc:'Flight Safety'};
+  const catColor = {ifs:'#003580',ops:'#16A34A',fsoc:'#DC2626'};
+  const tableFor = (cat) => {
+    const list = memos.filter(m=>m.cat===cat);
+    if (!list.length) return '<p style="color:#888;font-style:italic;padding:12px 16px">No memos logged.</p>';
+    return '<table><thead><tr><th>Date</th><th>Ref</th><th>Subject</th><th>Effective</th><th>Validity</th></tr></thead><tbody>'
+      + list.map((m,i)=>'<tr'+(i%2?' class="alt"':'')+'><td>'+( m.dateIssued||'—')+'</td><td style="font-weight:700;color:#003580;white-space:nowrap">'+m.ref+'</td><td>'+m.subject+'</td><td>'+(m.effective||'—')+'</td><td>'+(m.validity||'—')+'</td></tr>').join('')
+      + '</tbody></table>';
+  };
+  const html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MEMO.LOG Export — '+now+'</title>'
+    + '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#F4F7FB;color:#0D1F3C}.hdr{background:linear-gradient(135deg,#001F4E,#003580);border-bottom:3px solid #C9A84C;padding:18px 24px;color:#fff}.hdr h1{font-size:22px;font-weight:800;letter-spacing:.04em}.hdr h1 em{color:#C9A84C;font-style:normal}.hdr p{font-size:11px;color:rgba(255,255,255,.5);margin-top:4px}.body{max-width:1000px;margin:0 auto;padding:24px 16px 60px}.section{background:#fff;border:1px solid #E8EEF7;border-radius:10px;margin-bottom:24px;overflow:hidden}.sec-hdr{padding:14px 18px;border-bottom:2px solid #E8EEF7;display:flex;align-items:center;gap:10px}.sec-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}.sec-title{font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.sec-count{font-size:11px;color:#7A93B4;margin-left:4px}table{width:100%;border-collapse:collapse;font-size:12px}th{background:#001F4E;color:rgba(255,255,255,.7);padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}td{padding:10px 14px;border-bottom:1px solid #E8EEF7;vertical-align:top}tr.alt td{background:#F9FBFD}.foot{text-align:center;font-size:10px;color:#7A93B4;padding:20px;letter-spacing:.08em;text-transform:uppercase}</style>'
+    + '</head><body><div class="hdr"><h1>MEMO<em>.LOG</em></h1><p>Malaysia Airlines · Exported '+now+' · '+memos.length+' total memos · by 2100551</p></div>'
+    + '<div class="body">'
+    + cats.map(cat=>'<div class="section"><div class="sec-hdr"><div class="sec-dot" style="background:'+catColor[cat]+'"></div><div class="sec-title" style="color:'+catColor[cat]+'">'+cat.toUpperCase()+' <span class="sec-count">— '+catName[cat]+'</span></div><span class="sec-count">'+memos.filter(m=>m.cat===cat).length+' memos</span></div>'+tableFor(cat)+'</div>').join('')
+    + '</div><div class="foot">MEMO.LOG · Malaysia Airlines Berhad · Internal Reference · 2100551</div></body></html>';
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = 'MemoLog_Export_' + new Date().toISOString().slice(0,10) + '.html';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('HTML exported', 'ok');
+}
+
+// ═══════════════════════════════════════════════
+//  DATABASE IMPORT — JSON
+// ═══════════════════════════════════════════════
+function openImportModal()  { document.getElementById('importModal').classList.add('open'); document.getElementById('importStatus').className='import-status'; document.getElementById('importStatus').textContent=''; }
+function closeImportModal() { document.getElementById('importModal').classList.remove('open'); }
+
+async function importJSON(file) {
+  const statusEl = document.getElementById('importStatus');
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    const incoming = Array.isArray(data) ? data : (data.memos || []);
+    if (!incoming.length) { statusEl.className='import-status err'; statusEl.textContent='No memos found in this file.'; return; }
+    let added=0, skipped=0;
+    for (const m of incoming) {
+      if (!m.ref || !m.cat) { skipped++; continue; }
+      if (memos.find(x=>x.ref===m.ref)) { skipped++; continue; }
+      if (!m.id) m.id='imp-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);
+      memos.unshift(m);
+      persistOne(m);
+      added++;
+    }
+    statusEl.className='import-status ok';
+    statusEl.textContent='✓ '+added+' memo'+(added!==1?'s':'')+' imported'+(skipped?', '+skipped+' skipped (already in log)':'')+'.';
+    render(); updateDbBarInfo();
+    if (added) toast(added+' memos imported','ok');
+  } catch(e) {
+    statusEl.className='import-status err';
+    statusEl.textContent='Invalid file. Please use a MemoLog .json backup.';
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  LEAVE WARNING
+// ═══════════════════════════════════════════════
+let warnDismissed = false;
+function showWarnBanner() { if (memos.length&&!warnDismissed) document.getElementById('warnBanner').classList.add('show'); }
+function dismissWarn()    { document.getElementById('warnBanner').classList.remove('show'); warnDismissed=true; }
+
+window.addEventListener('beforeunload', e=>{
+  if (memos.length) { const m='Save your MEMO.LOG database before leaving!'; e.preventDefault(); e.returnValue=m; return m; }
+});
+document.addEventListener('visibilitychange', ()=>{ if (document.hidden&&memos.length&&!warnDismissed) showWarnBanner(); });
+let _inactTimer;
+function resetInactivity(){ clearTimeout(_inactTimer); _inactTimer=setTimeout(showWarnBanner, 30000); }
+['click','touchstart','keydown'].forEach(ev=>document.addEventListener(ev,resetInactivity,{passive:true}));
+
+// ═══════════════════════════════════════════════
+//  DB BAR INFO
+// ═══════════════════════════════════════════════
+function updateDbBarInfo(){
+  const el=document.getElementById('dbBarInfo');
+  if(!el) return;
+  const c={ifs:0,ops:0,fsoc:0};
+  memos.forEach(m=>c[m.cat]=(c[m.cat]||0)+1);
+  el.textContent=memos.length?memos.length+' memos · IFS:'+c.ifs+' OPS:'+c.ops+' FSOC:'+c.fsoc:'No memos yet — import a backup or drop files above';
+}
+
+// ═══════════════════════════════════════════════
+//  MODAL & IMPORT EVENT LISTENERS
+// ═══════════════════════════════════════════════
+document.getElementById('importModal').addEventListener('click',e=>{ if(e.target===document.getElementById('importModal')) closeImportModal(); });
+const importDZ=document.getElementById('importDropZone');
+importDZ.addEventListener('dragover', e=>{e.preventDefault();importDZ.classList.add('drag-over');});
+importDZ.addEventListener('dragleave',()=>importDZ.classList.remove('drag-over'));
+importDZ.addEventListener('drop',e=>{e.preventDefault();importDZ.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)importJSON(f);});
+document.getElementById('importJsonInput').addEventListener('change',e=>{if(e.target.files[0]){importJSON(e.target.files[0]);e.target.value='';}});
+
+// ═══════════════════════════════════════════════
+//  BOOT — async to await IndexedDB init
+// ═══════════════════════════════════════════════
+(async () => {
+  try {
+    await openDB();
+  } catch(e) {
+    console.warn('IndexedDB unavailable, using localStorage fallback:', e);
+  }
+  await hydrate();
+  render();
+})();
 </script>
+
+<!-- ════════════════ IMPORT MODAL ════════════════ -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">Import <em>Database</em></div>
+      <button class="modal-close" onclick="closeImportModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p>Drop your previously saved <strong>MemoLog .json</strong> file below, or browse for it. New memos will be added — existing ones (same REF) are skipped.</p>
+      <div class="import-status" id="importStatus"></div>
+      <div class="modal-drop" id="importDropZone" onclick="document.getElementById('importJsonInput').click()">
+        <div class="modal-drop-icon">📂</div>
+        <div class="modal-drop-text"><strong>Tap to browse</strong> or drop JSON file here</div>
+      </div>
+      <input type="file" id="importJsonInput" accept=".json">
+      <div class="modal-actions">
+        <button class="modal-btn cancel" onclick="closeImportModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ LEAVE WARNING BANNER ════════════════ -->
+<div class="warn-banner" id="warnBanner">
+  <div class="warn-row">
+    <span class="warn-icon">⚠️</span>
+    <div class="warn-text">
+      <strong>Save your database before you go.</strong><br>
+      Your memo log is stored in this browser only. Export a backup JSON so you can restore it next time — on this device or another.
+    </div>
+    <div class="warn-btns">
+      <button class="warn-btn gold" onclick="exportJSON();dismissWarn()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Save Now
+      </button>
+      <button class="warn-btn ghost" onclick="exportFullHTML();dismissWarn()">Export HTML</button>
+      <button class="warn-btn dismiss" onclick="dismissWarn()" title="Dismiss">×</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
