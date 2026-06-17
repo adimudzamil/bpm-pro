@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MEMO.LOG</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗂️</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗂️</text></svg>">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MEMO.LOG">
+<meta name="theme-color" content="#001F4E">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:       #003580;
+  --navy-dark:  #001F4E;
+  --navy-mid:   #00418A;
+  --gold:       #C9A84C;
+  --gold-light: #E8C96A;
+  --gold-pale:  #FBF5E6;
+  --white:      #FFFFFF;
+  --g50:        #F4F7FB;
+  --g100:       #E8EEF7;
+  --g200:       #C8D5E8;
+  --g400:       #7A93B4;
+  --g600:       #3D5A7A;
+  --text:       #0D1F3C;
+  --ifs-bg:     #EBF1FB; --ifs-tx: #003580; --ifs-ac: #003580;
+  --ops-bg:     #ECFAF2; --ops-tx: #166534; --ops-ac: #16A34A;
+  --fsoc-bg:    #FEF3EC; --fsoc-tx: #7C2D12; --fsoc-ac: #DC2626;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{height:100%;}
+body{font-family:'Inter',sans-serif;background:var(--g50);color:var(--text);min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;}
+
+/* ── HEADER ── */
+.hdr{background:linear-gradient(135deg,var(--navy-dark) 0%,var(--navy) 100%);border-bottom:3px solid var(--gold);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300;box-shadow:0 2px 20px rgba(0,31,78,.4);}
+.hdr-logo{display:flex;align-items:center;gap:10px;}
+.hdr-ico{font-size:26px;line-height:1;}
+.hdr-name{font-size:19px;font-weight:800;color:var(--white);letter-spacing:.04em;line-height:1;}
+.hdr-name em{color:var(--gold);font-style:normal;}
+.hdr-sub{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.18em;text-transform:uppercase;margin-top:2px;}
+.hdr-right{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.08em;text-transform:uppercase;text-align:right;line-height:1.8;}
+.hdr-right strong{display:block;color:var(--gold-light);font-size:11px;font-weight:600;}
+
+/* ── PAGES ── */
+.page{display:none;flex:1;flex-direction:column;}
+.page.active{display:flex;}
+
+/* ── MAIN PAGE ── */
+.main{max-width:900px;margin:0 auto;padding:28px 18px 80px;width:100%;flex:1;}
+
+/* ── STATS CARDS ── */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--white);border:1px solid var(--g100);border-radius:12px;padding:18px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.stat-card::after{content:'→';position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--g200);transition:all .2s;font-weight:700;}
+.stat-card:hover{box-shadow:0 4px 18px rgba(0,53,128,.12);transform:translateY(-1px);}
+.stat-card:hover::after{right:10px;color:var(--g400);}
+.stat-card.ifs:hover{border-color:var(--ifs-ac);}
+.stat-card.ops:hover{border-color:var(--ops-ac);}
+.stat-card.fsoc:hover{border-color:var(--fsoc-ac);}
+.stat-pip{width:8px;height:44px;border-radius:3px;flex-shrink:0;}
+.stat-pip.ifs{background:var(--ifs-ac);}
+.stat-pip.ops{background:var(--ops-ac);}
+.stat-pip.fsoc{background:var(--fsoc-ac);}
+.stat-info{flex:1;}
+.stat-label{font-size:10px;color:var(--g400);text-transform:uppercase;letter-spacing:.12em;font-weight:600;margin-bottom:3px;}
+.stat-num{font-size:30px;font-weight:800;color:var(--navy);line-height:1;}
+.stat-hint{font-size:10px;color:var(--g400);margin-top:2px;}
+
+/* ── DROP ZONE ── */
+.drop-zone{background:var(--white);border:2px dashed var(--g200);border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;margin-bottom:24px;overflow:hidden;}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--gold);background:var(--gold-pale);}
+.drop-zone.busy{pointer-events:none;}
+.drop-ico{width:50px;height:50px;background:var(--g50);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;transition:background .2s;}
+.drop-zone:hover .drop-ico{background:#EDE8D8;}
+.drop-title{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.drop-hint{font-size:12px;color:var(--g400);margin-bottom:16px;line-height:1.6;}
+.drop-hint strong{color:var(--g600);}
+.browse-btn{background:var(--navy);color:var(--white);border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:9px 24px;cursor:pointer;transition:background .15s;}
+.browse-btn:hover{background:var(--navy-mid);}
+#fileInput{display:none;}
+.proc-overlay{display:none;position:absolute;inset:0;background:rgba(255,255,255,.96);flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:10px;}
+.drop-zone.busy .proc-overlay{display:flex;}
+.proc-bar-wrap{width:220px;height:4px;background:var(--g100);border-radius:2px;overflow:hidden;}
+.proc-bar{height:100%;background:linear-gradient(90deg,var(--navy),var(--gold));border-radius:2px;width:0%;transition:width .3s ease;}
+.proc-label{font-size:13px;font-weight:600;color:var(--navy);}
+.proc-file{font-size:11px;color:var(--g400);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ── PANEL ── */
+.panel{background:var(--white);border:1px solid var(--g100);border-radius:12px;overflow:hidden;box-shadow:0 1px 6px rgba(0,31,78,.05);}
+.tabs-bar{display:flex;border-bottom:1px solid var(--g100);background:var(--g50);padding:0 4px;}
+.tab-btn{padding:13px 18px 12px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--g400);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;margin-bottom:-1px;font-family:'Inter',sans-serif;}
+.tab-btn:hover{color:var(--navy);}
+.tab-btn.active{color:var(--navy);border-bottom-color:var(--gold);background:var(--white);border-radius:6px 6px 0 0;}
+.tab-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;background:var(--g100);color:var(--g600);}
+.tab-btn.active .tab-badge{background:var(--gold-pale);color:var(--navy);}
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--g100);}
+.srch-wrap{flex:1;display:flex;align-items:center;gap:8px;background:var(--g50);border:1px solid var(--g100);border-radius:7px;padding:7px 11px;}
+.srch-wrap svg{color:var(--g400);flex-shrink:0;}
+.srch-inp{flex:1;border:none;outline:none;background:transparent;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);}
+.srch-inp::placeholder{color:var(--g400);}
+.srch-clr{background:none;border:none;cursor:pointer;color:var(--g400);display:none;padding:0;line-height:1;}
+.sort-btn{flex-shrink:0;display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--g200);border-radius:7px;padding:7px 11px;font-size:11px;font-weight:600;color:var(--g600);cursor:pointer;letter-spacing:.05em;transition:all .15s;font-family:'Inter',sans-serif;white-space:nowrap;}
+.sort-btn:hover{border-color:var(--navy);color:var(--navy);}
+.memo-list{padding:6px;}
+.empty-state{padding:56px 20px;text-align:center;color:var(--g400);}
+.empty-ico{width:52px;height:52px;background:var(--g50);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;opacity:.6;}
+.empty-title{font-size:15px;font-weight:600;color:var(--g400);margin-bottom:5px;}
+.empty-sub{font-size:12px;color:var(--g200);}
+.memo-row{display:flex;align-items:center;gap:8px;padding:10px 8px;border-radius:7px;transition:background .12s;animation:rowIn .2s ease;}
+@keyframes rowIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.memo-row:hover{background:var(--g50);}
+.memo-row+.memo-row{border-top:1px solid var(--g50);}
+.cat-tag{flex-shrink:0;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:4px;width:42px;text-align:center;}
+.cat-tag.ifs{background:var(--ifs-bg);color:var(--ifs-tx);}
+.cat-tag.ops{background:var(--ops-bg);color:var(--ops-tx);}
+.cat-tag.fsoc{background:var(--fsoc-bg);color:var(--fsoc-tx);}
+.memo-ref{flex-shrink:0;font-size:11px;font-weight:700;color:var(--navy);min-width:140px;}
+.vr{width:1px;height:20px;background:var(--g100);flex-shrink:0;}
+.memo-subject{flex:1;font-size:12px;color:var(--text);line-height:1.4;}
+.memo-date-col{flex-shrink:0;font-size:10px;color:var(--g400);white-space:nowrap;}
+.row-actions{flex-shrink:0;display:flex;align-items:center;gap:4px;}
+.copy-btn{display:flex;align-items:center;gap:4px;background:var(--navy);color:var(--white);border:none;border-radius:5px;font-family:'Inter',sans-serif;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:5px 10px;cursor:pointer;transition:background .15s;white-space:nowrap;}
+.copy-btn:hover{background:var(--navy-mid);}
+.copy-btn.ok{background:#16A34A;}
+.del-btn{width:26px;height:26px;background:none;border:1px solid var(--g100);border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--g400);transition:all .12s;}
+.del-btn:hover{border-color:#EF4444;color:#EF4444;background:#FEF2F2;}
+.panel-foot{padding:9px 16px;border-top:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between;background:var(--g50);}
+.panel-foot-info{font-size:11px;color:var(--g400);}
+.clear-tab-btn{font-size:11px;color:var(--g400);background:none;border:none;cursor:pointer;transition:color .15s;font-family:'Inter',sans-serif;}
+.clear-tab-btn:hover{color:#EF4444;}
+
+/* ── DETAIL PAGE ── */
+.det-hdr{background:linear-gradient(135deg,var(--navy-dark) 0%,var(--navy) 100%);border-bottom:3px solid var(--gold);padding:0 20px;height:64px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:300;box-shadow:0 2px 20px rgba(0,31,78,.4);}
+.back-btn{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:7px;color:var(--white);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;padding:7px 13px;cursor:pointer;transition:background .15s;letter-spacing:.04em;flex-shrink:0;}
+.back-btn:hover{background:rgba(255,255,255,.18);}
+.det-hdr-title{flex:1;}
+.det-hdr-cat{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:2px;}
+.det-hdr-name{font-size:16px;font-weight:800;color:var(--white);line-height:1;}
+.det-hdr-name em{color:var(--gold);font-style:normal;}
+.det-actions{display:flex;gap:8px;flex-shrink:0;}
+.export-btn{display:flex;align-items:center;gap:5px;background:var(--gold);color:var(--navy-dark);border:none;border-radius:7px;font-family:'Inter',sans-serif;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:8px 14px;cursor:pointer;transition:background .15s;}
+.export-btn:hover{background:var(--gold-light);}
+.export-txt{background:rgba(255,255,255,.15);color:var(--white);border:1px solid rgba(255,255,255,.25);}
+.export-txt:hover{background:rgba(255,255,255,.25);}
+
+.det-body{max-width:1100px;margin:0 auto;padding:24px 18px 80px;width:100%;}
+.det-summary{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.det-stat{background:var(--white);border:1px solid var(--g100);border-radius:8px;padding:12px 16px;min-width:100px;}
+.det-stat-label{font-size:9px;color:var(--g400);text-transform:uppercase;letter-spacing:.12em;font-weight:600;margin-bottom:3px;}
+.det-stat-val{font-size:20px;font-weight:800;color:var(--navy);}
+
+/* ── TABLE ── */
+.tbl-wrap{background:var(--white);border:1px solid var(--g100);border-radius:12px;overflow:hidden;box-shadow:0 1px 6px rgba(0,31,78,.05);}
+.tbl-toolbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--g100);background:var(--g50);}
+.tbl-search-wrap{flex:1;display:flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--g100);border-radius:7px;padding:7px 11px;}
+.tbl-search-wrap svg{color:var(--g400);flex-shrink:0;}
+.tbl-search-inp{flex:1;border:none;outline:none;background:transparent;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);}
+.tbl-search-inp::placeholder{color:var(--g400);}
+.tbl-sort-sel{background:var(--white);border:1px solid var(--g200);border-radius:7px;padding:7px 10px;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;color:var(--g600);cursor:pointer;outline:none;}
+.tbl-outer{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead tr{background:var(--navy-dark);}
+th{padding:11px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.7);white-space:nowrap;border-right:1px solid rgba(255,255,255,.06);}
+th:last-child{border-right:none;}
+th.sortable{cursor:pointer;user-select:none;}
+th.sortable:hover{color:var(--gold-light);}
+th .sort-arrow{margin-left:4px;opacity:.4;}
+th.sort-active{color:var(--gold-light);}
+th.sort-active .sort-arrow{opacity:1;}
+tbody tr{border-bottom:1px solid var(--g100);transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--g50);}
+td{padding:11px 14px;vertical-align:top;line-height:1.4;}
+td.td-date{white-space:nowrap;color:var(--g600);font-size:11px;font-weight:500;}
+td.td-eff{white-space:nowrap;color:var(--g600);font-size:11px;}
+td.td-val{white-space:nowrap;font-size:11px;}
+td.td-ref{font-weight:700;color:var(--navy);white-space:nowrap;font-size:11px;}
+td.td-subj{color:var(--text);max-width:320px;}
+.val-badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;}
+.val-badge.active{background:#DCFCE7;color:#166534;}
+.val-badge.expired{background:#FEE2E2;color:#991B1B;}
+.val-badge.udn{background:var(--g100);color:var(--g600);}
+.td-actions{white-space:nowrap;}
+.td-copy-btn{background:var(--navy);color:var(--white);border:none;border-radius:4px;font-family:'Inter',sans-serif;font-size:10px;font-weight:700;padding:4px 9px;cursor:pointer;transition:background .15s;}
+.td-copy-btn:hover{background:var(--navy-mid);}
+.td-copy-btn.ok{background:#16A34A;}
+.td-del-btn{background:none;border:1px solid var(--g100);border-radius:4px;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--g400);margin-left:4px;transition:all .12s;vertical-align:middle;}
+.td-del-btn:hover{border-color:#EF4444;color:#EF4444;background:#FEF2F2;}
+.tbl-foot{padding:9px 16px;border-top:1px solid var(--g100);display:flex;align-items:center;justify-content:space-between;background:var(--g50);}
+.tbl-foot-info{font-size:11px;color:var(--g400);}
+.tbl-empty{padding:52px 20px;text-align:center;color:var(--g400);}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:20px;background:var(--navy-dark);color:var(--white);padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;border-left:3px solid var(--gold);box-shadow:0 4px 20px rgba(0,31,78,.3);transform:translateY(12px);opacity:0;transition:all .25s ease;z-index:999;max-width:320px;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok{border-left-color:#22C55E;}
+.toast.err{border-left-color:#EF4444;}
+
+/* ── FOOTER ── */
+.site-foot{background:var(--navy-dark);border-top:1px solid rgba(201,168,76,.2);padding:12px 20px;text-align:center;font-size:10px;color:rgba(255,255,255,.22);letter-spacing:.1em;text-transform:uppercase;}
+.site-foot em{color:var(--gold);font-style:normal;}
+
+/* ── MOBILE ── */
+@media(max-width:640px){
+  .hdr{padding:0 14px;height:58px;}
+  .hdr-right{display:none;}
+  .main{padding:16px 12px 60px;}
+  .stats-row{gap:8px;}
+  .stat-num{font-size:24px;}
+  .memo-ref{min-width:100px;font-size:10px;}
+  .vr{display:none;}
+  .memo-date-col{display:none;}
+  .tab-btn{padding:11px 11px 10px;font-size:10px;}
+  .det-hdr{padding:0 12px;height:58px;}
+  .det-body{padding:16px 12px 60px;}
+  th,td{padding:9px 10px;}
+  td.td-subj{max-width:180px;}
+  .det-actions .export-btn span{display:none;}
+}
+@media(max-width:400px){
+  .stats-row{grid-template-columns:1fr;}
+  .stat-card::after{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════ SHARED HEADER ════════════════ -->
+<header class="hdr" id="mainHdr">
+  <div class="hdr-logo">
+    <div class="hdr-ico">🗂️</div>
+    <div>
+      <div class="hdr-name">MEMO<em>.LOG</em></div>
+      <div class="hdr-sub">by 2100551 · local storage</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <strong>Malaysia Airlines</strong>
+    IFS · OPS · FSOC
+  </div>
+</header>
+
+<!-- ════════════════ PAGE: MAIN ════════════════ -->
+<div class="page active" id="pageMain">
+  <main class="main">
+
+    <!-- STATS CARDS -->
+    <div class="stats-row">
+      <div class="stat-card ifs" onclick="openDetail('ifs')">
+        <div class="stat-pip ifs"></div>
+        <div class="stat-info">
+          <div class="stat-label">IFS</div>
+          <div class="stat-num" id="cnt-ifs">0</div>
+          <div class="stat-hint">In-Flight Services</div>
+        </div>
+      </div>
+      <div class="stat-card ops" onclick="openDetail('ops')">
+        <div class="stat-pip ops"></div>
+        <div class="stat-info">
+          <div class="stat-label">OPS</div>
+          <div class="stat-num" id="cnt-ops">0</div>
+          <div class="stat-hint">Ops Planning & Support</div>
+        </div>
+      </div>
+      <div class="stat-card fsoc" onclick="openDetail('fsoc')">
+        <div class="stat-pip fsoc"></div>
+        <div class="stat-info">
+          <div class="stat-label">FSOC</div>
+          <div class="stat-num" id="cnt-fsoc">0</div>
+          <div class="stat-hint">Flight Safety</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DROP ZONE -->
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-ico">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#003580" stroke-width="1.8" stroke-linecap="round">
+          <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+          <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+        </svg>
+      </div>
+      <div class="drop-title">Drop Memo Files Here</div>
+      <div class="drop-hint">Accepts <strong>PDF</strong> and <strong>screenshot images</strong> (PNG · JPG)<br>Auto-detects IFS · OPS · FSOC — reads REF, Subject, Date, Effective, Validity</div>
+      <button class="browse-btn" onclick="document.getElementById('fileInput').click()">Browse Files</button>
+      <input type="file" id="fileInput" multiple accept=".pdf,image/png,image/jpeg,image/jpg,image/webp">
+      <div class="proc-overlay">
+        <div class="proc-label" id="procLabel">Processing…</div>
+        <div class="proc-bar-wrap"><div class="proc-bar" id="procBar"></div></div>
+        <div class="proc-file" id="procFile"></div>
+      </div>
+    </div>
+
+    <!-- PANEL -->
+    <div class="panel">
+      <div class="tabs-bar">
+        <button class="tab-btn active" data-tab="all"  onclick="setTab('all')">All <span class="tab-badge" id="tb-all">0</span></button>
+        <button class="tab-btn"        data-tab="ifs"  onclick="setTab('ifs')">IFS <span class="tab-badge" id="tb-ifs">0</span></button>
+        <button class="tab-btn"        data-tab="ops"  onclick="setTab('ops')">OPS <span class="tab-badge" id="tb-ops">0</span></button>
+        <button class="tab-btn"        data-tab="fsoc" onclick="setTab('fsoc')">FSOC <span class="tab-badge" id="tb-fsoc">0</span></button>
+      </div>
+      <div class="toolbar">
+        <div class="srch-wrap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="srch-inp" id="searchInput" placeholder="Search ref or subject…" oninput="onSearch(this)">
+          <button class="srch-clr" id="clearSearch" onclick="clearSearch()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <button class="sort-btn" onclick="toggleSort()" id="sortBtn">↓ Newest</button>
+      </div>
+      <div class="memo-list" id="memoList"></div>
+      <div class="panel-foot">
+        <div class="panel-foot-info" id="panelInfo">0 records</div>
+        <button class="clear-tab-btn" onclick="clearTab()">Remove filtered</button>
+      </div>
+    </div>
+
+  </main>
+  <footer class="site-foot"><em>MEMO.LOG</em> · Malaysia Airlines Berhad · Internal Reference · <em>2100551</em></footer>
+</div>
+
+<!-- ════════════════ PAGE: DETAIL ════════════════ -->
+<div class="page" id="pageDetail">
+  <div class="det-hdr">
+    <button class="back-btn" onclick="closeDetail()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
+    <div class="det-hdr-title">
+      <div class="det-hdr-cat" id="detCatLabel">Category</div>
+      <div class="det-hdr-name" id="detCatName">—</div>
+    </div>
+    <div class="det-actions">
+      <button class="export-btn" onclick="exportCSV()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>CSV</span>
+      </button>
+      <button class="export-btn export-txt" onclick="exportTXT()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+        <span>TXT</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="det-body">
+    <div class="det-summary" id="detSummary"></div>
+    <div class="tbl-wrap">
+      <div class="tbl-toolbar">
+        <div class="tbl-search-wrap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="tbl-search-inp" id="tblSearch" placeholder="Search this category…" oninput="renderDetail()">
+        </div>
+        <select class="tbl-sort-sel" id="tblSort" onchange="renderDetail()">
+          <option value="date-desc">Newest first</option>
+          <option value="date-asc">Oldest first</option>
+          <option value="ref-asc">Ref A→Z</option>
+          <option value="subj-asc">Subject A→Z</option>
+        </select>
+      </div>
+      <div class="tbl-outer">
+        <table id="detTable">
+          <thead>
+            <tr>
+              <th>Date Issued</th>
+              <th>Ref</th>
+              <th>Subject</th>
+              <th>Effective</th>
+              <th>Validity</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="detTbody"></tbody>
+        </table>
+      </div>
+      <div class="tbl-foot">
+        <div class="tbl-foot-info" id="detInfo">0 records</div>
+      </div>
+    </div>
+  </div>
+  <footer class="site-foot"><em>MEMO.LOG</em> · Malaysia Airlines Berhad · Internal Reference · <em>2100551</em></footer>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+const STORE_KEY = 'mhMemoLog_v4';
+let memos   = [];
+let tab     = 'all';
+let sortAsc = false;
+let detCat  = 'ifs';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const CAT_META = {
+  ifs:  { label:'IFS',  name:'In-Flight Services Memo',      color:'#003580' },
+  ops:  { label:'OPS',  name:'Ops Planning & Support Memo',  color:'#16A34A' },
+  fsoc: { label:'FSOC', name:'Flight Safety Memo',           color:'#DC2626' },
+};
+
+// ═══════════════════════════════════════════════
+//  STORAGE
+// ═══════════════════════════════════════════════
+function persist() { localStorage.setItem(STORE_KEY, JSON.stringify(memos)); }
+function hydrate() {
+  try { memos = JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
+  catch { memos = []; }
+}
+
+// ═══════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════
+let _tt;
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.className='toast', 3200);
+}
+
+// ═══════════════════════════════════════════════
+//  PARSING — REF
+// ═══════════════════════════════════════════════
+function extractRef(text) {
+  const SEP  = '[\\s\\/\\-\\.]+';
+  const OSEP = '[\\s\\/\\-\\.]*';
+  const CAT  = '(FSOC|IFS|OPS)';
+  const NUM  = '(\\d{1,4})';
+  const YEAR = '(20\\d{2})';
+
+  // S1: REF label + value on same line
+  const rx1 = new RegExp('REF\\b[\\s\\|\\:]+F[O0]' + SEP + CAT + SEP + NUM + SEP + YEAR, 'i');
+  const m1  = text.match(rx1);
+  if (m1) return `FO/${m1[1].toUpperCase()}/${m1[2]}/${m1[3]}`;
+
+  // S2: REF on one line, value on next
+  const lines = text.split(/\n/).map(l=>l.trim());
+  for (let i=0;i<lines.length;i++) {
+    if (/^REF\s*$/i.test(lines[i]) && lines[i+1]) {
+      const rx2 = new RegExp('F[O0]' + SEP + CAT + SEP + NUM + SEP + YEAR, 'i');
+      const m2  = lines[i+1].match(rx2);
+      if (m2) return `FO/${m2[1].toUpperCase()}/${m2[2]}/${m2[3]}`;
+    }
+  }
+
+  // S3: any numeric FO/CAT/NNN/YYYY token (filters word-only footers)
+  const rx3 = new RegExp('F[O0]' + OSEP + CAT + OSEP + NUM + OSEP + YEAR, 'gi');
+  const all  = [...text.matchAll(rx3)];
+  if (all.length) { const m=all[0]; return `FO/${m[1].toUpperCase()}/${m[2]}/${m[3]}`; }
+
+  return null;
+}
+
+// ═══════════════════════════════════════════════
+//  PARSING — SUBJECT
+// ═══════════════════════════════════════════════
+const BAD = /^(TO|FROM|REF|DATE|EFFECTIVE|VALIDITY|CATEGORY|LEVEL|INFORMATION|COMPLIANCE|LOW|MEDIUM|HIGH|ALL CREW|ALL FLIGHT|HEAD|CHIEF|SENIOR|INTRODUCTION|INSTRUCTIONS|MANUAL|ISSUED|INTERNAL|DEAR|FOR YOUR|N\/A|UFN)$/i;
+function okSubj(s) { return s && s.length>5 && !BAD.test(s.trim()) && !/^\d+$/.test(s.trim()); }
+
+function extractSubject(text) {
+  const lines = text.split(/\n/).map(l=>l.trim()).filter(Boolean);
+  for (const line of lines) {
+    const m = line.match(/^SUBJECT[\s\|\:\-]*\s+(.{4,})/i);
+    if (m && okSubj(m[1])) return m[1].trim().toUpperCase();
+  }
+  for (let i=0;i<lines.length;i++) {
+    if (/^SUBJECT\s*$/i.test(lines[i])) {
+      for (let j=i+1;j<Math.min(i+4,lines.length);j++)
+        if (okSubj(lines[j])) return lines[j].toUpperCase();
+    }
+  }
+  const rxE = /FO[-\/](?:IFS|OPS|FSOC)[-\/]\d+[-\/]\d+\s*[:\-–]+\s*(.{6,})/i;
+  const mE  = text.match(rxE);
+  if (mE && okSubj(mE[1])) return mE[1].trim().toUpperCase();
+  const refIdx = lines.findIndex(l=>/\bREF\b/i.test(l));
+  const start  = refIdx>-1 ? refIdx : 0;
+  for (let i=start;i<Math.min(start+15,lines.length);i++) {
+    const l = lines[i];
+    if (/FO[\/\-](IFS|OPS|FSOC)/i.test(l)) continue;
+    if (/^[A-Z0-9\s\.\-–\/\(\)&]{10,}$/.test(l) && okSubj(l)) return l.toUpperCase();
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════
+//  PARSING — DATE / EFFECTIVE / VALIDITY
+// ═══════════════════════════════════════════════
+const MONTHS_RX = 'JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER';
+const RX_DATESTR = new RegExp(`\\d{1,2}\\s+(?:${MONTHS_RX})\\s+20\\d{2}`, 'i');
+const RX_DATESLASH = /\d{1,2}[\/\-]\d{1,2}[\/\-]20\d{2}/;
+const RX_SPECIAL = /\b(UFN|N\/A|TBD|IMMEDIATE|IMMEDIATE EFFECT)\b/i;
+
+// Extract a date-like value associated with a given row label.
+// Handles: same-line, next-line, and table-row-with-multiple-values layouts.
+function extractDateField(text, label) {
+  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Does this line start with or contain the label?
+    const labelRx = new RegExp(`^${label}\\b`, 'i');
+    if (!labelRx.test(line)) continue;
+
+    // The value may be on this line (after the label) or the next line
+    const candidates = [line, lines[i+1]||'', lines[i+2]||''];
+    for (const c of candidates) {
+      // Strip the label itself if present
+      const stripped = c.replace(new RegExp(`^${label}\\b[\\s\\|\\:]*`, 'i'), '').trim();
+      // Try full date string first
+      const dm = stripped.match(new RegExp(`\\d{1,2}\\s+(?:${MONTHS_RX})\\s+20\\d{2}`, 'i'));
+      if (dm) return dm[0].trim().toUpperCase();
+      const ds = stripped.match(/\d{1,2}[\/\-]\d{1,2}[\/\-]20\d{2}/);
+      if (ds) return ds[0].trim().toUpperCase();
+      // Special keywords
+      const sp = stripped.match(/\b(UFN|N\/A|TBD|IMMEDIATE EFFECT|IMMEDIATE)\b/i);
+      if (sp && stripped.length < 40) return sp[0].trim().toUpperCase();
+    }
+  }
+  return null;
+}
+
+function extractDate(text)      { return extractDateField(text, 'DATE'); }
+function extractEffective(text) {
+  // "EFFECTIVE" row often contains both the date AND "VALIDITY   <value>" on same line
+  // e.g. "EFFECTIVE   11 JUNE 2026   VALIDITY   10 JUNE 2027"
+  // We just want the part before VALIDITY
+  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+  for (const line of lines) {
+    if (!/^EFFECTIVE\b/i.test(line)) continue;
+    // Strip everything from VALIDITY onward
+    const stripped = line.replace(/^EFFECTIVE\b[\s\|:]*/i, '')
+                         .replace(/\s*VALIDITY\b.*/i, '').trim();
+    const dm = stripped.match(new RegExp(`\\d{1,2}\\s+(?:${MONTHS_RX})\\s+20\\d{2}`, 'i'));
+    if (dm) return dm[0].trim().toUpperCase();
+    const ds = stripped.match(/\d{1,2}[\/\-]\d{1,2}[\/\-]20\d{2}/);
+    if (ds) return ds[0].trim().toUpperCase();
+    const sp = stripped.match(/\b(UFN|N\/A|TBD|IMMEDIATE EFFECT|IMMEDIATE)\b/i);
+    if (sp) return sp[0].trim().toUpperCase();
+  }
+  return extractDateField(text, 'EFFECTIVE');
+}
+
+function extractValidity(text) {
+  // VALIDITY often appears inline after EFFECTIVE on the same line
+  // e.g. "EFFECTIVE  11 JUNE 2026  VALIDITY  10 JUNE 2027"
+  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+  for (const line of lines) {
+    // Check lines that contain VALIDITY anywhere (could be on EFFECTIVE row or its own row)
+    if (!/VALIDITY\b/i.test(line)) continue;
+    const after = line.replace(/.*?VALIDITY\b[\s\|:]*/i, '').trim();
+    // Strip trailing noise
+    const clean = after.split(/\s{2,}|\|/)[0].trim();
+    const dm = clean.match(new RegExp(`\\d{1,2}\\s+(?:${MONTHS_RX})\\s+20\\d{2}`, 'i'));
+    if (dm) return dm[0].trim().toUpperCase();
+    const ds = clean.match(/\d{1,2}[\/\-]\d{1,2}[\/\-]20\d{2}/);
+    if (ds) return ds[0].trim().toUpperCase();
+    const sp = clean.match(/^(UFN|N\/A|TBD)\b/i);
+    if (sp) return sp[0].trim().toUpperCase();
+    // Value might be on next line
+    const idx = lines.indexOf(line);
+    if (lines[idx+1]) {
+      const nxt = lines[idx+1];
+      const nm = nxt.match(new RegExp(`\\d{1,2}\\s+(?:${MONTHS_RX})\\s+20\\d{2}`, 'i'));
+      if (nm) return nm[0].trim().toUpperCase();
+      const ns = nxt.match(/\b(UFN|N\/A|TBD)\b/i);
+      if (ns) return ns[0].trim().toUpperCase();
+    }
+  }
+  return extractDateField(text, 'VALIDITY');
+}
+
+function detectCat(ref) {
+  const r = ref.toUpperCase();
+  if (/FSOC|FSO/.test(r)) return 'fsoc';
+  if (/\/OPS\//.test(r))  return 'ops';
+  return 'ifs';
+}
+
+// ═══════════════════════════════════════════════
+//  PDF TEXT EXTRACTION
+// ═══════════════════════════════════════════════
+async function parsePdf(file) {
+  const ab  = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data:ab}).promise;
+  let text = '';
+  for (let p=1;p<=Math.min(pdf.numPages,2);p++) {
+    const page    = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    let lastY = null;
+    const parts = [];
+    for (const item of content.items) {
+      if (lastY!==null && Math.abs(item.transform[5]-lastY)>4) parts.push('\n');
+      parts.push(item.str);
+      lastY = item.transform[5];
+    }
+    text += parts.join(' ') + '\n';
+  }
+  return text;
+}
+
+// ═══════════════════════════════════════════════
+//  IMAGE OCR
+// ═══════════════════════════════════════════════
+async function ocrImage(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const result = await Tesseract.recognize(url, 'eng', { logger: ()=>{} });
+    return result.data.text;
+  } finally { URL.revokeObjectURL(url); }
+}
+
+// ═══════════════════════════════════════════════
+//  PROCESS FILES
+// ═══════════════════════════════════════════════
+async function processFiles(files) {
+  const zone   = document.getElementById('dropZone');
+  const bar    = document.getElementById('procBar');
+  const label  = document.getElementById('procLabel');
+  const fileEl = document.getElementById('procFile');
+
+  zone.classList.add('busy');
+  let added=0, skipped=0, failed=0;
+
+  for (let i=0;i<files.length;i++) {
+    const file = files[i];
+    bar.style.width   = Math.round((i/files.length)*100)+'%';
+    label.textContent = `Processing ${i+1} of ${files.length}`;
+    fileEl.textContent = file.name;
+
+    try {
+      let raw = '';
+      if (file.type==='application/pdf') {
+        raw = await parsePdf(file);
+        if (!extractRef(raw)) {
+          const ab   = await file.arrayBuffer();
+          const pdf  = await pdfjsLib.getDocument({data:ab}).promise;
+          const page = await pdf.getPage(1);
+          const vp   = page.getViewport({scale:2});
+          const cvs  = document.createElement('canvas');
+          cvs.width=vp.width; cvs.height=vp.height;
+          await page.render({canvasContext:cvs.getContext('2d'),viewport:vp}).promise;
+          const blob = await new Promise(r=>cvs.toBlob(r,'image/jpeg',0.9));
+          raw = await ocrImage(blob);
+        }
+      } else if (file.type.startsWith('image/')) {
+        raw = await ocrImage(file);
+      } else { failed++; continue; }
+
+      const ref = extractRef(raw);
+      if (!ref) { toast(`REF not found: ${file.name}`,'err'); failed++; continue; }
+      if (memos.find(m=>m.ref===ref)) { toast(`Already logged: ${ref}`,''); skipped++; continue; }
+
+      const subject   = extractSubject(raw)   || 'SUBJECT NOT DETECTED';
+      const dateIssued= extractDate(raw)      || '';
+      const effective = extractEffective(raw) || '';
+      const validity  = extractValidity(raw)  || '';
+      const cat       = detectCat(ref);
+
+      memos.unshift({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+        ref, subject, cat,
+        dateIssued, effective, validity,
+        ts: new Date().toISOString()
+      });
+      added++;
+    } catch(err) {
+      console.error(file.name, err);
+      toast(`Error: ${file.name}`,'err');
+      failed++;
+    }
+  }
+
+  bar.style.width='100%';
+  setTimeout(()=>{bar.style.width='0%';},400);
+  zone.classList.remove('busy');
+  persist();
+  render();
+  if (added)   toast(`${added} memo${added>1?'s':''} logged.`,'ok');
+  if (skipped) toast(`${skipped} already in log.`,'');
+}
+
+// ═══════════════════════════════════════════════
+//  MAIN PAGE — TABS / SEARCH / SORT
+// ═══════════════════════════════════════════════
+function setTab(t) {
+  tab = t;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  render();
+}
+function onSearch(el) {
+  document.getElementById('clearSearch').style.display = el.value?'block':'none';
+  render();
+}
+function clearSearch() {
+  document.getElementById('searchInput').value='';
+  document.getElementById('clearSearch').style.display='none';
+  render();
+}
+function toggleSort() {
+  sortAsc=!sortAsc;
+  document.getElementById('sortBtn').textContent=(sortAsc?'↑ Oldest':'↓ Newest');
+  render();
+}
+function clearTab() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const keep = memos.filter(m=>{
+    const inTab=(tab==='all')||m.cat===tab;
+    const inQ=!q||m.ref.toLowerCase().includes(q)||m.subject.toLowerCase().includes(q);
+    return !(inTab&&inQ);
+  });
+  if (keep.length===memos.length){toast('Nothing to remove.','');return;}
+  if (!confirm(`Remove ${memos.length-keep.length} memo(s)?`)) return;
+  memos=keep; persist(); render(); toast('Removed.','');
+}
+
+// ═══════════════════════════════════════════════
+//  COPY
+// ═══════════════════════════════════════════════
+function copyMemo(id, btnEl) {
+  const m = memos.find(x=>x.id===id);
+  if (!m) return;
+  const line = `${m.ref} ${m.subject}`;
+  const doFallback=()=>{
+    const ta=document.createElement('textarea');
+    ta.value=line; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    toast('Copied','ok');
+  };
+  const flash=(btn)=>{
+    if(!btn) return;
+    const orig=btn.textContent; btn.textContent='✓'; btn.classList.add('ok');
+    setTimeout(()=>{btn.classList.remove('ok');btn.textContent=orig;},1800);
+  };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(line).then(()=>{flash(btnEl);toast('Copied to clipboard','ok');}).catch(doFallback);
+  } else doFallback();
+}
+function delMemo(id) {
+  memos=memos.filter(m=>m.id!==id);
+  persist(); render();
+  if (document.getElementById('pageDetail').classList.contains('active')) renderDetail();
+}
+
+// ═══════════════════════════════════════════════
+//  MAIN RENDER
+// ═══════════════════════════════════════════════
+function render() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const counts={ifs:0,ops:0,fsoc:0};
+  memos.forEach(m=>counts[m.cat]=(counts[m.cat]||0)+1);
+  document.getElementById('cnt-ifs').textContent  = counts.ifs||0;
+  document.getElementById('cnt-ops').textContent  = counts.ops||0;
+  document.getElementById('cnt-fsoc').textContent = counts.fsoc||0;
+  document.getElementById('tb-all').textContent   = memos.length;
+  document.getElementById('tb-ifs').textContent   = counts.ifs||0;
+  document.getElementById('tb-ops').textContent   = counts.ops||0;
+  document.getElementById('tb-fsoc').textContent  = counts.fsoc||0;
+
+  let list = memos.filter(m=>{
+    const inTab=(tab==='all')||m.cat===tab;
+    const inQ=!q||m.ref.toLowerCase().includes(q)||m.subject.toLowerCase().includes(q);
+    return inTab&&inQ;
+  });
+  if (sortAsc) list=list.slice().reverse();
+  document.getElementById('panelInfo').textContent=`${list.length} record${list.length!==1?'s':''}`;
+
+  const c = document.getElementById('memoList');
+  if (!list.length) {
+    c.innerHTML=`<div class="empty-state"><div class="empty-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7A93B4" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="empty-title">${q?'No results':'No memos logged yet'}</div><div class="empty-sub">${q?'Try different terms':'Drop PDF or screenshot files above'}</div></div>`;
+    return;
+  }
+  c.innerHTML=list.map(m=>{
+    const d=new Date(m.ts);
+    const ds=d.toLocaleDateString('en-MY',{day:'2-digit',month:'short',year:'numeric'});
+    return `<div class="memo-row" data-id="${m.id}">
+      <span class="cat-tag ${m.cat}">${m.cat.toUpperCase()}</span>
+      <span class="memo-ref">${m.ref}</span>
+      <div class="vr"></div>
+      <span class="memo-subject">${m.subject}</span>
+      <span class="memo-date-col">${ds}</span>
+      <div class="row-actions">
+        <button class="copy-btn" onclick="copyMemo('${m.id}',this)">Copy</button>
+        <button class="del-btn" onclick="delMemo('${m.id}')" title="Remove">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  DETAIL PAGE
+// ═══════════════════════════════════════════════
+function openDetail(cat) {
+  detCat = cat;
+  const meta = CAT_META[cat];
+  document.getElementById('detCatLabel').textContent = meta.label + ' · Category';
+  document.getElementById('detCatName').innerHTML    = meta.label + ' <em>— ' + meta.name + '</em>';
+  document.getElementById('tblSearch').value = '';
+  document.getElementById('pageMain').classList.remove('active');
+  document.getElementById('pageDetail').classList.add('active');
+  window.scrollTo(0,0);
+  renderDetail();
+}
+function closeDetail() {
+  document.getElementById('pageDetail').classList.remove('active');
+  document.getElementById('pageMain').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function validityStatus(val) {
+  if (!val) return {cls:'udn',label:'—'};
+  const v=val.toUpperCase();
+  if (v==='UFN'||v==='N/A'||v==='TBD') return {cls:'udn',label:v};
+  // Try to parse date
+  const d=parseDate(val);
+  if (!d) return {cls:'udn',label:val};
+  return d>=new Date() ? {cls:'active',label:val} : {cls:'expired',label:val+' ✕'};
+}
+
+function parseDate(str) {
+  if (!str) return null;
+  // "10 JUNE 2027"
+  const months={JAN:0,FEB:1,MAR:2,APR:3,MAY:4,JUN:5,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11,
+    JANUARY:0,FEBRUARY:1,MARCH:2,APRIL:3,MAY:4,JUNE:5,JULY:6,AUGUST:7,SEPTEMBER:8,OCTOBER:9,NOVEMBER:10,DECEMBER:11};
+  const mt = str.toUpperCase().match(/(\d{1,2})\s+([A-Z]+)\s+(20\d{2})/);
+  if (mt && months[mt[2]]!==undefined) return new Date(+mt[3], months[mt[2]], +mt[1]);
+  const ms = str.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](20\d{2})/);
+  if (ms) return new Date(+ms[3], +ms[2]-1, +ms[1]);
+  return null;
+}
+
+function renderDetail() {
+  const q    = document.getElementById('tblSearch').value.trim().toLowerCase();
+  const sort = document.getElementById('tblSort').value;
+
+  let list = memos.filter(m=>m.cat===detCat);
+  if (q) list=list.filter(m=>
+    m.ref.toLowerCase().includes(q)||
+    m.subject.toLowerCase().includes(q)||
+    (m.dateIssued||'').toLowerCase().includes(q)
+  );
+
+  // Sort
+  list=[...list];
+  if      (sort==='date-desc') list.sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  else if (sort==='date-asc')  list.sort((a,b)=>new Date(a.ts)-new Date(b.ts));
+  else if (sort==='ref-asc')   list.sort((a,b)=>a.ref.localeCompare(b.ref));
+  else if (sort==='subj-asc')  list.sort((a,b)=>a.subject.localeCompare(b.subject));
+
+  // Summary stats
+  const total   = memos.filter(m=>m.cat===detCat).length;
+  const active  = memos.filter(m=>m.cat===detCat && validityStatus(m.validity).cls==='active').length;
+  const expired = memos.filter(m=>m.cat===detCat && validityStatus(m.validity).cls==='expired').length;
+  document.getElementById('detSummary').innerHTML=`
+    <div class="det-stat"><div class="det-stat-label">Total</div><div class="det-stat-val">${total}</div></div>
+    <div class="det-stat"><div class="det-stat-label">Active</div><div class="det-stat-val" style="color:#16A34A">${active}</div></div>
+    <div class="det-stat"><div class="det-stat-label">Expired</div><div class="det-stat-val" style="color:#DC2626">${expired}</div></div>
+  `;
+
+  document.getElementById('detInfo').textContent=`${list.length} record${list.length!==1?'s':''}`;
+
+  const tbody = document.getElementById('detTbody');
+  if (!list.length) {
+    tbody.innerHTML=`<tr><td colspan="6" class="tbl-empty">${q?'No matching records':'No memos in this category yet'}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML=list.map(m=>{
+    const vs = validityStatus(m.validity);
+    return `<tr>
+      <td class="td-date">${m.dateIssued||'—'}</td>
+      <td class="td-ref">${m.ref}</td>
+      <td class="td-subj">${m.subject}</td>
+      <td class="td-eff">${m.effective||'—'}</td>
+      <td class="td-val"><span class="val-badge ${vs.cls}">${vs.label||'—'}</span></td>
+      <td class="td-actions">
+        <button class="td-copy-btn" onclick="copyMemo('${m.id}',this)">Copy</button>
+        <button class="td-del-btn" onclick="delMemo('${m.id}')" title="Remove">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  EXPORT CSV
+// ═══════════════════════════════════════════════
+function exportCSV() {
+  const list = memos.filter(m=>m.cat===detCat);
+  if (!list.length) { toast('Nothing to export','err'); return; }
+  const esc = v => `"${(v||'').replace(/"/g,'""')}"`;
+  const header = ['Date Issued','Ref','Subject','Effective','Validity'];
+  const rows   = list.map(m=>[
+    esc(m.dateIssued), esc(m.ref), esc(m.subject), esc(m.effective), esc(m.validity)
+  ].join(','));
+  const csv  = [header.join(','), ...rows].join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download=`MemoLog_${detCat.toUpperCase()}_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('CSV exported','ok');
+}
+
+// ═══════════════════════════════════════════════
+//  EXPORT TXT
+// ═══════════════════════════════════════════════
+function exportTXT() {
+  const list = memos.filter(m=>m.cat===detCat);
+  if (!list.length) { toast('Nothing to export','err'); return; }
+  const meta  = CAT_META[detCat];
+  const now   = new Date().toLocaleDateString('en-MY',{day:'2-digit',month:'long',year:'numeric'});
+  const line  = '─'.repeat(80);
+  const dline = '═'.repeat(80);
+  let txt = '';
+  txt += dline + '\n';
+  txt += `  MALAYSIA AIRLINES — ${meta.name.toUpperCase()}\n`;
+  txt += `  Generated: ${now}  ·  Total records: ${list.length}\n`;
+  txt += dline + '\n\n';
+  list.forEach((m, i) => {
+    txt += `[${String(i+1).padStart(3,'0')}]  ${m.ref}\n`;
+    txt += `     Subject   : ${m.subject}\n`;
+    txt += `     Date      : ${m.dateIssued||'—'}\n`;
+    txt += `     Effective : ${m.effective||'—'}\n`;
+    txt += `     Validity  : ${m.validity||'—'}\n`;
+    txt += `     Copy line : ${m.ref} ${m.subject}\n`;
+    txt += line + '\n';
+  });
+  txt += `\nEND OF ${meta.label} MEMO LOG\n`;
+  const blob = new Blob([txt], {type:'text/plain;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download=`MemoLog_${detCat.toUpperCase()}_${new Date().toISOString().slice(0,10)}.txt`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('TXT exported','ok');
+}
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover',  e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave', ()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e=>{
+  e.preventDefault(); dz.classList.remove('drag-over');
+  const files=Array.from(e.dataTransfer.files).filter(f=>f.type==='application/pdf'||f.type.startsWith('image/'));
+  if (files.length) processFiles(files);
+});
+document.getElementById('fileInput').addEventListener('change', e=>{
+  const files=Array.from(e.target.files);
+  if (files.length){processFiles(files);e.target.value='';}
+});
+
+// ═══════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════
+hydrate();
+render();
+</script>
+</body>
+</html>
