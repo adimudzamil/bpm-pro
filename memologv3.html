@@ -950,7 +950,7 @@ function extractRef(text) {
   const SEP  = '[\\s\\/\\-\\.]+';
   const OSEP = '[\\s\\/\\-\\.]*';
   const CAT  = '(FSOC|IFS|OPS)';
-  const NUM  = '(\\d{1,4})';
+  const NUM  = '([A-Za-z0-9]{1,4})';
   const YR   = '(20\\d{2})';
 
   // S1: REF label on same line as value
