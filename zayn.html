@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚗 Alphabet Road Trip - Speech Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(145deg, #fdf6e3, #f5e6d3);
+            font-family: 'Comic Sans MS', 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .game-container {
+            max-width: 850px;
+            width: 100%;
+            background: #fffbf5;
+            border-radius: 70px 70px 40px 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1), 0 6px 12px rgba(0,0,0,0.05);
+            padding: 30px 25px 40px;
+            border: 4px solid #f0d5b8;
+        }
+        h1 {
+            text-align: center;
+            margin: 0 0 5px 0;
+            font-size: 2.2rem;
+            color: #5a4a3a;
+            letter-spacing: 2px;
+            font-weight: 300;
+        }
+        h1 span { font-size: 2.8rem; }
+
+        /* TARGET LETTER DISPLAY */
+        .letter-display {
+            background: #e8f0fe;
+            border-radius: 120px;
+            padding: 15px 20px;
+            margin: 10px 0 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 3px dashed #b3cde0;
+        }
+        .target-box {
+            background: white;
+            border-radius: 80px;
+            padding: 5px 30px;
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.02);
+            min-width: 130px;
+            text-align: center;
+        }
+        .target-letter {
+            font-size: 7rem;
+            font-weight: bold;
+            color: #2c5f7c;
+            line-height: 1.2;
+            letter-spacing: 8px;
+        }
+        .speech-bubble {
+            background: white;
+            padding: 12px 25px;
+            border-radius: 60px;
+            color: #3a5a6f;
+            font-size: 1.5rem;
+            font-weight: 500;
+            box-shadow: 0 4px 0 #d0dbe8;
+            border: 2px solid #d0dbe8;
+            flex: 1;
+            margin-left: 15px;
+            text-align: center;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* THE ROAD & CAR */
+        .track-wrapper {
+            background: #d4e9d6;
+            border-radius: 120px;
+            padding: 25px 20px 20px 20px;
+            margin: 15px 0 25px 0;
+            border: 6px solid #b8d9bb;
+            position: relative;
+            overflow: hidden;
+        }
+        .road {
+            background: #5a6b5a;
+            height: 95px;
+            border-radius: 60px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            box-shadow: inset 0 8px 0 #3f4d3f;
+        }
+        .road-lines {
+            position: absolute;
+            width: 100%;
+            height: 6px;
+            background: repeating-linear-gradient(90deg, #ffdd99 0px, #ffdd99 20px, #5a6b5a 20px, #5a6b5a 40px);
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.6;
+        }
+        /* Letter stations on the road */
+        .stations {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            padding: 0 5px;
+        }
+        .station {
+            background: #f9f3e7;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #3a4a3a;
+            border: 4px solid #3f4d3f;
+            box-shadow: 0 6px 0 #2b372b;
+            transition: 0.2s;
+            background: #fff8e7;
+        }
+        .station.done {
+            background: #b5e6b5;
+            border-color: #2b7a2b;
+            box-shadow: 0 6px 0 #1a5a1a;
+            color: #145214;
+        }
+        .station.active {
+            background: #ffd966;
+            border-color: #b87c1a;
+            box-shadow: 0 0 0 6px #ffe69b, 0 6px 0 #8a5f14;
+            transform: scale(1.05);
+            color: #5a3e0a;
+        }
+
+        /* THE CAR */
+        .car-container {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            transition: left 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-size: 3.8rem;
+            line-height: 1;
+            filter: drop-shadow(0 8px 6px rgba(0,0,0,0.2));
+            pointer-events: none;
+        }
+        .car-container.move {
+            animation: bounceCar 0.5s ease;
+        }
+        @keyframes bounceCar {
+            0% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-80%) scale(1.2) rotate(-5deg); }
+            100% { transform: translateY(-50%) scale(1); }
+        }
+
+        /* CONTROLS */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            justify-content: center;
+            margin: 25px 0 10px 0;
+            align-items: center;
+        }
+        .mic-btn {
+            background: #5f9ea0;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 120px;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 10px 0 #2f6a6b;
+            cursor: pointer;
+            transition: 0.05s linear;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 3px solid #7fc0c2;
+            flex: 2;
+            min-width: 200px;
+            justify-content: center;
+        }
+        .mic-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 4px 0 #2f6a6b;
+        }
+        .mic-btn.listening {
+            background: #e67e22;
+            box-shadow: 0 10px 0 #a85f17;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        .helper-btn {
+            background: #e8d5b5;
+            border: 3px solid #b89f7a;
+            padding: 18px 30px;
+            border-radius: 80px;
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #4d3e2b;
+            box-shadow: 0 8px 0 #a68b66;
+            cursor: pointer;
+            transition: 0.05s linear;
+            flex: 1;
+            min-width: 140px;
+        }
+        .helper-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #a68b66;
+        }
+        .reset-btn {
+            background: #d4c5b0;
+            border: none;
+            border-radius: 60px;
+            font-size: 1.8rem;
+            padding: 10px 25px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #a6947b;
+            transition: 0.05s linear;
+            border: 2px solid #eee0cf;
+        }
+        .reset-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0 #a6947b;
+        }
+
+        .status-msg {
+            text-align: center;
+            font-size: 1.2rem;
+            min-height: 2.5rem;
+            color: #4f6452;
+            background: #eaf5ea;
+            padding: 8px 15px;
+            border-radius: 60px;
+            margin: 10px 0 0 0;
+            font-weight: 500;
+            border: 2px solid #c6dfc6;
+        }
+        .win-message {
+            background: #ffecb3;
+            border-color: #f0b84d;
+            font-size: 1.8rem;
+            color: #6b4f1a;
+        }
+
+        /* Confetti simple */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            overflow: hidden;
+        }
+        .confetti {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            top: -20px;
+            border-radius: 3px;
+            animation: confettiFall linear forwards;
+        }
+        @keyframes confettiFall {
+            to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        @media (max-width: 600px) {
+            .letter-display { flex-direction: column; gap: 10px; }
+            .speech-bubble { margin-left: 0; font-size: 1.2rem; min-height: 60px; }
+            .target-letter { font-size: 5rem; }
+            .station { width: 40px; height: 40px; font-size: 1.2rem; }
+            .car-container { font-size: 2.8rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <h1><span>🚗</span> Alphabet Road</h1>
+
+    <div class="letter-display">
+        <div class="target-box">
+            <div class="target-letter" id="targetLetter">A</div>
+        </div>
+        <div class="speech-bubble" id="speechBubble">🎤 Say the letter to drive!</div>
+    </div>
+
+    <div class="track-wrapper">
+        <div class="road">
+            <div class="road-lines"></div>
+            <div class="stations" id="stationsContainer"></div>
+            <div class="car-container" id="car">🚗</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="mic-btn" id="micBtn">🎙️ Speak</button>
+        <button class="helper-btn" id="helperBtn">👆 Tap to Drive</button>
+        <button class="reset-btn" id="resetBtn">🔄 Reset</button>
+    </div>
+    <div class="status-msg" id="statusMsg">Press "Speak" and say the letter clearly 🗣️</div>
+</div>
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+    (function(){
+        // ----- CONFIG -----
+        const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+        // Phonetic mappings for better recognition (common mis-hearings)
+        const phonemeMap = {
+            'A': ['A', 'AY', 'EY', 'HEY', 'EH'],
+            'B': ['B', 'BEE', 'BE', 'BI'],
+            'C': ['C', 'SEE', 'SEA', 'SI'],
+            'D': ['D', 'DEE', 'DE', 'DI'],
+            'E': ['E', 'EE', 'I', 'EA'],
+            'F': ['F', 'EFF', 'EF']
+        };
+
+        // ----- STATE -----
+        let currentIndex = 0; // 0 to letters.length-1
+        let isListening = false;
+        let recognition = null;
+        let gameWon = false;
+
+        // ----- DOM REFS -----
+        const targetLetterEl = document.getElementById('targetLetter');
+        const speechBubble = document.getElementById('speechBubble');
+        const carEl = document.getElementById('car');
+        const stationsContainer = document.getElementById('stationsContainer');
+        const micBtn = document.getElementById('micBtn');
+        const helperBtn = document.getElementById('helperBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const statusMsg = document.getElementById('statusMsg');
+        const confettiContainer = document.getElementById('confettiContainer');
+
+        // ----- RENDER STATIONS -----
+        function renderStations() {
+            stationsContainer.innerHTML = '';
+            letters.forEach((letter, idx) => {
+                const div = document.createElement('div');
+                div.className = 'station';
+                if (idx < currentIndex) div.classList.add('done');
+                if (idx === currentIndex) div.classList.add('active');
+                div.textContent = letter;
+                div.dataset.index = idx;
+                stationsContainer.appendChild(div);
+            });
+        }
+
+        // ----- UPDATE CAR POSITION -----
+        function updateCar() {
+            const total = letters.length;
+            const progress = currentIndex / (total - 1); // 0 to 1
+            const roadWidth = document.querySelector('.road')?.offsetWidth || 400;
+            const padding = 30;
+            const maxLeft = roadWidth - padding - 60; // car width approx
+            const leftPos = padding + progress * (maxLeft - padding);
+            carEl.style.left = leftPos + 'px';
+            // bounce animation
+            carEl.classList.remove('move');
+            void carEl.offsetWidth; // trigger reflow
+            carEl.classList.add('move');
+        }
+
+        // ----- UPDATE UI (letter, bubble, stations, car) -----
+        function refreshUI(message) {
+            if (gameWon) {
+                targetLetterEl.textContent = '🏁';
+                speechBubble.textContent = '🎉 You finished! Great job!';
+                statusMsg.textContent = '🏆 You did it! Press Reset to play again.';
+                statusMsg.classList.add('win-message');
+                renderStations(); // all done
+                return;
+            }
+
+            statusMsg.classList.remove('win-message');
+            const currentLetter = letters[currentIndex];
+            targetLetterEl.textContent = currentLetter;
+            speechBubble.textContent = message || `Say "${currentLetter}" to drive!`;
+            renderStations();
+            updateCar();
+            // If we are at the end (currentIndex == letters.length), trigger win
+            if (currentIndex >= letters.length) {
+                triggerWin();
+            }
+        }
+
+        // ----- WIN CONDITION -----
+        function triggerWin() {
+            if (gameWon) return;
+            gameWon = true;
+            currentIndex = letters.length; // clamp
+            targetLetterEl.textContent = '🎉';
+            speechBubble.textContent = '🌟 Amazing! You know your ABCs!';
+            statusMsg.textContent = '🏆 YOU WON! 🏆';
+            statusMsg.classList.add('win-message');
+            renderStations();
+            carEl.style.left = 'calc(100% - 80px)';
+            launchConfetti();
+        }
+
+        // ----- CONFETTI -----
+        function launchConfetti() {
+            confettiContainer.innerHTML = '';
+            const colors = ['#f94144', '#f8961e', '#f9c74f', '#90be6d', '#577590', '#9b5de5'];
+            for (let i = 0; i < 80; i++) {
+                const el = document.createElement('div');
+                el.className = 'confetti';
+                el.style.left = Math.random() * 100 + '%';
+                el.style.background = colors[Math.floor(Math.random() * colors.length)];
+                el.style.width = (Math.random() * 10 + 6) + 'px';
+                el.style.height = (Math.random() * 10 + 6) + 'px';
+                el.style.borderRadius = Math.random() > 0.5 ? '50%' : '3px';
+                el.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                el.style.animationDelay = (Math.random() * 1.5) + 's';
+                el.style.transform = `rotate(${Math.random() * 360}deg)`;
+                confettiContainer.appendChild(el);
+            }
+            setTimeout(() => confettiContainer.innerHTML = '', 5000);
+        }
+
+        // ----- MOVE FORWARD (called on success) -----
+        function moveForward() {
+            if (gameWon) return;
+            if (currentIndex < letters.length) {
+                currentIndex++;
+                if (currentIndex >= letters.length) {
+                    triggerWin();
+                } else {
+                    refreshUI('✅ Great! Next letter!');
+                }
+            }
+        }
+
+        // ----- SPEECH RECOGNITION -----
+        function initSpeech() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                statusMsg.textContent = '⚠️ Speech not supported in this browser. Please use Chrome.';
+                micBtn.disabled = true;
+                return null;
+            }
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const rec = new SR();
+            rec.lang = 'en-US';
+            rec.interimResults = false;
+            rec.maxAlternatives = 3;
+            rec.continuous = false;
+
+            rec.onstart = function() {
+                isListening = true;
+                micBtn.textContent = '🔴 Listening...';
+                micBtn.classList.add('listening');
+                statusMsg.textContent = '🎤 Listening... speak clearly!';
+            };
+
+            rec.onerror = function(event) {
+                console.warn('Speech error:', event.error);
+                isListening = false;
+                micBtn.textContent = '🎙️ Speak';
+                micBtn.classList.remove('listening');
+                if (event.error === 'not-allowed') {
+                    statusMsg.textContent = '❌ Please allow microphone access in your browser.';
+                } else if (event.error === 'no-speech') {
+                    statusMsg.textContent = '🔇 I didn\'t hear anything. Try saying the letter!';
+                } else {
+                    statusMsg.textContent = '🔄 Microphone issue. Tap "Speak" again.';
+                }
+            };
+
+            rec.onend = function() {
+                isListening = false;
+                micBtn.textContent = '🎙️ Speak';
+                micBtn.classList.remove('listening');
+                if (!gameWon && currentIndex < letters.length) {
+                    // keep status but don't overwrite a win
+                }
+            };
+
+            rec.onresult = function(event) {
+                isListening = false;
+                micBtn.textContent = '🎙️ Speak';
+                micBtn.classList.remove('listening');
+
+                let spokenText = '';
+                for (let i = 0; i < event.results.length; i++) {
+                    for (let j = 0; j < event.results[i].length; j++) {
+                        spokenText += event.results[i][j].transcript;
+                    }
+                }
+                spokenText = spokenText.toUpperCase().trim();
+                console.log('Heard:', spokenText);
+
+                if (gameWon) {
+                    statusMsg.textContent = 'You already won! Press Reset.';
+                    return;
+                }
+
+                const currentLetter = letters[currentIndex];
+                // Check if spoken text contains the letter or its phonemes
+                const possible = phonemeMap[currentLetter] || [currentLetter];
+                let matched = false;
+                for (let p of possible) {
+                    if (spokenText.includes(p)) {
+                        matched = true;
+                        break;
+                    }
+                }
+                // Also check direct match
+                if (spokenText === currentLetter) matched = true;
+
+                if (matched) {
+                    statusMsg.textContent = `🎉 You said "${spokenText}"! Correct!`;
+                    moveForward();
+                } else {
+                    statusMsg.textContent = `I heard "${spokenText}". Try saying "${currentLetter}" again!`;
+                    speechBubble.textContent = `🤔 Say "${currentLetter}" clearly!`;
+                    // small shake feedback on car?
+                }
+            };
+
+            return rec;
+        }
+
+        // ----- LISTEN BUTTON -----
+        function startListening() {
+            if (gameWon) {
+                statusMsg.textContent = '🎉 You already finished! Press Reset to play again.';
+                return;
+            }
+            if (isListening) {
+                try { recognition.stop(); } catch(e) {}
+                return;
+            }
+            if (!recognition) {
+                recognition = initSpeech();
+                if (!recognition) return;
+            }
+            try {
+                recognition.start();
+            } catch(e) {
+                statusMsg.textContent = '⚠️ Mic busy. Try again in a second.';
+            }
+        }
+
+        // ----- RESET -----
+        function resetGame() {
+            if (isListening) {
+                try { recognition.stop(); } catch(e) {}
+                isListening = false;
+                micBtn.textContent = '🎙️ Speak';
+                micBtn.classList.remove('listening');
+            }
+            gameWon = false;
+            currentIndex = 0;
+            confettiContainer.innerHTML = '';
+            refreshUI('🔄 New game! Say the first letter!');
+            statusMsg.classList.remove('win-message');
+            statusMsg.textContent = 'Press "Speak" and say the letter clearly 🗣️';
+            carEl.style.left = '30px';
+        }
+
+        // ----- HELPER (override) -----
+        function helperDrive() {
+            if (gameWon) {
+                statusMsg.textContent = '🎉 You already finished! Reset to go again.';
+                return;
+            }
+            statusMsg.textContent = '👆 Helper moved the car!';
+            moveForward();
+        }
+
+        // ----- INIT UI -----
+        function init() {
+            renderStations();
+            resetGame(); // sets initial state
+            // Event listeners
+            micBtn.addEventListener('click', startListening);
+            helperBtn.addEventListener('click', helperDrive);
+            resetBtn.addEventListener('click', resetGame);
+            // Update car position on resize
+            window.addEventListener('resize', () => {
+                if (!gameWon) updateCar();
+            });
+        }
+
+        // Wait for DOM fully rendered for measurements
+        setTimeout(init, 100);
+    })();
+</script>
+</body>
+</html>
