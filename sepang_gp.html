@@ -12,6 +12,7 @@
 
   /* ── HUD overlay ── */
   #hud{position:fixed;inset:0;pointer-events:none;z-index:10}
+  #hud *{pointer-events:none}
 
   /* top center – SAY THIS letter */
   #sayBox{
@@ -55,7 +56,7 @@
   .pill.active{background:#ff4757;color:#fff;transform:scale(1.3);box-shadow:0 0 14px rgba(255,71,87,.8)}
 
   /* mic button */
-  #micWrap{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:all}
+  #micWrap{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:all;z-index:20}
   #micBtn{
     width:82px;height:82px;border-radius:50%;border:none;cursor:pointer;font-size:34px;
     background:linear-gradient(145deg,#ff6b81,#ff4757);
@@ -145,6 +146,12 @@
   <div id="keyHint">⌨️ Enable keyboard mode (testing)</div>
 </div>
 
+<!-- MIC BUTTON — outside #hud so pointer-events work correctly -->
+<div id="micWrap">
+  <button id="micBtn" title="Hold to speak">🎤</button>
+  <div id="micHint">Tap to Speak! 🎤</div>
+</div>
+
 <!-- GAME HUD -->
 <div id="hud">
   <div id="sayBox">
@@ -158,10 +165,6 @@
   <div id="pills"></div>
   <div id="heardBubble"></div>
   <div id="toast"></div>
-  <div id="micWrap">
-    <button id="micBtn" title="Hold to speak">🎤</button>
-    <div id="micHint">Hold to Speak!</div>
-  </div>
 </div>
 
 <div id="noSpeechWarn">Speech recognition unavailable.<br>Try Chrome on Android or desktop!</div>
@@ -453,20 +456,29 @@ for (let i = 0; i < TOTAL_CP; i++) {
 }
 
 function updateCheckpointVisuals(currentIdx) {
+  // currentIdx = next letter index (0=need A, targeting cp panel index 1)
+  // cp panel 0 = START (always green once game running)
+  // cp panel 1..26 = A..Z  (panel i = letter i-1)
+  // cp panel 27 = FINISH
+  const targetPanel = Math.min(currentIdx + 1, TOTAL_CP - 1); // which panel kart is heading to
+
   cpMeshes.forEach((m,i) => {
     let color;
-    if (i===0) color='#2ed573';
-    else if (i===TOTAL_CP-1) color='#ffd32a';
-    else {
-      const done=(i-1)<(currentIdx-1);
-      const active=(i-1)===(currentIdx-1);
-      color = done?'#2ed573': active?'#ff4757':'#445';
+    if (i === 0) {
+      color = '#2ed573'; // START always green
+    } else if (i === TOTAL_CP-1) {
+      color = currentIdx >= 26 ? '#ff4757' : '#ffd32a'; // FINISH pulses red when active
+    } else {
+      // panel i = letter LETTERS[i-1]
+      const letterIdx = i - 1;
+      if (letterIdx < currentIdx) color = '#2ed573';      // done
+      else if (letterIdx === currentIdx) color = '#ff4757'; // active/next
+      else color = '#334';                                 // future
     }
-    const label = i===0?'GO!': i===TOTAL_CP-1?'FIN': LETTERS[i-1];
+    const label = i===0 ? 'GO!' : i===TOTAL_CP-1 ? 'FIN' : LETTERS[i-1];
     m.material.map = makeLetterTexture(label, color);
     m.material.map.needsUpdate = true;
-    // scale active
-    const sc = (i === currentIdx) ? 1.3 : 1.0;
+    const sc = (i === targetPanel) ? 1.35 : 1.0;
     m.scale.setScalar(sc);
   });
 }
@@ -735,8 +747,8 @@ function updatePills() {
     const p=document.getElementById('pill-'+l);
     if(!p)return;
     p.className='pill';
-    if(i<currentIndex-1) p.classList.add('done');
-    else if(i===currentIndex-1) p.classList.add('active');
+    if(i < currentIndex) p.classList.add('done');       // already said
+    else if(i === currentIndex) p.classList.add('active'); // currently needed
   });
 }
 function updateHUD() {
@@ -744,14 +756,13 @@ function updateHUD() {
   const fill=document.getElementById('progressFill');
   const label=document.getElementById('progressLabel');
 
-  if(currentIndex===0){el.textContent='A';}
-  else if(currentIndex<=25){el.textContent=LETTERS[currentIndex];}
-  else if(currentIndex===26){el.textContent='🏁';}
-  else{el.textContent='🏁';}
+  // currentIndex = next letter needed. 0→need A, 1→need B ... 25→need Z, 26→need FINISH
+  if(currentIndex <= 25){ el.textContent = LETTERS[currentIndex]; }
+  else { el.textContent = '🏁'; }
 
-  const pct=Math.min(currentIndex/27*100,100);
-  fill.style.width=pct+'%';
-  label.textContent=Math.min(currentIndex,26)+' / 26 letters';
+  const pct = Math.min(currentIndex / 26 * 100, 100);
+  fill.style.width = pct + '%';
+  label.textContent = currentIndex + ' / 26 letters' + (currentIndex>=26 ? ' — say FINISH!' : '');
 
   el.classList.remove('pop');
   void el.offsetWidth;
@@ -813,25 +824,26 @@ function correctLetter(){
   if(kartMoving||crashing||postCrashWait)return;
   spawnConfetti(40);
 
-  if(currentIndex<26){
-    showToast(`✅ ${LETTERS[currentIndex-1||0]}! Great job! 🎉`,900);
-  }
+  const justSaid = currentIndex <= 25 ? LETTERS[currentIndex] : 'FINISH';
+  showToast(`✅ ${justSaid}! Great job! 🎉`, 900);
 
   currentIndex++;
-  kartTargetT=cpT(Math.min(currentIndex,TOTAL_CP-1));
-  kartMoving=true;
+  // Target the next checkpoint: currentIndex now points to next cp panel
+  const targetCPIdx = Math.min(currentIndex, TOTAL_CP-1);
+  kartTargetT = cpT(targetCPIdx);
+  kartMoving = true;
   updateHUD();
 
-  if(currentIndex>=TOTAL_CP){
-    setTimeout(triggerWin,1600);
+  if(currentIndex >= TOTAL_CP){
+    setTimeout(triggerWin, 1800);
   }
 }
 
 function wrongLetter(heard){
-  if(crashing||postCrashWait)return;
-  const expected=currentIndex<=25?LETTERS[currentIndex]:'FINISH';
-  showToast(`❌ "${heard}" — Try again!<br>Say <b>${expected}</b>`,2200);
-  // start donut
+  if(crashing||postCrashWait||kartMoving)return;
+  const expected = currentIndex <= 25 ? LETTERS[currentIndex] : 'FINISH';
+  showToast(`❌ Heard "${heard}"<br>Try again! Say <b>${expected}</b>`, 2200);
+  // start donut crash
   crashing=true; crashTimer=0; donutAngle=0;
   donutCenter.copy(kartGroup.position);
 }
@@ -849,6 +861,7 @@ function resetGame(){
   confetti=[];
   document.getElementById('win').classList.remove('show');
   initKartPos();
+  buildPills();
   updateHUD();
   spawnConfetti(20);
 }
@@ -885,11 +898,13 @@ function animate(ts) {
     }
     if (crashTimer > 2.5) {
       crashing=false; postCrashWait=true;
-      setTimeout(()=>{ postCrashWait=false; },200);
-      // reset to current cp
-      const p=cpPositions[currentIndex];
-      kartGroup.position.copy(p); kartGroup.position.y=0;
-      kartT=cpT(currentIndex);
+      setTimeout(()=>{ postCrashWait=false; },300);
+      // Reset kart back to last successfully reached checkpoint panel
+      // That's panel index currentIndex (kart was sitting here when it crashed)
+      const cpIdx = Math.min(currentIndex, TOTAL_CP-1);
+      const p = cpPositions[cpIdx];
+      if(p){ kartGroup.position.copy(p); kartGroup.position.y=0; }
+      kartT = cpT(cpIdx);
     }
   }
 
@@ -993,25 +1008,30 @@ const LETTER_ALIASES = {
 
 function processVoice(text) {
   if (gameWon || crashing || postCrashWait) return false;
+  // Don't process speech while kart is still moving to checkpoint
+  if (kartMoving) return false;
+
   text = text.trim().toUpperCase();
   const words = text.split(/\s+/);
 
+  // After Z (index 26), need "FINISH"
   const needFinish = currentIndex >= 26;
   if (needFinish) {
-    if (text.includes('FINISH') || text.includes('FINISHED')) {
+    if (text.includes('FINISH') || text.includes('FINISHED') || text.includes('FINISH!')) {
       correctLetter(); return true;
     }
-    wrongLetter(text.slice(0,10)); return false;
+    wrongLetter(text.slice(0,12)); return false;
   }
 
+  // Need LETTERS[currentIndex] — e.g. index=0 → 'A', index=1 → 'B'
   const needLetter = LETTERS[currentIndex];
   const aliases = LETTER_ALIASES[needLetter] || [needLetter];
   for (const word of words) {
-    if (aliases.includes(word) || word[0]===needLetter) {
+    if (aliases.includes(word) || word.charAt(0) === needLetter) {
       correctLetter(); return true;
     }
   }
-  wrongLetter(text.slice(0,10)); return false;
+  wrongLetter(text.slice(0,12)); return false;
 }
 
 let recognition=null, isListening=false;
@@ -1023,12 +1043,17 @@ function setupSpeech(){
   recognition.lang='en-US'; recognition.maxAlternatives=5;
   recognition.onresult=(ev)=>{
     const res=ev.results[0];
-    showHeard(res[0].transcript.trim());
+    const heardText = res[0].transcript.trim();
+    showHeard(heardText);
+    // Try each alternative until one matches, stop at first match
     let matched=false;
     for(let i=0;i<res.length;i++){
       if(processVoice(res[i].transcript)){matched=true;break;}
     }
-    if(!matched) processVoice(res[0].transcript);
+    // If nothing matched, trigger wrong with the top result
+    if(!matched){
+      wrongLetter(heardText.toUpperCase().slice(0,12));
+    }
     stopListening();
   };
   recognition.onerror=()=>stopListening();
@@ -1038,22 +1063,37 @@ function startListening(){
   if(!recognition||isListening||!gameStarted||gameWon||crashing)return;
   isListening=true;
   document.getElementById('micBtn').classList.add('on');
-  document.getElementById('micHint').textContent='Listening... 🎤';
-  try{recognition.start();}catch(e){stopListening();}
+  document.getElementById('micHint').textContent='Listening… 🎙️';
+  try{recognition.start();}catch(e){console.warn('SR start err:',e);stopListening();}
 }
 function stopListening(){
   isListening=false;
   document.getElementById('micBtn').classList.remove('on');
-  document.getElementById('micHint').textContent='Hold to Speak!';
+  document.getElementById('micHint').textContent='Tap to Speak! 🎤';
   try{recognition.stop();}catch(e){}
 }
 
 const mic=document.getElementById('micBtn');
-mic.addEventListener('mousedown',startListening);
-mic.addEventListener('touchstart',e=>{e.preventDefault();startListening();},{passive:false});
-mic.addEventListener('mouseup',stopListening);
-mic.addEventListener('touchend',e=>{e.preventDefault();stopListening();},{passive:false});
-mic.addEventListener('mouseleave',stopListening);
+let tapMode = true; // tap once to start, auto-stops on result
+
+mic.addEventListener('click', ()=>{
+  if(!gameStarted) return;
+  if(isListening){ stopListening(); return; }
+  startListening();
+});
+// Also support hold on desktop
+mic.addEventListener('mousedown', e=>{ if(!tapMode) startListening(); });
+mic.addEventListener('mouseup',   e=>{ if(!tapMode) stopListening(); });
+
+// Make start button also init pills immediately
+document.getElementById('startBtn').addEventListener('click',()=>{
+  document.getElementById('startScreen').classList.add('hide');
+  gameStarted=true;
+  buildPills();
+  updateHUD();
+  spawnConfetti(30);
+  setupSpeech();
+});
 
 // ─── Keyboard fallback ───────────────────────────────
 let keyMode=false;
