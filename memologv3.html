@@ -1584,6 +1584,37 @@
             color: rgba(255, 255, 255, .6);
             margin-left: 4px;
         }
+
+        /* ── LOADING SPINNER for Tesseract ── */
+        .tess-loading {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--surface2);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text2);
+            margin-top: 8px;
+        }
+        .tess-loading.show {
+            display: flex;
+        }
+        .tess-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border2);
+            border-top-color: var(--navy);
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+            flex-shrink: 0;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 <body data-theme="ops">
@@ -1651,6 +1682,13 @@
                             <label class="browse-btn secondary" for="pdfInput">📄 PDFs</label>
                         </div>
                     </div>
+
+                    <!-- Tesseract loading indicator -->
+                    <div class="tess-loading" id="tessLoading">
+                        <div class="tess-spinner"></div>
+                        <span>Loading OCR engine… (one-time)</span>
+                    </div>
+
                     <input type="file" id="imgInput" multiple accept="image/png,image/jpeg,image/jpg,image/webp">
                     <input type="file" id="pdfInput" multiple accept=".pdf,application/pdf">
 
@@ -1912,10 +1950,25 @@
     <!-- COL MENU (shared, moved by JS) -->
     <div class="col-menu" id="colMenu" style="display:none;"></div>
 
+    <!-- ── CDN SCRIPTS ── -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
     </script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js">
     </script>
+
+    <!-- ── CDN LOAD CHECK (PART 2) ── -->
+    <script>
+        window.addEventListener('load', function() {
+            if (typeof Tesseract === 'undefined') {
+                console.warn('Tesseract.js CDN failed to load. Image OCR will not work offline.');
+            }
+            if (typeof pdfjsLib === 'undefined') {
+                console.warn('PDF.js CDN failed to load. PDF parsing will not work offline.');
+            }
+        });
+    </script>
+
+    <!-- ── MAIN APPLICATION ── -->
     <script>
         'use strict';
         // ════════════════════════════════════════════════════════
@@ -1929,13 +1982,12 @@
         const ST_MEMOS = 'memos';
         const ST_META = 'meta';
         let db = null;
-        let memos = []; // all memos in memory
-        let curCat = null; // active category
-        let sortMode = 'newest'; // 'newest' | 'oldest'
+        let memos = [];
+        let curCat = null;
+        let sortMode = 'newest';
         let editingId = null;
         let deleteId = null;
 
-        // Default columns — add more objects here to extend
         const DEFAULT_COLS = [
             { key: 'dateIssued', label: 'Date Issued', visible: true, editable: true },
             { key: 'ref', label: 'Ref', visible: true, editable: true },
@@ -1996,7 +2048,6 @@
         async function hydrate() {
             try {
                 let rows = await dbGetAll();
-                // Migration from old localStorage key
                 if (!rows.length) {
                     const old = localStorage.getItem('mhMemoLog_backup') || localStorage.getItem('mhMemoLog_v4');
                     if (old) {
@@ -2010,7 +2061,6 @@
                 }
                 memos = rows;
             } catch (e) {
-                // IndexedDB failed — fall back to localStorage
                 try { memos = JSON.parse(localStorage.getItem('mhMemoLog_backup') || '[]'); } catch (e2) { memos = []; }
             }
         }
@@ -2018,12 +2068,11 @@
         // ════════════════════════════════════════════════════════
         //  AUTO-SAVE SYSTEM
         // ════════════════════════════════════════════════════════
-        let fileHandle = null; // FileSystemFileHandle (File System Access API)
+        let fileHandle = null;
         let fsaSupported = typeof window !== 'undefined' && 'showSaveFilePicker' in window;
         let autoSaveTimer = null;
         let pendingSave = false;
 
-        // Show the autosave status chip
         function showChip(state, label) {
             const chip = document.getElementById('asChip');
             const dot = document.getElementById('asDot');
@@ -2038,7 +2087,6 @@
             }
         }
 
-        // Write JSON to the linked file (File System Access API)
         async function writeToLinkedFile() {
             if (!fileHandle) return false;
             try {
@@ -2055,7 +2103,6 @@
             }
         }
 
-        // Debounced auto-save — fires 1.5s after last change
         let _asDebounce;
 
         async function triggerAutoSave() {
@@ -2063,19 +2110,17 @@
             showChip('saving', 'Saving…');
             clearTimeout(_asDebounce);
             _asDebounce = setTimeout(async () => {
-                lsMirror(); // always update localStorage mirror
+                lsMirror();
                 if (fileHandle && fsaSupported) {
                     const ok = await writeToLinkedFile();
                     showChip(ok ? 'saved' : 'err', ok ? 'Auto-saved' : 'Save failed');
                 } else {
-                    // No linked file — just mirror to localStorage, chip confirms
                     showChip('saved', 'Stored locally');
                 }
                 pendingSave = false;
             }, 1500);
         }
 
-        // Ask user to pick/create a file to link for auto-save
         async function linkBackupFile() {
             if (!fsaSupported) {
                 toast('Auto-save to file not supported on this browser — use Save button instead', 'err');
@@ -2088,7 +2133,6 @@
                 });
                 localStorage.setItem('mlFileLinked', 'true');
                 updateLinkBtn(true);
-                // Write immediately
                 showChip('saving', 'Saving…');
                 const ok = await writeToLinkedFile();
                 showChip(ok ? 'saved' : 'err', ok ? 'File linked — auto-saving' : 'Link failed');
@@ -2110,7 +2154,6 @@
                 btn.title = 'Auto-save to a file on your device';
                 btn.textContent = '🔗 Link File';
             }
-            // Hide link button on unsupported browsers
             if (!fsaSupported) btn.style.display = 'none';
         }
 
@@ -2132,7 +2175,6 @@
         //  FIRST-OPEN FLOW
         // ════════════════════════════════════════════════════════
         function checkFirstOpen() {
-            // Show first-open modal only if DB is empty AND user hasn't seen it before
             const seen = localStorage.getItem('mlFoSeen');
             if (!seen && memos.length === 0) {
                 document.getElementById('foModal').classList.add('open');
@@ -2147,7 +2189,6 @@
         function foImport() {
             localStorage.setItem('mlFoSeen', '1');
             document.getElementById('foModal').classList.remove('open');
-            // Open import modal
             document.getElementById('importStatus').className = 'import-status';
             openModal('importModal');
         }
@@ -2156,7 +2197,6 @@
             localStorage.setItem('mlFoSeen', '1');
             document.getElementById('foModal').classList.remove('open');
             if (fsaSupported) {
-                // Try to open existing file to read + link
                 try {
                     const [handle] = await window.showOpenFilePicker({
                         types: [{ description: 'JSON Database', accept: { 'application/json': ['.json'] } }],
@@ -2170,24 +2210,21 @@
                     toast('File linked and database loaded', 'ok');
                 } catch (e) {
                     if (e.name !== 'AbortError') {
-                        // No existing file — create new
                         await linkBackupFile();
                     }
                 }
             } else {
-                // Fallback: just open import modal
                 document.getElementById('importStatus').className = 'import-status';
                 openModal('importModal');
             }
         }
 
         // ════════════════════════════════════════════════════════
-        //  MOBILE SAVE BANNER (visibilitychange fallback)
+        //  MOBILE SAVE BANNER
         // ════════════════════════════════════════════════════════
         let bannerDismissed = false;
 
         function showSaveBanner() {
-            // Only show if: no linked file, has memos, not dismissed this session
             if (fileHandle || !memos.length || bannerDismissed) return;
             document.getElementById('saveBanner').classList.add('show');
         }
@@ -2208,41 +2245,32 @@
         const MONTHS =
             'JAN(?:UARY)?|FEB(?:RUARY)?|MAR(?:CH)?|APR(?:IL)?|MAY|JUN(?:E)?|JUL(?:Y)?|AUG(?:UST)?|SEP(?:TEMBER)?|OCT(?:OBER)?|NOV(?:EMBER)?|DEC(?:EMBER)?';
         const MO_IDX = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-        // ── CHANGE 1: ALL_CATS master list ──────────────────────────
         const ALL_CATS = 'FSOC|IFS|OPS|FOTM|FOMM|FOTC|FOPS|FOCC|FOCA|FOCM|DFO|DFT|FOO|FLTOPS';
 
         function parseDate(s) {
             if (!s) return null;
             s = s.trim();
-            // "13 June 2026" / "13th June 2026"
             const mL = s.match(new RegExp(`(\\d{1,2})(?:st|nd|rd|th)?[\\s]+(${MONTHS})[\\s]+(20\\d{2})`, 'i'));
             if (mL) return `${parseInt(mL[1])} ${mL[2].substring(0,3).toUpperCase()} ${mL[3]}`;
-            // "13/06/2026" or "13-06-2026"
             const m4 = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](20\d{2})/);
             if (m4) { const mo = MO_IDX[parseInt(m4[2]) - 1] || m4[2]; return `${parseInt(m4[1])} ${mo} ${m4[3]}`; }
-            // "13/06/26" or "13-06-26"
             const m2 = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/);
             if (m2) { const mo = MO_IDX[parseInt(m2[2]) - 1] || m2[2]; return `${parseInt(m2[1])} ${mo} 20${m2[3]}`; }
-            // Keywords
             if (/^(UFN|N\/A|TBD|IMMEDIATE EFFECT|IMMEDIATE)$/i.test(s)) return s.toUpperCase();
             return null;
         }
 
-        // ── CHANGE 2: extractRef uses ALL_CATS ──────────────────────
         function extractRef(text) {
             const SEP = '[\\s\\/\\-\\.]+';
             const OSEP = '[\\s\\/\\-\\.]*';
-            // REPLACED: const CAT = '(FSOC|IFS|OPS)';
             const CAT = `(${ALL_CATS})`;
             const NUM = '([A-Za-z0-9]{1,4})';
             const YR = '(20\\d{2})';
 
-            // S1: REF label on same line as value
             const r1 = new RegExp(`REF\\b[\\s\\|\\:]+F[O0]${SEP}${CAT}${SEP}${NUM}${SEP}${YR}`, 'i');
             const m1 = text.match(r1);
             if (m1) return `FO/${m1[1].toUpperCase()}/${m1[2]}/${m1[3]}`;
 
-            // S2: REF label alone, value on next line
             const lines = text.split(/\n/).map(l => l.trim());
             for (let i = 0; i < lines.length; i++) {
                 if (/^REF\s*$/i.test(lines[i]) && lines[i + 1]) {
@@ -2252,7 +2280,6 @@
                 }
             }
 
-            // S3: Any FO/CAT/NUM/YEAR token — numeric memo number only
             const r3 = new RegExp(`F[O0]${OSEP}${CAT}${OSEP}${NUM}${OSEP}${YR}`, 'gi');
             const all = [...text.matchAll(r3)];
             for (const m of all) {
@@ -2267,19 +2294,16 @@
 
         function okSubj(s) { return s && s.length > 6 && !TABLE_SKIP.test(s.trim()) && !/^\d+$/.test(s.trim()); }
 
-        // ── CHANGE 4: Full fixed extractSubject ──────────────────────
-        // ── Helpers for extractSubject ──────────────────────────────────
-        // Field-boundary keywords — stop collecting subject lines at these
         const FIELD_BOUNDARY =
             /^(TO|FROM|REF|DATE\b|EFFECTIVE\b|VALIDITY\b|CATEGORY\b|LEVEL\b|INFORMATION\b|COMPLIANCE\b|INTRODUCTION\b|INSTRUCTIONS\b|MANUAL\s+INCORPORATION\b|ISSUED\b|INTERNAL\b|DEAR\b|BACKGROUND\b|ACTION\b|ATTACHMENT\b|DISTRIBUTION\b|PREPARED\b|APPROVED\b|SIGNED\b|REFERENCE\b)/i;
-        // Reject lines that are nothing but dashes/separators (OCR table borders)
+
         function isOnlyDash(s) { return /^[\-–—=\*\s]+$/.test(s); }
-        // Strip leading/trailing punctuation, collapse spaces, uppercase
+
         function cleanSubj(s) {
             return s
-                .replace(/^[\s\-–—:]+/, '') // remove leading dashes/colons
-                .replace(/[\s\-–—:]+$/, '') // remove trailing dashes/colons
-                .replace(/\s{2,}/g, ' ') // collapse multiple spaces to one
+                .replace(/^[\s\-–—:]+/, '')
+                .replace(/[\s\-–—:]+$/, '')
+                .replace(/\s{2,}/g, ' ')
                 .trim()
                 .toUpperCase();
         }
@@ -2287,29 +2311,21 @@
         function extractSubject(text) {
             const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
 
-            // ── Strategy 1: SUBJECT label + value on same line ──────────────
-            // Example: "SUBJECT IN-FLIGHT THEFT HANDLING PROCEDURE"
             for (let i = 0; i < lines.length; i++) {
                 const m = lines[i].match(/^SUBJECT[\s\|\:\-]+(.{4,})/i);
                 if (!m) continue;
                 const parts = [cleanSubj(m[1])];
-                // Collect up to 7 more continuation lines
                 for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
-                    if (FIELD_BOUNDARY.test(lines[j])) break; // stop at next field label
+                    if (FIELD_BOUNDARY.test(lines[j])) break;
                     const c = cleanSubj(lines[j]);
-                    if (isOnlyDash(c)) break; // stop at separator lines
-                    if (!c) continue; // SKIP blank lines (don't stop!)
+                    if (isOnlyDash(c)) break;
+                    if (!c) continue;
                     parts.push(c);
                 }
                 const joined = parts.filter(Boolean).join(' ');
                 if (okSubj(joined)) return joined;
             }
 
-            // ── Strategy 2: SUBJECT alone on its own line ────────────────────
-            // Example:
-            // "SUBJECT"
-            // "CCPM – ADDITIONAL NOTE UNDER CHAPTER 3.16.5"
-            // "INSTRUCTIONS TO ADULT WITH INFANT"
             for (let i = 0; i < lines.length; i++) {
                 if (!/^SUBJECT\s*$/i.test(lines[i])) continue;
                 const parts = [];
@@ -2317,18 +2333,13 @@
                     if (FIELD_BOUNDARY.test(lines[j])) break;
                     const c = cleanSubj(lines[j]);
                     if (isOnlyDash(c)) break;
-                    if (!c) continue; // SKIP blank lines (don't stop!)
+                    if (!c) continue;
                     parts.push(c);
                 }
                 const joined = parts.filter(Boolean).join(' ');
                 if (okSubj(joined)) return joined;
             }
 
-            // ── Strategy 3: Email/heading title line ────────────────────────
-            // Example: "FO DFO 024_2026 - ADOPTION OF NEW IFLIGHT CWP..."
-            // Also: "FO-IFS-142-2026 CCPM – ADDITIONAL NOTE..."
-            // FIX: allow plain space as separator, include all dept codes,
-            // and grab the next line if subject is cut off mid-sentence
             const meRx = new RegExp(
                 `FO[-\\/\\s](${ALL_CATS})[-\\/\\s_]\\d+[-\\/\\s_]\\d+[\\s:\\-–_]+(.{4,})`,
                 'i'
@@ -2340,7 +2351,6 @@
                 const nextLineRaw = (afterMatch.split(/\n/)[0] || '').trim();
                 const firstPart = cleanSubj(me[2]);
                 let combined = firstPart;
-                // Append next line if it exists and is not a field boundary
                 if (nextLineRaw && !FIELD_BOUNDARY.test(nextLineRaw) && !isOnlyDash(nextLineRaw)) {
                     const nextClean = cleanSubj(nextLineRaw);
                     if (nextClean) combined = firstPart + ' ' + nextClean;
@@ -2349,6 +2359,61 @@
             }
 
             return null;
+        }
+
+        function extractDateField(text, label) {
+            const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+            const lRx = new RegExp(`^${label}\\b[\\s\\|\\:]*`, 'i');
+            const tRx = new RegExp(`^${label}\\b`, 'i');
+            for (let i = 0; i < lines.length; i++) {
+                if (!tRx.test(lines[i])) continue;
+                const cands = [
+                    lines[i].replace(lRx, '').replace(/\s*VALIDITY\b.*/i, ''),
+                    lines[i + 1] || '',
+                    lines[i + 2] || ''
+                ];
+                for (const c of cands) {
+                    const d = parseDate(c.trim());
+                    if (d) return d;
+                    const sp = c.match(/\b(UFN|N\/A|TBD|IMMEDIATE EFFECT|IMMEDIATE)\b/i);
+                    if (sp && c.length < 40) return sp[1].toUpperCase();
+                }
+            }
+            return null;
+        }
+
+        function extractEffective(text) {
+            const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+            for (const line of lines) {
+                if (!/^EFFECTIVE\b/i.test(line)) continue;
+                const s = line.replace(/^EFFECTIVE\b[\s\|:]*/i, '').replace(/\s*VALIDITY\b.*/i, '').trim();
+                const d = parseDate(s);
+                if (d) return d;
+                const sp = s.match(/\b(UFN|N\/A|TBD|IMMEDIATE EFFECT|IMMEDIATE)\b/i);
+                if (sp) return sp[1].toUpperCase();
+            }
+            return extractDateField(text, 'EFFECTIVE');
+        }
+
+        function extractValidity(text) {
+            const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+            for (const line of lines) {
+                if (!/VALIDITY\b/i.test(line)) continue;
+                const after = line.replace(/.*?VALIDITY\b[\s\|:]*/i, '').trim();
+                const clean = after.split(/\s{2,}|\|/)[0].trim();
+                const d = parseDate(clean);
+                if (d) return d;
+                const sp = clean.match(/^(UFN|N\/A|TBD)\b/i);
+                if (sp) return sp[1].toUpperCase();
+                const idx = lines.indexOf(line);
+                if (lines[idx + 1]) {
+                    const d2 = parseDate(lines[idx + 1]);
+                    if (d2) return d2;
+                    const ns = lines[idx + 1].match(/\b(UFN|N\/A|TBD)\b/i);
+                    if (ns) return ns[1].toUpperCase();
+                }
+            }
+            return extractDateField(text, 'VALIDITY');
         }
 
         function parseFields(text) {
@@ -2360,39 +2425,111 @@
             return { ref, subject, dateIssued, effective, validity };
         }
 
-        // ── CHANGE 3: detectCat maps all codes to 3 buckets ────────────
         function detectCat(ref) {
             if (!ref) return null;
             const r = ref.toUpperCase();
-
-            // Flight Safety
             if (r.includes('FSOC')) return 'fsoc';
-            // In-Flight Services
             if (r.includes('/IFS/')) return 'ifs';
-
-            // All Flight Ops sub-departments → ops bucket
             if (r.includes('/OPS/')) return 'ops';
-            if (r.includes('FOTM')) return 'ops'; // Flight Ops Training Mgmt
-            if (r.includes('FOMM')) return 'ops'; // Flight Ops Manual Mgmt
-            if (r.includes('FOTC')) return 'ops'; // Flight Ops Training Centre
-            if (r.includes('FOPS')) return 'ops'; // Flight Ops Planning Support
-            if (r.includes('FOCC')) return 'ops'; // Flight Ops Crew Coordination
-            if (r.includes('FOCA')) return 'ops'; // Flight Ops Crew Admin
-            if (r.includes('FOCM')) return 'ops'; // Flight Ops Crew Management
-            if (r.includes('/DFO/')) return 'ops'; // Director of Flight Operations
-            if (r.includes('/DFT/')) return 'ops'; // Director of Flight Training
-            if (r.includes('/FOO/')) return 'ops'; // Flight Ops Officer
-            if (r.includes('FLTOPS')) return 'ops'; // Generic Flight Ops
-
+            if (r.includes('FOTM')) return 'ops';
+            if (r.includes('FOMM')) return 'ops';
+            if (r.includes('FOTC')) return 'ops';
+            if (r.includes('FOPS')) return 'ops';
+            if (r.includes('FOCC')) return 'ops';
+            if (r.includes('FOCA')) return 'ops';
+            if (r.includes('FOCM')) return 'ops';
+            if (r.includes('/DFO/')) return 'ops';
+            if (r.includes('/DFT/')) return 'ops';
+            if (r.includes('/FOO/')) return 'ops';
+            if (r.includes('FLTOPS')) return 'ops';
             return null;
         }
 
-        // Sort key from ref: FO/IFS/132/2026 → { year:2026, num:132 }
         function refSortKey(ref) {
             if (!ref) return { year: 0, num: 0 };
             const m = ref.match(/\/(\d{1,4})\/(20\d{2})$/);
             return m ? { year: parseInt(m[2]), num: parseInt(m[1]) } : { year: 0, num: 0 };
         }
+
+        // ── PART 1: waitForTesseract + ocrFile ──────────────────────────
+
+        function waitForTesseract(maxMs = 15000) {
+            return new Promise((resolve, reject) => {
+                if (typeof Tesseract !== 'undefined') {
+                    resolve();
+                    return;
+                }
+                const start = Date.now();
+                const check = setInterval(() => {
+                    if (typeof Tesseract !== 'undefined') {
+                        clearInterval(check);
+                        resolve();
+                    } else if (Date.now() - start > maxMs) {
+                        clearInterval(check);
+                        reject(new Error(
+                            'Tesseract did not load in time. Check your internet connection and try again.'));
+                    }
+                }, 200);
+            });
+        }
+
+        async function ocrFile(fileOrBlob) {
+            // Show loading indicator
+            const loadingEl = document.getElementById('tessLoading');
+            if (loadingEl) loadingEl.classList.add('show');
+
+            try {
+                await waitForTesseract();
+            } catch (err) {
+                if (loadingEl) loadingEl.classList.remove('show');
+                throw err;
+            }
+
+            if (loadingEl) loadingEl.classList.remove('show');
+
+            const url = URL.createObjectURL(fileOrBlob);
+            try {
+                const result = await Tesseract.recognize(url, 'eng', { logger: () => {} });
+                return result.data.text;
+            } finally {
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // ── PDF helpers ──────────────────────────────────────────────────
+
+        async function pdfToText(file) {
+            const ab = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+            let out = '';
+            for (let p = 1; p <= Math.min(pdf.numPages, 2); p++) {
+                const page = await pdf.getPage(p);
+                const cont = await page.getTextContent();
+                let lastY = null;
+                const parts = [];
+                for (const item of cont.items) {
+                    if (lastY !== null && Math.abs(item.transform[5] - lastY) > 4) parts.push('\n');
+                    parts.push(item.str);
+                    lastY = item.transform[5];
+                }
+                out += parts.join(' ') + '\n';
+            }
+            return out;
+        }
+
+        async function pdfToImageBlob(file) {
+            const ab = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+            const page = await pdf.getPage(1);
+            const vp = page.getViewport({ scale: 2 });
+            const cvs = document.createElement('canvas');
+            cvs.width = vp.width;
+            cvs.height = vp.height;
+            await page.render({ canvasContext: cvs.getContext('2d'), viewport: vp }).promise;
+            return new Promise(r => cvs.toBlob(b => r(b), 'image/jpeg', 0.9));
+        }
+
+        // ── processFiles with friendly error handling (PART 3) ──────────
 
         async function processFiles(files) {
             if (!files.length) return;
@@ -2466,7 +2603,15 @@
                     added++;
 
                 } catch (err) {
-                    addLogRow('fail', file.name, 'Error: ' + err.message);
+                    const msg = err.message || String(err);
+                    // Friendly hint for Tesseract loading failures
+                    if (msg.toLowerCase().includes('tesseract') || msg.toLowerCase().includes('not defined') ||
+                        msg.toLowerCase().includes('load in time')) {
+                        addLogRow('fail', file.name, 'OCR not ready — wait a moment and try again');
+                        toast('Tesseract still loading — try again in a few seconds', 'err');
+                    } else {
+                        addLogRow('fail', file.name, 'Error: ' + msg);
+                    }
                     failed++;
                 }
             }
@@ -2608,7 +2753,6 @@
                 return buildRow(m, i + 1, vc);
             }).join('');
 
-            // Drag-to-reorder listeners
             tbody.querySelectorAll('tr[draggable]').forEach(row => {
                 row.addEventListener('dragstart', onRowDragStart);
                 row.addEventListener('dragover', onRowDragOver);
@@ -2798,10 +2942,8 @@
             if (fromIdx < 0 || toIdx < 0) return;
             const [moved] = list.splice(fromIdx, 1);
             list.splice(toIdx, 0, moved);
-            // Update sortOrder for this cat
             list.forEach((m, i) => { m.sortOrder = i;
                 persistOne(m); });
-            // Update in memos array
             list.forEach(m => { const idx = memos.findIndex(x => x.id === m.id); if (idx > -1) memos[idx] = m; });
             renderTable();
         }
@@ -2857,7 +2999,6 @@
         }
 
         function sortByCol(key) {
-            // For REF column use refSortKey; for others sort alphabetically
             closeColMenu();
             const list = sortedMemos();
             list.sort((a, b) => (a[key] || '').localeCompare(b[key] || ''));
@@ -3092,25 +3233,20 @@
         // ════════════════════════════════════════════════════════
         document.addEventListener('DOMContentLoaded', async () => {
 
-            // Theme
             const savedTheme = localStorage.getItem('mlTheme') || 'ops';
             document.body.dataset.theme = savedTheme;
             updateMetaTheme();
 
-            // DB
             try { await openDB(); } catch (e) { console.warn('IDB unavailable', e); }
             await hydrate();
             updateCounts();
             updateDbInfo();
             buildThemeGrid();
 
-            // Service worker
             registerSW();
 
-            // Back button
             document.getElementById('hdrBack').addEventListener('click', () => {
                 if (document.getElementById('viewSettings').classList.contains('active')) {
-                    // from settings
                     if (curCat) {
                         document.getElementById('hdrBack').style.display = 'flex';
                         document.getElementById('hdrSettings').style.display = 'none';
@@ -3124,10 +3260,8 @@
                 }
             });
 
-            // Settings button
             document.getElementById('hdrSettings').addEventListener('click', goSettings);
 
-            // Drop zone
             const dz = document.getElementById('dropZone');
             dz.addEventListener('dragover', e => { e.preventDefault();
                 dz.classList.add('drag-over'); });
@@ -3140,7 +3274,6 @@
                 if (files.length) processFiles(files);
             });
 
-            // File inputs
             document.getElementById('imgInput').addEventListener('change', e => {
                 const files = Array.from(e.target.files);
                 if (files.length) { processFiles(files);
@@ -3152,7 +3285,6 @@
                     e.target.value = ''; }
             });
 
-            // Import modal
             const importDrop = document.getElementById('importDrop');
             importDrop.addEventListener('dragover', e => { e.preventDefault();
                 importDrop.classList.add('drag-over'); });
@@ -3176,10 +3308,8 @@
                 if (e.target === document.getElementById('delModal')) closeModal('delModal');
             });
 
-            // Close col menu on outside click
             document.addEventListener('click', () => closeColMenu());
 
-            // beforeunload — desktop only (mobile ignores this)
             window.addEventListener('beforeunload', e => {
                 if (pendingSave) {
                     const m = 'Changes are being saved — please wait a moment.';
@@ -3189,22 +3319,14 @@
                 }
             });
 
-            // visibilitychange — fires on mobile when switching apps / closing tab
-            // Show save banner as fallback when no file is linked
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden) showSaveBanner();
             });
 
-            // First-open check
             checkFirstOpen();
-
-            // Restore link button state
             updateLinkBtn(!!localStorage.getItem('mlFileLinked'));
 
-            // Note: fileHandle cannot be persisted across sessions (browser security)
-            // If user had linked a file previously, prompt them to re-link on next visit
             if (localStorage.getItem('mlFileLinked') && !fileHandle && memos.length) {
-                // Show a one-time soft prompt after 2s
                 setTimeout(() => {
                     if (!fileHandle && fsaSupported) {
                         toast('Tip: Re-link your backup file for auto-save → tap 🔗 Link File', '');
