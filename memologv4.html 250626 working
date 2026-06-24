@@ -2260,106 +2260,53 @@
             return null;
         }
 
-        // ════════════════════════════════════════════════════════
-        //  CHANGE 1 of 2 — extractRef() replaced with focused version
-        //  Only looks near the word REF — ignores attachment filenames,
-        //  email subjects, and other false positives.
-        //  Supports alphanumeric memo numbers (e.g. 088A, 24B)
-        //  and ANY 2-6 letter department code — future-proof.
-        // ════════════════════════════════════════════════════════
         function extractRef(text) {
-            // ── Regex parts ──────────────────────────────────────────────
-            // SEP: any combination of slash, dash, dot, space (1 or more)
-            // CAT: any 2-6 uppercase letters (the department code)
-            // NUM: memo number — digits optionally followed by letters e.g. 088, 088A, 24B
-            // YR: 4-digit year starting with 20
             const SEP = '[\\s\\/\\-\\.]+';
-            const CAT = '([A-Z]{2,6})';
-            const NUM = '(\\d{1,4}[A-Za-z]?)';
+            const OSEP = '[\\s\\/\\-\\.]*';
+            const CAT = `(${ALL_CATS})`;
+            const NUM = '([A-Za-z0-9]{1,4})';
             const YR = '(20\\d{2})';
 
-            // We only look in the VICINITY of the word REF.
-            // Split into lines, find the REF row, then look at that line
-            // and the 1-2 lines immediately after it. This prevents false
-            // matches from attachment filenames or email subject lines.
+            const r1 = new RegExp(`REF\\b[\\s\\|\\:]+F[O0]${SEP}${CAT}${SEP}${NUM}${SEP}${YR}`, 'i');
+            const m1 = text.match(r1);
+            if (m1) return `FO/${m1[1].toUpperCase()}/${m1[2]}/${m1[3]}`;
+
             const lines = text.split(/\n/).map(l => l.trim());
-
             for (let i = 0; i < lines.length; i++) {
-                const line = lines[i];
-                // Does this line START with or contain the word REF as a label?
-                // Matches: "REF", "REF:", "REF |", "REF FO/..."
-                if (!/\bREF\b/i.test(line)) continue;
-
-                // Collect this line and next 2 lines as candidates
-                const candidates = [
-                    line,
-                    lines[i + 1] || '',
-                    lines[i + 2] || '',
-                ];
-
-                for (const candidate of candidates) {
-                    // Core pattern: FO/CAT/NUM/YEAR with any separator between parts
-                    // Also matches F0 (zero instead of O — common OCR mistake)
-                    const rx = new RegExp(
-                        `F[O0]${SEP}${CAT}${SEP}${NUM}${SEP}${YR}`,
-                        'i'
-                    );
-                    const m = candidate.match(rx);
-                    if (!m) continue;
-
-                    const cat = m[1].toUpperCase();
-                    const num = m[2].toUpperCase();
-                    const yr = m[3];
-
-                    // Sanity check: year must be plausible, num must not be empty
-                    if (!num || !yr) continue;
-                    const yearN = parseInt(yr);
-                    if (yearN < 2000 || yearN > 2099) continue;
-
-                    return `FO/${cat}/${num}/${yr}`;
+                if (/^REF\s*$/i.test(lines[i]) && lines[i + 1]) {
+                    const r2 = new RegExp(`F[O0]${SEP}${CAT}${SEP}${NUM}${SEP}${YR}`, 'i');
+                    const m2 = lines[i + 1].match(r2);
+                    if (m2) return `FO/${m2[1].toUpperCase()}/${m2[2]}/${m2[3]}`;
                 }
             }
 
+            const r3 = new RegExp(`F[O0]${OSEP}${CAT}${OSEP}${NUM}${OSEP}${YR}`, 'gi');
+            const all = [...text.matchAll(r3)];
+            for (const m of all) {
+                const n = parseInt(m[2]);
+                if (n >= 1 && n <= 9999) return `FO/${m[1].toUpperCase()}/${m[2]}/${m[3]}`;
+            }
             return null;
         }
 
-        // ════════════════════════════════════════════════════════
-        //  CHANGE 2 of 2 — detectCat() replaced with dynamic version
-        //  Splits REF by "/" and reads the 2nd segment directly.
-        //  Never needs to know codes in advance — just checks for
-        //  FSOC or IFS, and puts everything else into ops.
-        //  Future codes like FO/XYZ/001/2026 land in ops automatically.
-        // ════════════════════════════════════════════════════════
-        function detectCat(ref) {
-            // ref format is always FO/DEPTCODE/NUM/YEAR after extractRef()
-            // Extract the department code — it's always the 2nd segment
-            if (!ref) return null;
-            const parts = ref.toUpperCase().split('/');
-            // parts[0] = FO, parts[1] = DEPTCODE, parts[2] = NUM, parts[3] = YEAR
-            if (parts.length < 4) return null;
-            const dept = parts[1];
+        const TABLE_SKIP =
+            /^(TO|FROM|REF|DATE|EFFECTIVE|VALIDITY|CATEGORY|LEVEL|INFORMATION|COMPLIANCE|LOW|MEDIUM|HIGH|UFN|N\/A|TBD|ALL CREW|ALL FLIGHT|ALL CREWMEMBERS|HEAD|CHIEF|SENIOR|CAPTAIN|INTRODUCTION|INSTRUCTIONS|MANUAL INCORPORATION|ISSUED|INTERNAL|DEAR|FOR YOUR|N\/A)$/i;
 
-            // Flight Safety bucket
-            if (dept === 'FSOC') return 'fsoc';
-            // In-Flight Services bucket
-            if (dept === 'IFS') return 'ifs';
-            // Everything else is Flight Ops → ops bucket
-            // This covers DFO, FOTM, FOMM, FOTC, FOPS, OPS, FOO, and
-            // any future codes we haven't seen yet
-            return 'ops';
+        function okSubj(s) { return s && s.length > 6 && !TABLE_SKIP.test(s.trim()) && !/^\d+$/.test(s.trim()); }
+
+        const FIELD_BOUNDARY =
+            /^(TO|FROM|REF|DATE\b|EFFECTIVE\b|VALIDITY\b|CATEGORY\b|LEVEL\b|INFORMATION\b|COMPLIANCE\b|INTRODUCTION\b|INSTRUCTIONS\b|MANUAL\s+INCORPORATION\b|ISSUED\b|INTERNAL\b|DEAR\b|BACKGROUND\b|ACTION\b|ATTACHMENT\b|DISTRIBUTION\b|PREPARED\b|APPROVED\b|SIGNED\b|REFERENCE\b)/i;
+
+        function isOnlyDash(s) { return /^[\-–—=\*\s]+$/.test(s); }
+
+        function cleanSubj(s) {
+            return s
+                .replace(/^[\s\-–—:]+/, '')
+                .replace(/[\s\-–—:]+$/, '')
+                .replace(/\s{2,}/g, ' ')
+                .trim()
+                .toUpperCase();
         }
-
-        /*
-         * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-         *  IF YOU WANT TO CHANGE WHICH CODES GO TO IFS OR FSOC
-         * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-         *  Just edit the detectCat() function above.
-         *  For example if you discover a new safety code like "FSOCC":
-         *  Add this line before the "return 'ops'" line:
-         *    if (dept === 'FSOCC') return 'fsoc';
-         *  That's all you ever need to do for new codes.
-         * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-         */
 
         function extractSubject(text) {
             const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
@@ -2478,23 +2425,24 @@
             return { ref, subject, dateIssued, effective, validity };
         }
 
-        const TABLE_SKIP =
-            /^(TO|FROM|REF|DATE|EFFECTIVE|VALIDITY|CATEGORY|LEVEL|INFORMATION|COMPLIANCE|LOW|MEDIUM|HIGH|UFN|N\/A|TBD|ALL CREW|ALL FLIGHT|ALL CREWMEMBERS|HEAD|CHIEF|SENIOR|CAPTAIN|INTRODUCTION|INSTRUCTIONS|MANUAL INCORPORATION|ISSUED|INTERNAL|DEAR|FOR YOUR|N\/A)$/i;
-
-        function okSubj(s) { return s && s.length > 6 && !TABLE_SKIP.test(s.trim()) && !/^\d+$/.test(s.trim()); }
-
-        const FIELD_BOUNDARY =
-            /^(TO|FROM|REF|DATE\b|EFFECTIVE\b|VALIDITY\b|CATEGORY\b|LEVEL\b|INFORMATION\b|COMPLIANCE\b|INTRODUCTION\b|INSTRUCTIONS\b|MANUAL\s+INCORPORATION\b|ISSUED\b|INTERNAL\b|DEAR\b|BACKGROUND\b|ACTION\b|ATTACHMENT\b|DISTRIBUTION\b|PREPARED\b|APPROVED\b|SIGNED\b|REFERENCE\b)/i;
-
-        function isOnlyDash(s) { return /^[\-–—=\*\s]+$/.test(s); }
-
-        function cleanSubj(s) {
-            return s
-                .replace(/^[\s\-–—:]+/, '')
-                .replace(/[\s\-–—:]+$/, '')
-                .replace(/\s{2,}/g, ' ')
-                .trim()
-                .toUpperCase();
+        function detectCat(ref) {
+            if (!ref) return null;
+            const r = ref.toUpperCase();
+            if (r.includes('FSOC')) return 'fsoc';
+            if (r.includes('/IFS/')) return 'ifs';
+            if (r.includes('/OPS/')) return 'ops';
+            if (r.includes('FOTM')) return 'ops';
+            if (r.includes('FOMM')) return 'ops';
+            if (r.includes('FOTC')) return 'ops';
+            if (r.includes('FOPS')) return 'ops';
+            if (r.includes('FOCC')) return 'ops';
+            if (r.includes('FOCA')) return 'ops';
+            if (r.includes('FOCM')) return 'ops';
+            if (r.includes('/DFO/')) return 'ops';
+            if (r.includes('/DFT/')) return 'ops';
+            if (r.includes('/FOO/')) return 'ops';
+            if (r.includes('FLTOPS')) return 'ops';
+            return null;
         }
 
         function refSortKey(ref) {
