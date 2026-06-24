@@ -2256,35 +2256,41 @@
             if (m4) { const mo = MO_IDX[parseInt(m4[2]) - 1] || m4[2]; return `${parseInt(m4[1])} ${mo} ${m4[3]}`; }
             const m2 = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/);
             if (m2) { const mo = MO_IDX[parseInt(m2[2]) - 1] || m2[2]; return `${parseInt(m2[1])} ${mo} 20${m2[3]}`; }
-            // ── CHANGE 2: added NIL ──
-            if (/^(UFN|NIL|N\/A|NA|TBD|IMMEDIATE EFFECT|IMMEDIATE)$/i.test(s)) return s.toUpperCase();
+            if (/^(UFN|N\/A|TBD|IMMEDIATE EFFECT|IMMEDIATE)$/i.test(s)) return s.toUpperCase();
             return null;
         }
 
         // ════════════════════════════════════════════════════════
-        //  CHANGE 1 of 4 — Fix extractRef() NUM and SEP patterns
+        //  CHANGE 1 of 2 — extractRef() replaced with focused version
+        //  Only looks near the word REF — ignores attachment filenames,
+        //  email subjects, and other false positives.
+        //  Supports alphanumeric memo numbers (e.g. 088A, 24B)
+        //  and ANY 2-6 letter department code — future-proof.
         // ════════════════════════════════════════════════════════
         function extractRef(text) {
-            // SEP between major parts (FO, CAT, NUM, YR)
+            // ── Regex parts ──────────────────────────────────────────────
+            // SEP: any combination of slash, dash, dot, space (1 or more)
+            // CAT: any 2-6 uppercase letters (the department code)
+            // NUM: memo number — digits optionally followed by letters e.g. 088, 088A, 24B
+            // YR: 4-digit year starting with 20
             const SEP = '[\\s\\/\\-\\.]+';
-            // SEP_OPT: separator between NUM and YR is optional
-            // because OCR sometimes merges "144-2026" → "1442026"
-            const SEP_OPT = '[\\s\\/\\-\\.]*';
-            // CAT: any 2-6 letter dept code (case insensitive via 'i' flag)
-            const CAT = '([A-Za-z]{2,6})';
-            // NUM: 1-4 digits, optional letter suffix (e.g. 088A, 24B)
-            // also allow up to 3 digits that run into the year
+            const CAT = '([A-Z]{2,6})';
             const NUM = '(\\d{1,4}[A-Za-z]?)';
             const YR = '(20\\d{2})';
 
+            // We only look in the VICINITY of the word REF.
+            // Split into lines, find the REF row, then look at that line
+            // and the 1-2 lines immediately after it. This prevents false
+            // matches from attachment filenames or email subject lines.
             const lines = text.split(/\n/).map(l => l.trim());
 
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
-                // Only look near the REF label — ignore rest of doc
+                // Does this line START with or contain the word REF as a label?
+                // Matches: "REF", "REF:", "REF |", "REF FO/..."
                 if (!/\bREF\b/i.test(line)) continue;
 
-                // Check this line and next 2 lines
+                // Collect this line and next 2 lines as candidates
                 const candidates = [
                     line,
                     lines[i + 1] || '',
@@ -2292,109 +2298,68 @@
                 ];
 
                 for (const candidate of candidates) {
-                    // Primary: standard FO/CAT/NUM/YR with any separator
+                    // Core pattern: FO/CAT/NUM/YEAR with any separator between parts
+                    // Also matches F0 (zero instead of O — common OCR mistake)
                     const rx = new RegExp(
-                        `F[O0]${SEP}${CAT}${SEP}${NUM}${SEP_OPT}${YR}`,
+                        `F[O0]${SEP}${CAT}${SEP}${NUM}${SEP}${YR}`,
                         'i'
                     );
                     const m = candidate.match(rx);
-                    if (m) {
-                        const cat = m[1].toUpperCase();
-                        const num = m[2].toUpperCase();
-                        const yr = m[3];
-                        if (num && yr) {
-                            const yearN = parseInt(yr);
-                            if (yearN >= 2000 && yearN <= 2099) {
-                                return `FO/${cat}/${num}/${yr}`;
-                            }
-                        }
-                    }
+                    if (!m) continue;
 
-                    // Fallback: OCR merged NUM and YR into one token
-                    // e.g. "FO-IFS-1442026" — split last 4 digits as year
-                    const rx2 = new RegExp(
-                        `F[O0]${SEP}${CAT}${SEP}(\\d{1,4}[A-Za-z]?)(20\\d{2})`,
-                        'i'
-                    );
-                    const m2 = candidate.match(rx2);
-                    if (m2) {
-                        const cat = m2[1].toUpperCase();
-                        const num = m2[2].toUpperCase();
-                        const yr = m2[3];
-                        if (num && yr) {
-                            const yearN = parseInt(yr);
-                            if (yearN >= 2000 && yearN <= 2099) {
-                                return `FO/${cat}/${num}/${yr}`;
-                            }
-                        }
-                    }
+                    const cat = m[1].toUpperCase();
+                    const num = m[2].toUpperCase();
+                    const yr = m[3];
+
+                    // Sanity check: year must be plausible, num must not be empty
+                    if (!num || !yr) continue;
+                    const yearN = parseInt(yr);
+                    if (yearN < 2000 || yearN > 2099) continue;
+
+                    return `FO/${cat}/${num}/${yr}`;
                 }
             }
 
             return null;
         }
 
-        // ── CUSTOM CATEGORY SYSTEM ─────────────────────────────────────
-
-        // Built-in categories — these always exist
-        const BUILTIN_CATS = {
-            ifs: { label: 'In-Flight Services', color: '#003580' },
-            ops: { label: 'Ops & Flight Ops', color: '#16A34A' },
-            fsoc: { label: 'Flight Safety', color: '#DC2626' },
-        };
-
-        // Load user-defined dept-to-category mappings from localStorage
-        // Format: { "FOTM": "ops", "DFO": "ops", "MYCODE": "training" }
-        function loadDeptMap() {
-            try { return JSON.parse(localStorage.getItem('mlDeptMap') || '{}'); } catch (e) { return {}; }
-        }
-
-        function saveDeptMap(map) {
-            localStorage.setItem('mlDeptMap', JSON.stringify(map));
-        }
-
-        // Load user-defined custom categories
-        // Format: { "training": { label: "Training", color: "#7C3AED" } }
-        function loadCustomCats() {
-            try { return JSON.parse(localStorage.getItem('mlCustomCats') || '{}'); } catch (e) { return {}; }
-        }
-
-        function saveCustomCats(cats) {
-            localStorage.setItem('mlCustomCats', JSON.stringify(cats));
-        }
-
-        // All categories combined
-        function allCats() {
-            return { ...BUILTIN_CATS, ...loadCustomCats() };
-        }
-
-        // ── CHANGE 3 of 4 — Custom Categories system ──
+        // ════════════════════════════════════════════════════════
+        //  CHANGE 2 of 2 — detectCat() replaced with dynamic version
+        //  Splits REF by "/" and reads the 2nd segment directly.
+        //  Never needs to know codes in advance — just checks for
+        //  FSOC or IFS, and puts everything else into ops.
+        //  Future codes like FO/XYZ/001/2026 land in ops automatically.
+        // ════════════════════════════════════════════════════════
         function detectCat(ref) {
+            // ref format is always FO/DEPTCODE/NUM/YEAR after extractRef()
+            // Extract the department code — it's always the 2nd segment
             if (!ref) return null;
             const parts = ref.toUpperCase().split('/');
+            // parts[0] = FO, parts[1] = DEPTCODE, parts[2] = NUM, parts[3] = YEAR
             if (parts.length < 4) return null;
             const dept = parts[1];
 
-            // Check user-defined dept map first
-            const deptMap = loadDeptMap();
-            if (deptMap[dept]) return deptMap[dept];
-
-            // Built-in rules
+            // Flight Safety bucket
             if (dept === 'FSOC') return 'fsoc';
+            // In-Flight Services bucket
             if (dept === 'IFS') return 'ifs';
-
-            // Everything else → ops
+            // Everything else is Flight Ops → ops bucket
+            // This covers DFO, FOTM, FOMM, FOTC, FOPS, OPS, FOO, and
+            // any future codes we haven't seen yet
             return 'ops';
         }
 
-        // Save a dept-to-category mapping for future auto-routing
-        function saveDeptMapping(dept, catKey) {
-            const map = loadDeptMap();
-            map[dept.toUpperCase()] = catKey;
-            saveDeptMap(map);
-        }
-
-        // ── END CUSTOM CATEGORY SYSTEM ─────────────────────────────────
+        /*
+         * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+         *  IF YOU WANT TO CHANGE WHICH CODES GO TO IFS OR FSOC
+         * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+         *  Just edit the detectCat() function above.
+         *  For example if you discover a new safety code like "FSOCC":
+         *  Add this line before the "return 'ops'" line:
+         *    if (dept === 'FSOCC') return 'fsoc';
+         *  That's all you ever need to do for new codes.
+         * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+         */
 
         function extractSubject(text) {
             const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
@@ -2463,7 +2428,7 @@
                 for (const c of cands) {
                     const d = parseDate(c.trim());
                     if (d) return d;
-                    const sp = c.match(/\b(UFN|N\/A|TBD|IMMEDIATE EFFECT|IMMEDIATE|NIL)\b/i);
+                    const sp = c.match(/\b(UFN|N\/A|TBD|IMMEDIATE EFFECT|IMMEDIATE)\b/i);
                     if (sp && c.length < 40) return sp[1].toUpperCase();
                 }
             }
@@ -2477,13 +2442,12 @@
                 const s = line.replace(/^EFFECTIVE\b[\s\|:]*/i, '').replace(/\s*VALIDITY\b.*/i, '').trim();
                 const d = parseDate(s);
                 if (d) return d;
-                const sp = s.match(/\b(UFN|N\/A|TBD|IMMEDIATE EFFECT|IMMEDIATE|NIL)\b/i);
+                const sp = s.match(/\b(UFN|N\/A|TBD|IMMEDIATE EFFECT|IMMEDIATE)\b/i);
                 if (sp) return sp[1].toUpperCase();
             }
             return extractDateField(text, 'EFFECTIVE');
         }
 
-        // ── CHANGE 2 (part 2): extractValidity() regex updated ──
         function extractValidity(text) {
             const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
             for (const line of lines) {
@@ -2492,14 +2456,13 @@
                 const clean = after.split(/\s{2,}|\|/)[0].trim();
                 const d = parseDate(clean);
                 if (d) return d;
-                // ── UPDATED: added NIL, NA ──
-                const sp = clean.match(/^(UFN|NIL|NA|N\/A|TBD)\b/i);
+                const sp = clean.match(/^(UFN|N\/A|TBD)\b/i);
                 if (sp) return sp[1].toUpperCase();
                 const idx = lines.indexOf(line);
                 if (lines[idx + 1]) {
                     const d2 = parseDate(lines[idx + 1]);
                     if (d2) return d2;
-                    const ns = lines[idx + 1].match(/\b(UFN|NIL|NA|N\/A|TBD)\b/i);
+                    const ns = lines[idx + 1].match(/\b(UFN|N\/A|TBD)\b/i);
                     if (ns) return ns[1].toUpperCase();
                 }
             }
@@ -2618,7 +2581,7 @@
             return new Promise(r => cvs.toBlob(b => r(b), 'image/jpeg', 0.9));
         }
 
-        // ── processFiles with friendly error handling ──────────────────
+        // ── processFiles with friendly error handling (PART 3) ──────────
 
         async function processFiles(files) {
             if (!files.length) return;
@@ -2693,6 +2656,7 @@
 
                 } catch (err) {
                     const msg = err.message || String(err);
+                    // Friendly hint for Tesseract loading failures
                     if (msg.toLowerCase().includes('tesseract') || msg.toLowerCase().includes('not defined') ||
                         msg.toLowerCase().includes('load in time')) {
                         addLogRow('fail', file.name, 'OCR not ready — wait a moment and try again');
@@ -2744,10 +2708,7 @@
         function openCat(cat) {
             curCat = cat;
             const names = { ifs: 'In-Flight Services', ops: 'Ops Planning & Support', fsoc: 'Flight Safety' };
-            // Merge with custom cats
-            const all = allCats();
-            const label = all[cat] ? all[cat].label : cat.toUpperCase();
-            document.getElementById('hdrCatLabel').textContent = label;
+            document.getElementById('hdrCatLabel').textContent = names[cat];
             document.getElementById('hdrCatLabel').style.display = 'block';
             document.getElementById('hdrBack').style.display = 'flex';
             document.getElementById('hdrSettings').style.display = 'none';
@@ -2884,31 +2845,19 @@
           </tr>`;
         }
 
-        // ── CHANGE 4 of 4 — buildEditRow with category selector ──
         function buildEditRow(m, idx, vc) {
-            const cats = allCats();
-            const catOptions = Object.entries(cats)
-                .map(([k, v]) => `<option value="${k}" ${k === m.cat ? 'selected' : ''}>${v.label}</option>`)
-                .join('');
-
             const cells = vc.map(c => `
               <td><input class="edit-input" data-key="${c.key}" value="${(m[c.key] || '').replace(/"/g, '&quot;')}"></td>
             `).join('');
-
             return `<tr class="editing" data-id="${m.id}">
             <td class="td-num">${idx}</td>
             ${cells}
             <td class="td-actions">
-              <div class="row-acts" style="flex-direction:column;align-items:flex-end;gap:6px;">
-                <select id="catsel-${m.id}" style="font-size:10px;padding:3px 6px;border-radius:4px;border:1px solid var(--gold);background:var(--surface);color:var(--text);width:100%;">
-                  ${catOptions}
-                </select>
-                <div style="display:flex;gap:4px;">
-                  <button class="edit-save-btn" onclick="saveEdit('${m.id}')">Save</button>
-                  <button class="ra-btn" onclick="cancelEdit()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  </button>
-                </div>
+              <div class="row-acts">
+                <button class="edit-save-btn" onclick="saveEdit('${m.id}')">Save</button>
+                <button class="ra-btn" onclick="cancelEdit()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
               </div>
             </td>
           </tr>`;
@@ -2943,42 +2892,14 @@
         function cancelEdit() { editingId = null;
             renderTable(); }
 
-        // ── CHANGE 4 (part 2): saveEdit with category move + dept mapping ──
         async function saveEdit(id) {
             const m = memos.find(x => x.id === id);
             if (!m) return;
-
             const row = document.querySelector(`tr[data-id="${id}"]`);
             if (!row) return;
-
-            // Save text fields
-            row.querySelectorAll('.edit-input').forEach(inp => {
-                m[inp.dataset.key] = inp.value.trim();
-            });
-
-            // Read category selector
-            const catSel = document.getElementById('catsel-' + id);
-            if (catSel && catSel.value) {
-                const newCat = catSel.value;
-                if (newCat !== m.cat) {
-                    // If user changed the category, ask if we should
-                    // remember this dept code mapping for future parses
-                    const deptParts = (m.ref || '').toUpperCase().split('/');
-                    if (deptParts.length >= 2) {
-                        const dept = deptParts[1];
-                        const remember = confirm(
-                            `Move this memo to "${newCat}"?\n\n` +
-                            `Also remember: route all future "${dept}" memos to "${newCat}" automatically?`
-                        );
-                        if (remember) saveDeptMapping(dept, newCat);
-                    }
-                    m.cat = newCat;
-                }
-            }
-
+            row.querySelectorAll('.edit-input').forEach(inp => { m[inp.dataset.key] = inp.value.trim(); });
             editingId = null;
             await persistOne(m);
-            updateCounts();
             renderTable();
             toast('Saved', 'ok');
         }
@@ -3211,12 +3132,13 @@
         function exportHTML() {
             if (!memos.length) { toast('No memos to export', 'err'); return; }
             const now = new Date().toLocaleDateString('en-MY', { day: '2-digit', month: 'long', year: 'numeric' });
-            const all = allCats();
-            const catKeys = Object.keys(all);
+            const cats = ['ifs', 'ops', 'fsoc'];
+            const catNames = { ifs: 'In-Flight Services', ops: 'Ops Planning & Support', fsoc: 'Flight Safety' };
+            const catColors = { ifs: '#003580', ops: '#16A34A', fsoc: '#DC2626' };
             const vc = visibleCols();
 
-            const tableFor = catKey => {
-                const list = memos.filter(m => m.cat === catKey);
+            const tableFor = cat => {
+                const list = memos.filter(m => m.cat === cat);
                 if (!list.length) return '<p style="color:#888;padding:12px 16px;font-style:italic">No memos.</p>';
                 const rows = list.map((m, i) =>
                     `<tr${i % 2 ? ' style="background:#F9FBFD"' : ''}>
@@ -3242,13 +3164,13 @@
           </style></head><body>
           <div class="hdr"><h1>MEMO<em>.LOG</em></h1><p>Exported ${now} · ${memos.length} memos · by2100551</p></div>
           <div class="body">
-          ${catKeys.map(catKey => `<div class="sec">
+          ${cats.map(cat => `<div class="sec">
             <div class="sec-hdr">
-              <div class="sec-dot" style="background:${all[catKey].color || '#666'}"></div>
-              <span class="sec-label" style="color:${all[catKey].color || '#666'}">${catKey.toUpperCase()}</span>
-              <span style="font-size:11px;color:#7A93B4;margin-left:4px">— ${all[catKey].label} · ${memos.filter(m => m.cat === catKey).length} memos</span>
+              <div class="sec-dot" style="background:${catColors[cat]}"></div>
+              <span class="sec-label" style="color:${catColors[cat]}">${cat.toUpperCase()}</span>
+              <span style="font-size:11px;color:#7A93B4;margin-left:4px">— ${catNames[cat]} · ${memos.filter(m => m.cat === cat).length} memos</span>
             </div>
-            ${tableFor(catKey)}
+            ${tableFor(cat)}
           </div>`).join('')}
           </div>
           <div class="foot">memo.log · by2100551 · local reference only</div>
@@ -3308,29 +3230,19 @@
         //  COUNTS & DB INFO
         // ════════════════════════════════════════════════════════
         function updateCounts() {
-            const all = allCats();
-            const counts = {};
-            Object.keys(all).forEach(k => counts[k] = 0);
-            memos.forEach(m => { if (counts[m.cat] !== undefined) counts[m.cat]++; });
-            // Update home cards: built-in + custom cats get shown if they have memos
-            const homeCards = document.querySelector('.cat-cards');
-            // We keep the static 3 cards for built-in, but we need to update counts
-            document.getElementById('cnt-ifs').textContent = counts.ifs || 0;
-            document.getElementById('cnt-ops').textContent = counts.ops || 0;
-            document.getElementById('cnt-fsoc').textContent = counts.fsoc || 0;
-            // For custom categories, we add dynamic cards if they have memos
-            // (they'll appear when user creates them)
+            const c = { ifs: 0, ops: 0, fsoc: 0 };
+            memos.forEach(m => { if (c[m.cat] !== undefined) c[m.cat]++; });
+            document.getElementById('cnt-ifs').textContent = c.ifs;
+            document.getElementById('cnt-ops').textContent = c.ops;
+            document.getElementById('cnt-fsoc').textContent = c.fsoc;
         }
 
         function updateDbInfo() {
-            const all = allCats();
-            const counts = {};
-            Object.keys(all).forEach(k => counts[k] = 0);
-            memos.forEach(m => { if (counts[m.cat] !== undefined) counts[m.cat]++; });
-            const parts = Object.entries(counts).filter(([k, v]) => v > 0)
-                .map(([k, v]) => `${k.toUpperCase()}:${v}`);
+            const c = { ifs: 0, ops: 0, fsoc: 0 };
+            memos.forEach(m => { if (c[m.cat] !== undefined) c[m.cat]++; });
             const el = document.getElementById('dbInfo');
-            if (el) el.textContent = memos.length ? `${memos.length} memos · ${parts.join(' ')}` : 'No memos yet';
+            if (el) el.textContent = memos.length ? `${memos.length} memos · IFS:${c.ifs} OPS:${c.ops} FSOC:${c.fsoc}` :
+                'No memos yet';
         }
 
         // ════════════════════════════════════════════════════════
