@@ -759,6 +759,79 @@
             font-style: italic;
         }
 
+        /* ── NEW: Paste text panel ── */
+        .paste-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        .paste-hdr {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .paste-hdr-title {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text2);
+        }
+        .paste-body {
+            padding: 14px;
+        }
+        .paste-body textarea {
+            width: 100%;
+            min-height: 120px;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 12px;
+            color: var(--text);
+            resize: vertical;
+            outline: none;
+            transition: border-color .15s;
+        }
+        .paste-body textarea:focus {
+            border-color: var(--navy);
+        }
+        .paste-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            justify-content: flex-end;
+        }
+        .paste-btn {
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            padding: 8px 16px;
+            transition: background .15s;
+        }
+        .paste-btn.primary {
+            background: var(--navy);
+            color: #fff;
+        }
+        .paste-btn.primary:hover {
+            background: var(--navy3);
+        }
+        .paste-btn.secondary {
+            background: var(--surface2);
+            color: var(--text2);
+            border: 1px solid var(--border2);
+        }
+        .paste-btn.secondary:hover {
+            border-color: var(--navy);
+            color: var(--navy);
+        }
+
         /* ══════════════════════════════════════════
            CATEGORY VIEW
         ══════════════════════════════════════════ */
@@ -1708,6 +1781,20 @@
                             <button class="pl-clear" onclick="clearLog()">Clear</button>
                         </div>
                         <div class="pl-rows" id="plRows"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── NEW: Paste text panel ── -->
+            <div class="paste-panel">
+                <div class="paste-hdr">
+                    <span class="paste-hdr-title">📝 Paste Memo Text</span>
+                </div>
+                <div class="paste-body">
+                    <textarea id="pasteText" placeholder="Paste the memo email content here… (including REF, SUBJECT, dates, etc.)"></textarea>
+                    <div class="paste-actions">
+                        <button class="paste-btn secondary" onclick="document.getElementById('pasteText').value=''">Clear</button>
+                        <button class="paste-btn primary" onclick="parseManualText()">Parse Text</button>
                     </div>
                 </div>
             </div>
@@ -2798,6 +2885,68 @@
 
             if (added) toast(`${added} memo${added > 1 ? 's' : ''} added`, 'ok');
             if (failed) toast(`${failed} file${failed > 1 ? 's' : ''} failed`, 'err');
+        }
+
+        // ── NEW: Manual text paste parser ──────────────────────────────────
+        async function parseManualText() {
+            const textarea = document.getElementById('pasteText');
+            const text = textarea.value.trim();
+            if (!text) {
+                toast('Please paste some memo text first.', 'err');
+                return;
+            }
+
+            const parseLog = document.getElementById('parseLog');
+            const plRows = document.getElementById('plRows');
+            parseLog.classList.add('show');
+
+            try {
+                const f = parseFields(text);
+                if (!f.ref) {
+                    addLogRow('fail', 'Pasted text', 'REF not found');
+                    toast('Could not find a valid REF in the text.', 'err');
+                    return;
+                }
+
+                if (memos.find(m => m.ref === f.ref)) {
+                    addLogRow('fail', 'Pasted text', `${f.ref} already in log`);
+                    toast('Duplicate REF – memo already exists.', 'err');
+                    return;
+                }
+
+                const cat = detectCat(f.ref);
+                if (!cat) {
+                    addLogRow('fail', 'Pasted text', `Unknown category: ${f.ref}`);
+                    toast('Could not detect category from REF.', 'err');
+                    return;
+                }
+
+                const memo = {
+                    id: `${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+                    cat,
+                    ref: f.ref,
+                    subject: f.subject || '—',
+                    dateIssued: f.dateIssued || '—',
+                    effective: f.effective || '—',
+                    validity: f.validity || '—',
+                    sortOrder: 0,
+                    ts: new Date().toISOString()
+                };
+
+                memos.unshift(memo);
+                await persistOne(memo);
+                addLogRow('ok', 'Pasted text', f.ref, f.subject || '');
+                updateCounts();
+                updateDbInfo();
+                toast('Memo added from pasted text.', 'ok');
+
+                // Clear the textarea for the next entry
+                textarea.value = '';
+
+            } catch (err) {
+                addLogRow('fail', 'Pasted text', 'Error: ' + err.message);
+                toast('Error parsing text: ' + err.message, 'err');
+            }
         }
 
         function addLogRow(type, filename, refOrMsg, subject) {
