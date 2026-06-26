@@ -2583,7 +2583,7 @@
             });
         }
 
-        // ── UPDATED OCR FUNCTION with PSM fallback loop ──────────────────
+        // ── UPDATED OCR FUNCTION with image preprocessing ──────────────
         async function ocrFile(fileOrBlob) {
             const loadingEl = document.getElementById('tessLoading');
             if (loadingEl) loadingEl.classList.add('show');
@@ -2597,36 +2597,76 @@
 
             if (loadingEl) loadingEl.classList.remove('show');
 
+            // ── Preprocess the image ──────────────────────────────────────────
+            // Load the image into a canvas, resize & grayscale.
+            const img = new Image();
             const url = URL.createObjectURL(fileOrBlob);
-            try {
-                // List of PSM modes to try in order – most likely to least
-                const psmModes = [6, 4, 11, 7, 3, 12];
-                let lastError = null;
-                let text = '';
+            img.src = url;
 
-                for (const psm of psmModes) {
-                    try {
-                        const result = await Tesseract.recognize(url, 'eng', {
-                            logger: () => {},
-                            psm: psm,
-                        });
-                        text = result.data.text;
-                        // If we found both FO and a 20xx year, consider it good
-                        if (text.includes('FO') && /\b20\d{2}\b/.test(text)) {
-                            return text;
-                        }
-                    } catch (err) {
-                        lastError = err;
-                        continue;
-                    }
-                }
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+            });
 
-                // If we tried all and still no FO+year, return the best we got
-                if (text) return text;
-                throw lastError || new Error('OCR failed to extract text with any PSM mode.');
-            } finally {
-                URL.revokeObjectURL(url);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Resize: ensure width is at least 1000px (preserve aspect ratio)
+            let width = img.width;
+            let height = img.height;
+            const MIN_WIDTH = 1000;
+            if (width < MIN_WIDTH) {
+                const scale = MIN_WIDTH / width;
+                width = MIN_WIDTH;
+                height = Math.round(height * scale);
             }
+            canvas.width = width;
+            canvas.height = height;
+
+            // Draw and convert to grayscale
+            ctx.drawImage(img, 0, 0, width, height);
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                data[i] = gray;
+                data[i + 1] = gray;
+                data[i + 2] = gray;
+            }
+            ctx.putImageData(imageData, 0, 0);
+
+            // Convert canvas to blob for Tesseract
+            const processedBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+            URL.revokeObjectURL(url); // clean up
+
+            // ── OCR with multiple PSM modes ──────────────────────────────────
+            const psmModes = [6, 7]; // 6 = block text, 7 = single text line
+            let lastError = null;
+            let text = '';
+
+            for (const psm of psmModes) {
+                try {
+                    const result = await Tesseract.recognize(processedBlob, 'eng', {
+                        logger: () => {},
+                        psm: psm,
+                        oem: 1, // LSTM only – better for clean text
+                    });
+                    text = result.data.text;
+                    console.log(`Tesseract (PSM ${psm}) output:`, text); // DEBUG
+                    // If we found both FO and a 20xx year, consider it good
+                    if (text.includes('FO') && /\b20\d{2}\b/.test(text)) {
+                        return text;
+                    }
+                } catch (err) {
+                    lastError = err;
+                    continue;
+                }
+            }
+
+            // If we still don't have FO+year, return the best we got (or throw)
+            if (text) return text;
+            throw lastError || new Error('OCR failed with all PSM modes.');
         }
 
         // ── PDF helpers ──────────────────────────────────────────────────
