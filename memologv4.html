@@ -2583,7 +2583,7 @@
             });
         }
 
-        // ── UPDATED OCR FUNCTION with PSM fallback ──────────────────────
+        // ── UPDATED OCR FUNCTION with PSM fallback loop ──────────────────
         async function ocrFile(fileOrBlob) {
             const loadingEl = document.getElementById('tessLoading');
             if (loadingEl) loadingEl.classList.add('show');
@@ -2599,23 +2599,31 @@
 
             const url = URL.createObjectURL(fileOrBlob);
             try {
-                // Try PSM 6 (single uniform text block) – best for tables
-                let result = await Tesseract.recognize(url, 'eng', {
-                    logger: () => {},
-                    psm: 6,
-                });
-                let text = result.data.text;
+                // List of PSM modes to try in order – most likely to least
+                const psmModes = [6, 4, 11, 7, 3, 12];
+                let lastError = null;
+                let text = '';
 
-                // If the REF is still missing, retry with PSM 11 (sparse text)
-                if (!text.includes('FO') || !text.includes('20')) {
-                    result = await Tesseract.recognize(url, 'eng', {
-                        logger: () => {},
-                        psm: 11,
-                    });
-                    text = result.data.text;
+                for (const psm of psmModes) {
+                    try {
+                        const result = await Tesseract.recognize(url, 'eng', {
+                            logger: () => {},
+                            psm: psm,
+                        });
+                        text = result.data.text;
+                        // If we found both FO and a 20xx year, consider it good
+                        if (text.includes('FO') && /\b20\d{2}\b/.test(text)) {
+                            return text;
+                        }
+                    } catch (err) {
+                        lastError = err;
+                        continue;
+                    }
                 }
 
-                return text;
+                // If we tried all and still no FO+year, return the best we got
+                if (text) return text;
+                throw lastError || new Error('OCR failed to extract text with any PSM mode.');
             } finally {
                 URL.revokeObjectURL(url);
             }
