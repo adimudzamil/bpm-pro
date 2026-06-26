@@ -2583,6 +2583,7 @@
             });
         }
 
+        // ── UPDATED OCR FUNCTION with PSM fallback ──────────────────────
         async function ocrFile(fileOrBlob) {
             const loadingEl = document.getElementById('tessLoading');
             if (loadingEl) loadingEl.classList.add('show');
@@ -2598,8 +2599,23 @@
 
             const url = URL.createObjectURL(fileOrBlob);
             try {
-                const result = await Tesseract.recognize(url, 'eng', { logger: () => {} });
-                return result.data.text;
+                // Try PSM 6 (single uniform text block) – best for tables
+                let result = await Tesseract.recognize(url, 'eng', {
+                    logger: () => {},
+                    psm: 6,
+                });
+                let text = result.data.text;
+
+                // If the REF is still missing, retry with PSM 11 (sparse text)
+                if (!text.includes('FO') || !text.includes('20')) {
+                    result = await Tesseract.recognize(url, 'eng', {
+                        logger: () => {},
+                        psm: 11,
+                    });
+                    text = result.data.text;
+                }
+
+                return text;
             } finally {
                 URL.revokeObjectURL(url);
             }
