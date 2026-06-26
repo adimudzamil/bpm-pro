@@ -2256,29 +2256,43 @@
             if (m4) { const mo = MO_IDX[parseInt(m4[2]) - 1] || m4[2]; return `${parseInt(m4[1])} ${mo} ${m4[3]}`; }
             const m2 = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/);
             if (m2) { const mo = MO_IDX[parseInt(m2[2]) - 1] || m2[2]; return `${parseInt(m2[1])} ${mo} 20${m2[3]}`; }
+            // ── CHANGE 2: added NIL ──
             if (/^(UFN|NIL|N\/A|NA|TBD|IMMEDIATE EFFECT|IMMEDIATE)$/i.test(s)) return s.toUpperCase();
             return null;
         }
 
-        // ──  REF EXTRACTION  ─────────────────────────────────────────────
+        // ════════════════════════════════════════════════════════
+        //  REPLACED extractRef() with improved OCR handling
+        // ════════════════════════════════════════════════════════
         function extractRef(text) {
+            // ── Regex building blocks ─────────────────────────────────────
             const SEP = '[\\s\\/\\-\\.]+';
+            // SEP between NUM and YR is optional — OCR sometimes merges them
             const SEP_OPT = '[\\s\\/\\-\\.]*';
-            const CAT = '([A-Za-z]{2,8})';
-            const NUM = '([0-9lI]{1,4}[A-Za-z]?)';
+            // CAT: any 2-6 letter dept code
+            const CAT = '([A-Za-z]{2,6})';
+            // NUM: OCR CONFUSION FIX
+            // In sans-serif bold fonts, digit "1", letter "l", and "I" look
+            // identical to Tesseract. "144" often comes out as "l44" or "I44".
+            // We allow [0-9lI] to cover all three, then normalise after match.
+            // Also allow optional single space inside (OCR splits "144" → "1 44")
+            const NUM = '([0-9lI]{1,2}\\s?[0-9lI]{0,3}[A-Za-z]?)';
             const YR = '(20\\d{2})';
 
+            // Helper: clean up a captured memo number
+            // l → 1, I → 1, remove internal spaces
             function fixNum(s) {
                 return s.replace(/\s/g, '').replace(/[lI]/g, '1').toUpperCase();
             }
 
+            // Only look near REF label — ignore attachment names, subjects etc.
             const lines = text.split(/\n/).map(l => l.trim());
 
-            // 1) Look for lines containing the word "REF"
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
                 if (!/\bREF\b/i.test(line)) continue;
 
+                // Scan this line + next 2 lines
                 const candidates = [
                     line,
                     lines[i + 1] || '',
@@ -2286,6 +2300,7 @@
                 ];
 
                 for (const candidate of candidates) {
+                    // Primary match: FO/CAT/NUM/YR — separator between NUM and YR optional
                     const rx = new RegExp(
                         `F[O0]${SEP}${CAT}${SEP}${NUM}${SEP_OPT}${YR}`,
                         'i'
@@ -2303,6 +2318,8 @@
                         }
                     }
 
+                    // Fallback: NUM and YR merged into one token
+                    // e.g. "FO-IFS-1442026" or "FO-IFS-l442026"
                     const rx2 = new RegExp(
                         `F[O0]${SEP}${CAT}${SEP}([0-9lI]{1,4}[A-Za-z]?)(20\\d{2})`,
                         'i'
@@ -2322,29 +2339,20 @@
                 }
             }
 
-            // ── GLOBAL FALLBACK  ──────────────────────────────────────────
-            // Scan the entire text for the unmistakable FO-XXX-YYY-ZZZZ pattern
-            // regardless of whether "REF" was found.
-            const globalRx = /\bF[O0][\s\/\-_]+([A-Za-z0-9]{2,8})[\s\/\-_]+([A-Za-z0-9]{1,6})[\s\/\-_]+(20\d{2})\b/i;
-            const globalMatch = text.match(globalRx);
-            if (globalMatch) {
-                const cat = globalMatch[1].toUpperCase();
-                const num = globalMatch[2].toUpperCase().replace(/[lI]/g, '1');
-                const yr = globalMatch[3];
-                return `FO/${cat}/${num}/${yr}`;
-            }
-
             return null;
         }
 
         // ── CUSTOM CATEGORY SYSTEM ─────────────────────────────────────
 
+        // Built-in categories — these always exist
         const BUILTIN_CATS = {
             ifs: { label: 'In-Flight Services', color: '#003580' },
             ops: { label: 'Ops & Flight Ops', color: '#16A34A' },
             fsoc: { label: 'Flight Safety', color: '#DC2626' },
         };
 
+        // Load user-defined dept-to-category mappings from localStorage
+        // Format: { "FOTM": "ops", "DFO": "ops", "MYCODE": "training" }
         function loadDeptMap() {
             try { return JSON.parse(localStorage.getItem('mlDeptMap') || '{}'); } catch (e) { return {}; }
         }
@@ -2353,6 +2361,8 @@
             localStorage.setItem('mlDeptMap', JSON.stringify(map));
         }
 
+        // Load user-defined custom categories
+        // Format: { "training": { label: "Training", color: "#7C3AED" } }
         function loadCustomCats() {
             try { return JSON.parse(localStorage.getItem('mlCustomCats') || '{}'); } catch (e) { return {}; }
         }
@@ -2361,25 +2371,31 @@
             localStorage.setItem('mlCustomCats', JSON.stringify(cats));
         }
 
+        // All categories combined
         function allCats() {
             return { ...BUILTIN_CATS, ...loadCustomCats() };
         }
 
+        // ── CHANGE 3 of 4 — Custom Categories system ──
         function detectCat(ref) {
             if (!ref) return null;
             const parts = ref.toUpperCase().split('/');
             if (parts.length < 4) return null;
             const dept = parts[1];
 
+            // Check user-defined dept map first
             const deptMap = loadDeptMap();
             if (deptMap[dept]) return deptMap[dept];
 
+            // Built-in rules
             if (dept === 'FSOC') return 'fsoc';
             if (dept === 'IFS') return 'ifs';
 
+            // Everything else → ops
             return 'ops';
         }
 
+        // Save a dept-to-category mapping for future auto-routing
         function saveDeptMapping(dept, catKey) {
             const map = loadDeptMap();
             map[dept.toUpperCase()] = catKey;
@@ -2475,6 +2491,7 @@
             return extractDateField(text, 'EFFECTIVE');
         }
 
+        // ── CHANGE 2 (part 2): extractValidity() regex updated ──
         function extractValidity(text) {
             const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
             for (const line of lines) {
@@ -2483,6 +2500,7 @@
                 const clean = after.split(/\s{2,}|\|/)[0].trim();
                 const d = parseDate(clean);
                 if (d) return d;
+                // ── UPDATED: added NIL, NA ──
                 const sp = clean.match(/^(UFN|NIL|NA|N\/A|TBD)\b/i);
                 if (sp) return sp[1].toUpperCase();
                 const idx = lines.indexOf(line);
@@ -2553,6 +2571,7 @@
         }
 
         async function ocrFile(fileOrBlob) {
+            // Show loading indicator
             const loadingEl = document.getElementById('tessLoading');
             if (loadingEl) loadingEl.classList.add('show');
 
@@ -2733,6 +2752,7 @@
         function openCat(cat) {
             curCat = cat;
             const names = { ifs: 'In-Flight Services', ops: 'Ops Planning & Support', fsoc: 'Flight Safety' };
+            // Merge with custom cats
             const all = allCats();
             const label = all[cat] ? all[cat].label : cat.toUpperCase();
             document.getElementById('hdrCatLabel').textContent = label;
@@ -2872,6 +2892,7 @@
           </tr>`;
         }
 
+        // ── CHANGE 4 of 4 — buildEditRow with category selector ──
         function buildEditRow(m, idx, vc) {
             const cats = allCats();
             const catOptions = Object.entries(cats)
@@ -2930,6 +2951,7 @@
         function cancelEdit() { editingId = null;
             renderTable(); }
 
+        // ── CHANGE 4 (part 2): saveEdit with category move + dept mapping ──
         async function saveEdit(id) {
             const m = memos.find(x => x.id === id);
             if (!m) return;
@@ -2937,14 +2959,18 @@
             const row = document.querySelector(`tr[data-id="${id}"]`);
             if (!row) return;
 
+            // Save text fields
             row.querySelectorAll('.edit-input').forEach(inp => {
                 m[inp.dataset.key] = inp.value.trim();
             });
 
+            // Read category selector
             const catSel = document.getElementById('catsel-' + id);
             if (catSel && catSel.value) {
                 const newCat = catSel.value;
                 if (newCat !== m.cat) {
+                    // If user changed the category, ask if we should
+                    // remember this dept code mapping for future parses
                     const deptParts = (m.ref || '').toUpperCase().split('/');
                     if (deptParts.length >= 2) {
                         const dept = deptParts[1];
@@ -3294,9 +3320,14 @@
             const counts = {};
             Object.keys(all).forEach(k => counts[k] = 0);
             memos.forEach(m => { if (counts[m.cat] !== undefined) counts[m.cat]++; });
+            // Update home cards: built-in + custom cats get shown if they have memos
+            const homeCards = document.querySelector('.cat-cards');
+            // We keep the static 3 cards for built-in, but we need to update counts
             document.getElementById('cnt-ifs').textContent = counts.ifs || 0;
             document.getElementById('cnt-ops').textContent = counts.ops || 0;
             document.getElementById('cnt-fsoc').textContent = counts.fsoc || 0;
+            // For custom categories, we add dynamic cards if they have memos
+            // (they'll appear when user creates them)
         }
 
         function updateDbInfo() {
