@@ -2262,6 +2262,7 @@
 
         // ──  REF EXTRACTION  ─────────────────────────────────────────────
         function extractRef(text) {
+            // ── STAGE 1: Search near "REF" label ──────────────────────────────
             const SEP = '[\\s\\/\\-\\.]+';
             const SEP_OPT = '[\\s\\/\\-\\.]*';
             const CAT = '([A-Za-z]{2,8})';
@@ -2274,7 +2275,6 @@
 
             const lines = text.split(/\n/).map(l => l.trim());
 
-            // 1) Look for lines containing the word "REF"
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
                 if (!/\bREF\b/i.test(line)) continue;
@@ -2322,16 +2322,47 @@
                 }
             }
 
-            // ── GLOBAL FALLBACK  ──────────────────────────────────────────
-            // Scan the entire text for the unmistakable FO-XXX-YYY-ZZZZ pattern
-            // regardless of whether "REF" was found.
-            const globalRx = /\bF[O0][\s\/\-_]+([A-Za-z0-9]{2,8})[\s\/\-_]+([A-Za-z0-9]{1,6})[\s\/\-_]+(20\d{2})\b/i;
-            const globalMatch = text.match(globalRx);
-            if (globalMatch) {
-                const cat = globalMatch[1].toUpperCase();
-                const num = globalMatch[2].toUpperCase().replace(/[lI]/g, '1');
-                const yr = globalMatch[3];
+            // ── STAGE 2: Loose global regex (separators optional) ──────────────
+            const looseRx = /\bF[O0]\s*[\-\/_\s]?\s*([A-Za-z0-9]{2,8})\s*[\-\/_\s]?\s*([A-Za-z0-9]{1,6})\s*[\-\/_\s]?\s*(20\d{2})\b/i;
+            const looseMatch = text.match(looseRx);
+            if (looseMatch) {
+                const cat = looseMatch[1].toUpperCase();
+                const num = looseMatch[2].toUpperCase().replace(/[lI]/g, '1');
+                const yr = looseMatch[3];
                 return `FO/${cat}/${num}/${yr}`;
+            }
+
+            // ── STAGE 3: ULTIMATE FALLBACK (last resort) ──────────────────────
+            // Scan for any substring that starts with FO and ends with 20xx.
+            // Strip all separators, limit total length to 17 characters.
+            const ultraRx = /\b(F[O0][A-Za-z0-9\-_\s\/\|]{1,11}20\d{2})\b/i;
+            const ultraMatch = text.match(ultraRx);
+            if (ultraMatch) {
+                let raw = ultraMatch[1];
+                // Strip all non-alphanumeric characters
+                let clean = raw.replace(/[^A-Za-z0-9]/g, '');
+                // Correct common OCR confusion: l/I → 1
+                clean = clean.replace(/[lI]/g, '1');
+
+                // Must start with FO (or F0) and be within 17 chars
+                if (clean.length >= 8 && clean.length <= 17) {
+                    const yearMatch = clean.match(/(20\d{2})$/);
+                    if (yearMatch) {
+                        const year = yearMatch[1];
+                        const body = clean.substring(2, clean.length - 4); // remove "FO" and year
+                        if (body.length >= 2) {
+                            // Extract the trailing digits as the memo number
+                            const numMatch = body.match(/(\d+)$/);
+                            if (numMatch) {
+                                const num = numMatch[1];
+                                const cat = body.substring(0, body.length - num.length);
+                                if (cat && num) {
+                                    return `FO/${cat.toUpperCase()}/${num}/${year}`;
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             return null;
