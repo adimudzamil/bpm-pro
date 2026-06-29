@@ -13,7 +13,7 @@
  *     `DOMContentLoaded` event listener.
  *  2. If your script needs to react to report generation, hook into
  *     `generateReportWithCurrentSettings()` or extend the UI controls.
- *  3. Keep functions small and focused – see the “Extensibility Points”
+ *  3. Keep functions small and focused, see the “Extensibility Points”
  *     section below for safe places to add new features.
  *
  *  ─── OVERVIEW ──────────────────────────────────────────────────────────
