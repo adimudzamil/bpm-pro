@@ -5,7 +5,7 @@
  *  MAIN.JS – Architecture & Developer Guide
  *
  *  This file powers the Passenger Meal & Tier Report tool used by cabin
- *  crew to quickly generate print‑ready reports from BPM manifests.
+ *  crew to quickly generate print ready reports from BPM manifests.
  *
  *  ─── HOW TO ADD A NEW SCRIPT ──────────────────────────────────────────
  *  1. Import or paste your new script at the top of this file (or in a
@@ -148,7 +148,7 @@
  *  ─── CODING STYLE ──────────────────────────────────────────────────────
  *  • Functions are organised by concern: parsing, generation, helpers.
  *  • Global variables are minimised; use currentSettings for preferences.
- *  • Avoid jQuery – use plain DOM APIs.
+ *  • Avoid jQuery, use plain DOM APIs.
  *  • All new functions should be well‑named and include JSDoc comments.
  *
  *  ─── CONTACT ──────────────────────────────────────────────────────────
